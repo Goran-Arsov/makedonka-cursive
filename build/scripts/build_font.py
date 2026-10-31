@@ -589,13 +589,13 @@ LICENSE = ('Derivative of "Macedonian cursive script" by MacedonianBoy '
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
-fb.setupCFF(PS, {"version": "0.9.16", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.9.17", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.16",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.16", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.17",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.17", "copyright": ATTRIB,
     "description": "Macedonian cursive display font; letters traced from a CC BY-SA 3.0 chart, digits designed to match.",
     "designer": "MacedonianBoy (original cursive letterforms)",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",

@@ -36,14 +36,20 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
 - **Install & use guide** (public, non-technical): `claude.ai/artifact/3z5jJ3FRbKJa6e4jKD5mQs` — a separate
   shareable page explaining install (Windows/Mac/Linux) + web use. Private; owner shares via the Share menu.
 
-## Current state (v0.9.16 — BUILT into the project dir but NOT yet shipped; 2026-10-31)
-- **Ship status: v0.9.16 BUILT, NOT shipped (2026-10-31).** Added 7 punctuation glyphs (`/ … · « » ° %`) +
-  a no-break-space alias, and fixed font-table metadata (see v0.9.16 changelog). Project dir rebuilt
-  (Reg+Bold × otf/ttf/woff2/woff + `specimen.png`); README `**0.9.16**`, `?v=27` in demo+css, demo shows a
-  new-punctuation line. **Still the user's steps:** bump nothing further; zip the suite, install both OTFs to
-  `~/.local/share/fonts/` (+fc-cache), commit (incl. the metadata/glyph edits), push, cut GitHub release v0.9.16,
-  update the live specimen artifact. amici unchanged. Regression-checked: no existing glyph's advance or outline
-  changed (purely additive + OS/2/hhea metadata). Build env: `.venv/` (recreated this session).
+## Current state (v0.9.17 — BUILT + committed locally, NOT pushed; 2026-10-31)
+- **Ship status: v0.9.17 committed locally, NOT pushed (2026-10-31).** **Solved the "known limitations":**
+  added **uppercase spacing kerning** so consecutive capitals / all-caps now read (both weights; `kern_util.py`;
+  see v0.9.17 changelog). The other three limitations were judged inherent and documented honestly, not
+  force-fixed: true contextual joining stays v2; the faux-bold's lower contrast needs a redraw the trace can't
+  give (an anisotropic emboldening was evaluated + rejected as marginal); "display-only/unhinted" is the nature
+  of an ornate copperplate. Project dir rebuilt (Reg+Bold × otf/ttf/woff2/woff + `specimen.png`); README
+  `**0.9.17**` + known-limitations rewritten + a kerning note; `?v=28` in demo+css; OTFs reinstalled to
+  `~/.local/share/fonts/` (+fc-cache; restart LibreOffice). **Still the user's steps:** push, zip the suite, cut
+  GitHub release v0.9.17, refresh the live specimen artifact. amici unchanged. Regression: glyph diff vs v0.9.16
+  shows **no advance/outline change** (pure kerning); pairs 609→1865 Reg / 439→1735 Bold, woff2 +~2 KB/weight.
+- **Ship status: v0.9.16 committed locally, NOT pushed (2026-10-31).** 7 punctuation glyphs (`/ … · « » ° %`) +
+  NBSP alias + font-table metadata fixes (commit `9454aaf`). OTFs installed to `~/.local/share/fonts/`. Not
+  pushed/zipped/released. (Superseded by v0.9.17 above — both are in the unpushed local history.)
 - **Ship status: v0.9.15 SHIPPED (2026-10-31).** Project dir has the final Reg+Bold × otf/ttf/woff2/woff +
   `specimen.png`; README + `?v=26` bumped; `MakedonkaCursive-v0.9.15.zip` built; both OTFs installed to
   `~/.local/share/fonts/` (+ fc-cache; restart LibreOffice to pick them up); committed + pushed to `main`
@@ -75,6 +81,12 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   `config.x.script_font = :makedonka` (the opt-in flag; `ApplicationHelper#makedonka_font?` adds `.script-makedonka`).
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.17** — **uppercase spacing kerning (consecutive-caps limitation solved).** `kern_util.py` now also
+  emits a capital→capital GPOS kern: measure each cap's dense-body edges (specimen method), push each cap pair's
+  body gap up to `CAP_GAP=300` (positive-only), so all-caps reads while flourishes still cross. Fires only
+  cap-before-cap, so the capital→lowercase tuck is untouched. Both weights; HarfBuzz-verified. Pure kerning —
+  no glyph changed. The faux-bold-contrast, contextual-joining and hinting limitations were judged inherent and
+  documented honestly (not force-fixed); README known-limitations rewritten.
 - **v0.9.16** — **coverage + font-table metadata.** Added 7 calligraphic punctuation glyphs (`/` solidus, `…`
   ellipsis, `·` middot, `« »` guillemets, `°` degree, `%` percent — all reuse the existing pen/`_ring`
   primitives, both weights) + a **no-break space** alias (U+00A0→space). Fixed OS/2/hhea: `fsType` 0x0004→**0**
@@ -115,8 +127,10 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
 4. ~~**Pair kerning (`GPOS`)**~~ — **DONE in v0.9.15** (bidirectional auto-kern, both scripts & weights via
    `kern_util.py`). Could still be hand-refined for individual pairs, or extended to uppercase/mixed pairs,
    but the lowercase rhythm + connections now read well. Tune via the params in `kern_util.py`.
-5. **Even consecutive capitals (`RIGHT_CAP`)** — would trim right cap-flourishes for all-caps, but
-   reduces the lowercase tuck-under the user approved. Only matters for all-caps (not this font's use).
+5. ~~**Even consecutive capitals**~~ — **DONE in v0.9.17** via capital→capital GPOS spacing kern in
+   `kern_util.py` (`_cap_pairs`, `CAP_GAP`), NOT the feared `RIGHT_CAP` flourish-trim: kerning is
+   context-specific, so it fires only cap-before-cap and leaves the approved capital→lowercase tuck intact.
+   Tune the all-caps body gap via `CAP_GAP` (currently 300); could still be hand-refined per pair.
 6. **Other-Cyrillic coverage** — Russian/Serbian/Bulgarian/Ukrainian-specific letters (Ё Й Щ Ъ Ы Э Ю Я …):
    new designed glyphs. (Latin is DONE.)
 7. **Sharper digit edges** — the disk-brush gives a soft pen edge; a non-self-intersecting stroker would

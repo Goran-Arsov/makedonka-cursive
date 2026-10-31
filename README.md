@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.16.**
+**Version 0.9.17.**
 
 ![specimen](specimen.png)
 
@@ -79,15 +79,19 @@ h1.strong { font-weight: 700; }
   **restrained** pen style. Every Latin glyph is either drawn or a re-angled copy of a
   Cyrillic letter (the Macedonian glyphs themselves are unchanged). Good for names,
   wordmarks and short Latin text — not a full-flourish Latin script.
+- **Spacing & kerning:** letters join at the x-height, and built-in **GPOS kerning** evens the
+  connections, tightens loose joins, and spaces consecutive capitals so **all-caps also reads**
+  (the cap flourishes still cross, as a copperplate hand does). Applied to both weights.
 - **Not included:** other-Cyrillic (Russian/Serbian-specific letters).
 
 ## Known limitations
-- **Consecutive capitals overlap** — built for normal words (one leading capital +
-  lowercase); avoid setting all-caps cursive.
-- **Not pair-kerned;** true contextual joining (v2) is future work.
-- **Bold is a faux-bold** (uniform dilation), so its stroke contrast is lower than the
-  Regular's.
-- Display face only; not hinted for small sizes.
+- **True contextual joining (v2) is future work.** Letters are spaced and kerned to read connected
+  at the x-height, but there are no entry/exit joining strokes or contextual alternates yet.
+- **Bold is a faux-bold** (uniform dilation of the Regular), so its stroke contrast is lower than
+  the Regular's — a higher-contrast Bold would need strokes redrawn heavier, which the single-weight
+  traced source doesn't provide.
+- **It's an ornate copperplate display face** — meant for large sizes (headings, logos, titles).
+  It isn't hinted and the hairlines thin out at small sizes, so it isn't for body copy.
 
 ## License & attribution — **required**
 

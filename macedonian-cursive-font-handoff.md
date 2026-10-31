@@ -192,10 +192,22 @@ vectorizing the Wikimedia chart (see *Source material* below).
   caret leans with the script (was vertical 1/0). *Vertical line metrics were left unchanged* (hhea/win are
   bbox-based and tall by design; changing them alters current layout — flagged as an opt-in, not done). Nothing
   else touched: a glyph-by-glyph diff vs v0.9.15 shows no existing advance or outline changed.
-- **Known limits (open for v2+):** consecutive capitals overlap (built for
-  one-capital words); kerning is algorithmic connection-kerning, not hand-tuned per pair; true contextual
-  joining (v2 — entry/exit substitution) not done; display face only. Bold is a faux-bold (dilation), not
-  redrawn strokes, so its contrast is lower than the Regular's.
+- **(v0.9.17) uppercase spacing kerning — consecutive-caps fixed:** `kern_util.py` now also emits a
+  **capital→capital** GPOS kern. For each cap it measures the dense-body left/right edge by ink-mass
+  percentile (the same method `build_font.py`'s specimen uses to space the cap chart — new helpers `_CFP`,
+  `_cap_body`), then for each cap pair pushes the body gap up to **`CAP_GAP=300`** (positive-only, floor
+  `MIN_CAP_KERN=10`), so all-caps reads while the flourishes still cross. It fires **only capital-before-capital**
+  (both scripts), so the approved **capital→lowercase tuck is untouched** — this is the insight that resolves
+  the old tension (open-work #5 feared a RIGHT_CAP sidebearing fix would hurt the tuck; kerning is context-specific,
+  so it doesn't). Verified end-to-end by HarfBuzz-shaping ОХРИД/СКОПЈЕ/МАКЕДОНИЈА/OHRID (read cleanly) and Скопје
+  (unchanged). Pure kerning: a glyph diff vs v0.9.16 shows **no advance or outline changed**; pairs 609→1865 (Reg) /
+  439→1735 (Bold), woff2 +~2 KB/weight (feaLib compacts them into the one kern lookup). The anisotropic
+  contrast-preserving Bold was **evaluated and rejected** (only a marginal change — not worth re-tuning the shipped weight).
+- **Known limits (open for v2+):** **true contextual joining** (v2 — entry/exit strokes + `calt` substitution)
+  is not done; lowercase connection kerning is algorithmic (not hand-tuned per pair). **Bold is a faux-bold**
+  (dilation), not redrawn strokes, so its contrast is lower than the Regular's (a true Bold needs a heavier
+  redraw the single-weight trace can't supply). **Ornate display face** — not hinted; hairlines thin at small
+  sizes. (Consecutive-caps overlap was fixed in v0.9.17; lowercase pair kerning shipped v0.9.15.)
 
 ---
 

@@ -593,13 +593,17 @@ LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursiv
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
-fb.setupCFF(PS, {"version": "0.9.18", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
-                 "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
+# CFF alignment zones (UPM 700): baseline, x-height ~264, Latin ascender ~553, cap ~685; descender ~-240.
+# These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
+PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
+           "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
+fb.setupCFF(PS, {"version": "0.9.19", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+                 "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.18",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.18", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.19",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.19", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -623,6 +627,18 @@ fb.save(otf); print("saved", otf)
 # ---- connection kerning (both scripts): even the cursive joins — loosen crowded pairs, tighten loose ones
 from kern_util import add_kern
 print(f"kerning: {add_kern(otf)} pairs")
+
+# ---- hinting: psautohint adds PostScript stem hints keyed off the Private-dict alignment zones above
+# (best-effort: a couple of disk-brush glyphs self-overlap and warn, which is non-fatal)
+import subprocess
+def hint_otf(path):
+    try:
+        ps = os.path.join(os.path.dirname(sys.executable), "psautohint")
+        r = subprocess.run([ps, path, "-o", path], capture_output=True, text=True, timeout=300)
+        print(f"hinted {os.path.basename(path)} (psautohint rc={r.returncode})")
+    except Exception as e:
+        print(f"WARN: psautohint skipped ({e}) — shipping unhinted")
+hint_otf(otf)
 
 for fl in ("woff2", "woff"):
     f = TTFont(otf); f.flavor = fl; f.save(os.path.join(OUTDIR, f"MakedonkaCursive-Regular.{fl}"))

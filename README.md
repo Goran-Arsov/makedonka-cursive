@@ -7,7 +7,8 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.18** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.19** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+Now **hinted** (PostScript + TrueType), with a contrast-preserving Bold.
 
 ![specimen](specimen.png)
 
@@ -69,7 +70,8 @@ h1.strong { font-weight: 700; }
 ## Coverage
 - **Letters:** all 31 Macedonian letters, upper + lowercase (62 glyphs), with the correct
   Macedonian/Serbian-style cursive forms (overbarred г/п/т, g-shaped д, dotted ј, …).
-- **Weights:** Regular + Bold (the Bold is a dilation of the Regular — a faux-bold).
+- **Weights:** Regular + Bold (a faux-bold derived from the Regular by a **contrast-preserving** dilation —
+  it weights the stems while keeping the hairlines, overbars and connectors delicate).
 - **Digits:** 0–9, designed to match (calligraphic pen numerals; not in the source chart).
 - **Punctuation:** space `. , : ; ! ? - – — ( ) ' " „ " « » / … · ° %` — calligraphic pen marks,
   including the Macedonian `„ "` and `« »` quotes (designed to match; not in the source chart).
@@ -84,14 +86,13 @@ h1.strong { font-weight: 700; }
   (the cap flourishes still cross, as a copperplate hand does). Applied to both weights.
 - **Not included:** other-Cyrillic (Russian/Serbian-specific letters).
 
-## Known limitations
-- **True contextual joining (v2) is future work.** Letters are spaced and kerned to read connected
-  at the x-height, but there are no entry/exit joining strokes or contextual alternates yet.
-- **Bold is a faux-bold** (uniform dilation of the Regular), so its stroke contrast is lower than
-  the Regular's — a higher-contrast Bold would need strokes redrawn heavier, which the single-weight
-  traced source doesn't provide.
-- **It's an ornate copperplate display face** — meant for large sizes (headings, logos, titles).
-  It isn't hinted and the hairlines thin out at small sizes, so it isn't for body copy.
+## Scope & roadmap
+- **A display face — use it large.** An ornate copperplate for headings, logos, titles and short text.
+  It ships **hinted** (PostScript + TrueType grid-fitting), but the hairlines are intentionally delicate,
+  so it isn't meant for long body copy at small sizes.
+- **Fully connected joining is on the roadmap (v2).** The letters are spaced and kerned to read as
+  connected cursive; true entry/exit joining strokes (OpenType `calt` with connected letterforms) are
+  future work — they need the forms drawn by hand, so they're not auto-generated.
 
 ## License & attribution — **required**
 

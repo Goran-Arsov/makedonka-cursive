@@ -32,3 +32,13 @@ f["head"].indexToLocFormat = 0
 if "glyf" in f: f["head"].glyphDataFormat = 0
 f.sfntVersion = "\x00\x01\x00\x00"
 f.save(DST); print("saved", DST)
+
+# ---- TrueType grid-fitting hints via ttfautohint (best-effort) ----
+try:
+    from ttfautohint import ttfautohint
+    _hinted = ttfautohint(in_file=DST)
+    with open(DST, "wb") as _fh:
+        _fh.write(_hinted)
+    print("ttfautohinted", DST)
+except Exception as _e:
+    print(f"WARN: ttfautohint skipped ({_e}) — shipping unhinted TTF")

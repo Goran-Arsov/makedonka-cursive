@@ -33,7 +33,19 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   shareable pages; the owner holds the links. Regenerate the specimen from the current `.woff2` when the font
   changes. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.18 — SHIPPED; 2026-10-31)
+## Current state (v0.9.19 — SHIPPED; 2026-10-31)
+- **Ship status: v0.9.19 SHIPPED (2026-10-31).** **Tackled the three remaining "Known limitations":**
+  (1) **true joining** — attempted auto-generated connecting strokes, which **degraded** the design (tested by
+  render: doubled strokes / collisions), so NOT shipped; it genuinely needs hand-drawn connected forms →
+  reframed as a v2 roadmap item (the kerning already reads connected). (2) **Bold contrast** — FIXED:
+  `make_bold.py` now emboldens in **un-slanted space, anisotropically** (dx=16 > dy=7) so weight lands on the
+  thick near-vertical stems while the horizontal hairlines (т/г/п overbars, ш underline, connectors) stay
+  delicate — verified clearly better than the old isotropic dilation. (3) **not hinted** — FIXED: added CFF
+  **alignment zones** (Private-dict BlueValues/OtherBlues/StdHW/StdVW in both weights) + **psautohint** (OTF
+  stem hints) + **ttfautohint** (TTF grid-fitting), all best-effort in the build; "display face, use large" kept
+  as scope (not a flaw). README section renamed **"Known limitations" → "Scope & roadmap"**. New build deps:
+  `psautohint`, `ttfautohint-py`. woff2 +~11% (hints). Outline diff vs v0.9.18 Regular = 0 (hints don't change
+  outlines); Bold outlines changed (new emboldening) — that's the fix. Rebuilt all; `?v=30`.
 - **Ship status: v0.9.18 SHIPPED (2026-10-31).** **Authorship + specimen + public-ready cleanup.** Name-table
   now credits **Goran Arsov** as the font author (designer/manufacturer/copyright), keeping MacedonianBoy's
   attribution for the source letterforms; `LICENSE`/`README` updated; CC BY-SA 3.0 unchanged. Specimen
@@ -90,6 +102,10 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   that site's own pipeline handles the rest. Whether/when it goes live is that site's concern, not this repo's.
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.19** — **two of three remaining limitations fixed; one reframed.** **Bold** re-emboldened in
+  un-slanted space (anisotropic, contrast-preserving — overbars/hairlines stay thin). **Hinting** added: CFF
+  alignment zones + `psautohint` (OTF) + `ttfautohint` (TTF). **True joining** tested (auto-connectors) and
+  rejected — degrades the design; stays a v2 roadmap item. README "Known limitations" → "Scope & roadmap".
 - **v0.9.18** — **authorship + specimen.** Name-table credits **Goran Arsov** as the font author (keeping
   MacedonianBoy's attribution for the original letterforms; CC BY-SA 3.0 unchanged); `LICENSE` + `README`
   updated to match. Specimen regenerated to show the punctuation set + an all-caps word. Metadata + specimen
@@ -134,9 +150,11 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
 2. **Short caps `C` / `E` (and drawn `G`/`L`)** — `C.lat`/`E.lat` sit a touch short (their Cyrillic source has a
    bottom swash that defeats a `BASEFRAC` baseline lift — it overshoots); drawn `G`/`L` are short by their own
    design. Would need those specific caps redrawn (not a global knob). Minor. (Round cap `О` was equalized in v0.9.11.)
-3. **True contextual joining (v2)** — real entry/exit connectors + `GSUB`/`calt`. Big, uncertain on traced
-   standalone forms. **Lower priority now** — the v0.9.15 GPOS kern already makes joins read connected (it
-   pulls each letter into contact without morphing strokes). Full joining would still be cleaner; likely needs Glyphs/FontForge.
+3. **True contextual joining (v2)** — real entry/exit connectors + `GSUB`/`calt`. **Auto-generation tried in
+   v0.9.19 and rejected** — adding connecting strokes programmatically doubled/collided with the existing traced
+   entry/exit tails and degraded the design (render in that session's scratch). The v0.9.15 GPOS kern already
+   makes joins read connected; true joining needs **hand-drawn connected forms** (Glyphs/FontForge), so it stays
+   a v2 roadmap item, not an auto-fix.
 4. ~~**Pair kerning (`GPOS`)**~~ — **DONE in v0.9.15** (bidirectional auto-kern, both scripts & weights via
    `kern_util.py`). Could still be hand-refined for individual pairs, or extended to uppercase/mixed pairs,
    but the lowercase rhythm + connections now read well. Tune via the params in `kern_util.py`.

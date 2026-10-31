@@ -9,11 +9,11 @@
 
 ## ✅ Build status: v0.9.17 shipped (updated 2026-10-31)
 
-**Current: v0.9.18** — Regular + Bold, 153 glyphs: all 31 Macedonian letters (+ grave-accented ѐ/ѝ),
+**Current: v0.9.19** — Regular + Bold, 153 glyphs: all 31 Macedonian letters (+ grave-accented ѐ/ѝ),
 a full Latin alphabet, digits, and calligraphic punctuation, with GPOS **connection kerning + uppercase
-spacing kerning** (all-caps reads). Authored by **Goran Arsov** — a derivative of MacedonianBoy's CC BY-SA 3.0
-cursive chart (attribution kept). Pushed to GitHub + released; installed for LibreOffice; also wired into a
-separate website. The per-version history and every tuning knob are in the dated changelog further down; the
+spacing kerning** (all-caps reads), a **contrast-preserving Bold**, and **hinting** (PostScript + TrueType).
+Authored by **Goran Arsov** — a derivative of MacedonianBoy's CC BY-SA 3.0 cursive chart (attribution kept).
+Pushed to GitHub + released; installed for LibreOffice; also wired into a separate website. The per-version history and every tuning knob are in the dated changelog further down; the
 snapshot below is the **original v1 milestone (2026-10-30)**, kept for context.
 
 **v1 (original milestone)** — a working Macedonian cursive font made by
@@ -217,11 +217,26 @@ vectorizing the Wikimedia chart (see *Source material* below).
   Specimen regenerated to showcase the v0.9.16 punctuation (`«Охрид» · 3/4 · 50% · 20° … и така`) and an
   all-caps word (`МАКЕДОНИЈА`, spaced via the specimen's body-spacing since PIL can't apply GPOS, mirroring what
   the kerning delivers in real apps). **Metadata + specimen only — glyph outlines/advances unchanged** (153 glyphs).
-- **Known limits (open for v2+):** **true contextual joining** (v2 — entry/exit strokes + `calt` substitution)
-  is not done; lowercase connection kerning is algorithmic (not hand-tuned per pair). **Bold is a faux-bold**
-  (dilation), not redrawn strokes, so its contrast is lower than the Regular's (a true Bold needs a heavier
-  redraw the single-weight trace can't supply). **Ornate display face** — not hinted; hairlines thin at small
-  sizes. (Consecutive-caps overlap was fixed in v0.9.17; lowercase pair kerning shipped v0.9.15.)
+- **(v0.9.19) contrast Bold + hinting; joining reframed:** three remaining "known limitations" addressed.
+  **(a) Bold contrast** — `make_bold.py::embolden(path, dx, dy)` now **un-slants** by the 18° italic (shear
+  `-TAN`), dilates **anisotropically** (`D`=dx=16 horizontal > `DY`=dy≈7 vertical, so weight lands on the thick
+  ~vertical stems while the thin horizontals — т/г/п overbars, ш underline, connectors — barely grow), then
+  re-slants. Clearly better contrast than the old isotropic union (verified by render). Advance still `+2·D`.
+  **(b) Hinting** — both build scripts pass a CFF **Private dict** (BlueValues/OtherBlues/StdHW/StdVW; zones at
+  baseline/x-height≈264/ascender≈553/cap≈685, descender≈-240) then run **psautohint** (OTF stem hints, keyed off
+  those zones) after `add_kern`; `otf2ttf.py` runs **ttfautohint** (TTF `fpgm`/`prep`/`gasp`). Both are
+  best-effort (a couple of self-overlapping disk-brush glyphs warn — non-fatal) so a hinter failure never breaks
+  the build. New deps in `requirements.txt`: `psautohint`, `ttfautohint-py`. Hints don't change outlines (Regular
+  bound/advance diff vs v0.9.18 = 0); woff2 +~11%. **(c) True joining** — a prototype that auto-added entry/exit
+  connecting strokes was **tested and rejected**: it doubled strokes and collided with the existing traced
+  entry/exit tails (render in scratch), confirming true `calt` joining needs hand-drawn connected forms. NOT
+  shipped. The kerning already reads connected, so joining was reframed as a **v2 roadmap** item, not a defect.
+- **Known limits (open for v2+):** **true contextual joining** (v2 — entry/exit strokes + `calt` with hand-drawn
+  connected forms) is not done (auto-generating it degrades the design — tried in v0.9.19); lowercase connection
+  kerning is algorithmic (not hand-tuned per pair). Bold is still a **faux-bold** (now a contrast-preserving
+  dilation, much closer to the Regular's contrast, but not redrawn strokes). **Display face** (hinted, but the
+  hairlines stay delicate by design — use it large). (Consecutive-caps overlap fixed v0.9.17; lowercase pair
+  kerning shipped v0.9.15; Bold contrast + hinting shipped v0.9.19.)
 
 ---
 

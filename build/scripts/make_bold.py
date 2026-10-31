@@ -17,22 +17,35 @@ from fontTools.pens.transformPen import TransformPen
 import pathops
 
 REG, OUTDIR = sys.argv[1], sys.argv[2]
-D = float(sys.argv[3]) if len(sys.argv) > 3 else 14.0
-VER = "0.9.18"
+D = float(sys.argv[3]) if len(sys.argv) > 3 else 16.0    # horizontal bold amount (the thick-stem axis)
+TAN = math.tan(math.radians(18))                         # the font's italic angle
+DY = max(4.0, round(D * 0.44))                           # vertical growth < horizontal, so weight lands on the thick
+                                                         # near-vertical stems, not the thin horizontals (т/г/п overbars,
+                                                         # ш underline, connectors) — this keeps the Regular's contrast
+VER = "0.9.19"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
-def embolden(path, d):
-    dirs = [(d,0),(-d,0),(0,d),(0,-d),(0.7*d,0.7*d),(-0.7*d,-0.7*d),(0.7*d,-0.7*d),(-0.7*d,0.7*d)]
+def embolden(path, dx, dy):
+    # Contrast-preserving faux-bold: un-slant so the thick strokes stand ~vertical, dilate MORE
+    # horizontally (dx) than vertically (dy) so the weight lands on those stems while the thin
+    # horizontal hairlines barely grow, then re-slant. (A plain isotropic dilation fattens thick
+    # and thin equally and flattens the Regular's contrast.)
+    us = pathops.Path(); path.draw(TransformPen(us.getPen(), (1, 0, -TAN, 1, 0, 0)))
+    try: us.simplify()
+    except pathops.PathOpsError: pass
+    dirs = [(dx,0),(-dx,0),(0,dy),(0,-dy),(0.7*dx,0.7*dy),(-0.7*dx,-0.7*dy),(0.7*dx,-0.7*dy),(-0.7*dx,0.7*dy)]
     def union():
-        u = pathops.Path(); pen = u.getPen(); path.draw(pen)
-        for dx, dy in dirs: path.draw(TransformPen(pen, (1,0,0,1,dx,dy)))
+        u = pathops.Path(); pen = u.getPen(); us.draw(pen)
+        for ox, oy in dirs: us.draw(TransformPen(pen, (1, 0, 0, 1, ox, oy)))
         return u
     u = union()
-    try:
-        u.simplify(); return u
-    except pathops.PathOpsError:
-        return union()   # un-simplified: renders solid via nonzero winding
+    try: u.simplify()
+    except pathops.PathOpsError: u = union()
+    out = pathops.Path(); u.draw(TransformPen(out.getPen(), (1, 0, TAN, 1, 0, 0)))
+    try: out.simplify()
+    except pathops.PathOpsError: pass
+    return out   # un-simplified branches still render solid via nonzero winding
 
 charstrings = {}; metrics = {}
 for g in order:
@@ -40,7 +53,7 @@ for g in order:
     p = pathops.Path(); gs[g].draw(p.getPen())
     if not p.bounds:                                   # space / empty
         charstrings[g] = T2CharStringPen(adv, None).getCharString(); metrics[g] = (adv, lsb); continue
-    pb = embolden(p, D)
+    pb = embolden(p, D, DY)
     sh = pathops.Path(); pb.draw(TransformPen(sh.getPen(), (1,0,0,1,D,0)))
     try: sh.simplify()
     except pathops.PathOpsError: pass
@@ -59,8 +72,11 @@ LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursiv
 PS = "MakedonkaCursive-Bold"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(order); fb.setupCharacterMap(cmap)
+# CFF alignment zones, widened slightly for the dilated Bold; heavier standard stems than the Regular.
+PRIVATE = {"BlueValues": [-12, 0, 258, 278, 546, 568, 678, 700], "OtherBlues": [-252, -232],
+           "StdHW": 30, "StdVW": 72, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
 fb.setupCFF(PS, {"version": VER, "FullName": "Makedonka Cursive Bold", "FamilyName": "Makedonka Cursive",
-                 "Weight": "Bold", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
+                 "Weight": "Bold", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 asc = f["hhea"].ascent; desc = f["hhea"].descent
 fb.setupHorizontalHeader(ascent=asc, descent=desc, lineGap=0)
@@ -88,5 +104,13 @@ otf = os.path.join(OUTDIR, "MakedonkaCursive-Bold.otf")
 fb.save(otf); print("saved", otf, "D=", D)
 from kern_util import add_kern                       # kern the Bold on its own (dilated) metrics
 print(f"kerning (bold): {add_kern(otf)} pairs")
+# hinting: psautohint stem hints keyed off the Private-dict alignment zones (best-effort)
+import subprocess
+try:
+    _ps = os.path.join(os.path.dirname(sys.executable), "psautohint")
+    _r = subprocess.run([_ps, otf, "-o", otf], capture_output=True, text=True, timeout=300)
+    print(f"hinted bold (psautohint rc={_r.returncode})")
+except Exception as _e:
+    print(f"WARN: psautohint skipped for bold ({_e})")
 for fl in ("woff2", "woff"):
     g = TTFont(otf); g.flavor = fl; g.save(os.path.join(OUTDIR, f"MakedonkaCursive-Bold.{fl}"))

@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.15.**
+**Version 0.9.16.**
 
 ![specimen](specimen.png)
 
@@ -71,8 +71,9 @@ h1.strong { font-weight: 700; }
   Macedonian/Serbian-style cursive forms (overbarred г/п/т, g-shaped д, dotted ј, …).
 - **Weights:** Regular + Bold (the Bold is a dilation of the Regular — a faux-bold).
 - **Digits:** 0–9, designed to match (calligraphic pen numerals; not in the source chart).
-- **Punctuation:** space `. , : ; ! ? - – — ( ) ' " „ "` — calligraphic pen marks, including
-  the Macedonian `„ "` quotes (designed to match; not in the source chart).
+- **Punctuation:** space `. , : ; ! ? - – — ( ) ' " „ " « » / … · ° %` — calligraphic pen marks,
+  including the Macedonian `„ "` and `« »` quotes (designed to match; not in the source chart).
+  A no-break space (U+00A0) is mapped too.
 - **Latin:** full A–Z / a–z, a calmer companion to the ornate Macedonian hand — one
   consistent, moderately upright slant across all letters, figures and punctuation, in a
   **restrained** pen style. Every Latin glyph is either drawn or a re-angled copy of a

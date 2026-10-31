@@ -18,7 +18,7 @@ import pathops
 
 REG, OUTDIR = sys.argv[1], sys.argv[2]
 D = float(sys.argv[3]) if len(sys.argv) > 3 else 14.0
-VER = "0.9.15"
+VER = "0.9.16"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
@@ -69,9 +69,16 @@ fb.setupNameTable({
 })
 o2 = f["OS/2"]
 fb.setupOS2(sTypoAscender=o2.sTypoAscender, sTypoDescender=o2.sTypoDescender, sTypoLineGap=o2.sTypoLineGap,
-            usWinAscent=asc, usWinDescent=abs(desc), usWeightClass=700)
+            usWinAscent=asc, usWinDescent=abs(desc), usWeightClass=700,
+            sxHeight=o2.sxHeight, sCapHeight=o2.sCapHeight)   # carry the Regular's measured x/cap heights
 fb.font["OS/2"].fsSelection = (fb.font["OS/2"].fsSelection & ~0x40) | 0x20   # clear REGULAR, set BOLD
 fb.font["head"].macStyle |= 0x01
+# ---- v0.9.16 font-table correctness, matching the Regular ----
+_b = fb.font["OS/2"]
+_b.fsType = 0x0000; _b.achVendID = "GARS"
+_b.ulCodePageRange1 = 0x00000005; _b.ulCodePageRange2 = 0x00000000
+_bh = fb.font["hhea"]
+_bh.caretSlopeRise = 1000; _bh.caretSlopeRun = int(round(1000 * math.tan(math.radians(18))))
 fb.setupPost(italicAngle=-18.0)
 otf = os.path.join(OUTDIR, "MakedonkaCursive-Bold.otf")
 fb.save(otf); print("saved", otf, "D=", D)

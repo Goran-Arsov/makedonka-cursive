@@ -406,6 +406,10 @@ def _circle(pen, cx, cy, r):
     pen.curveTo((cx-r, cy-k), (cx-k, cy-r), (cx, cy-r)); pen.curveTo((cx+k, cy-r), (cx+r, cy-k), (cx+r, cy)); pen.closePath()
 def _rect(pen, x0, y0, x1, y1): pen.moveTo((x0, y0)); pen.lineTo((x1, y0)); pen.lineTo((x1, y1)); pen.lineTo((x0, y1)); pen.closePath()
 def _poly(pen, pts): pen.moveTo(pts[0]); [pen.lineTo(q) for q in pts[1:]]; pen.closePath()
+def _ring(pen, cx, cy, R, r, n=48):
+    # a hollow ring (° and %): outer CCW + inner CW so nonzero winding leaves the hole
+    _emit(pen, [(cx+R*math.cos(2*math.pi*j/n), cy+R*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=True)
+    _emit(pen, [(cx+r*math.cos(2*math.pi*j/n), cy+r*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=False)
 def _paren(pen, width, left=True):
     x0 = width*0.60 if left else width*0.40; s = 1 if left else -1; top, bot = 720, -150
     pen.moveTo((x0, top)); pen.curveTo((x0-s*185, top-300), (x0-s*185, bot+300), (x0, bot))
@@ -442,6 +446,14 @@ PUNCT = [
     (0x201D, "quotedblright", 330, lambda p: (_pencomma(p, 100, 560, 1.0), _pencomma(p, 212, 560, 1.0))),             # ” raised 9-form (Latin closing — both marks UP)
     (0x2018, "quoteleft", 180, lambda p: _pencomma(p, 100, 560, 1.0, True)),                                           # ‘ single raised 6-form
     (0x2019, "quoteright", 180, lambda p: _pencomma(p, 100, 560, 1.0)),                                                # ’ single raised 9-form (= apostrophe, up)
+    # ---- v0.9.16: fill real coverage gaps, reusing the calligraphic pen primitives above ----
+    (0x002F, "slash", 300, lambda p: ribbon_prof(p, [('M', (74, -46)), ('L', (150, 586))], 40, 40)),                   # / solidus (dates, fractions, URLs)
+    (0x2026, "ellipsis", 470, lambda p: (_oval(p, 75, 48, 35, 41), _oval(p, 225, 48, 35, 41), _oval(p, 375, 48, 35, 41))),  # … three baseline dots = period×3
+    (0x00B7, "periodcentered", 150, lambda p: _oval(p, 75, 132, 35, 41)),                                              # · middle dot = period raised to mid x-height
+    (0x00AB, "guillemotleft", 310, lambda p: (ribbon_prof(p, [('M', (124, 232)), ('L', (48, 130)), ('L', (124, 28))], 26, 26), ribbon_prof(p, [('M', (236, 232)), ('L', (160, 130)), ('L', (236, 28))], 26, 26))),  # « Macedonian 2ndary quote
+    (0x00BB, "guillemotright", 310, lambda p: (ribbon_prof(p, [('M', (48, 232)), ('L', (124, 130)), ('L', (48, 28))], 26, 26), ribbon_prof(p, [('M', (160, 232)), ('L', (236, 130)), ('L', (160, 28))], 26, 26))),  # »
+    (0x00B0, "degree", 210, lambda p: _ring(p, 98, 470, 62, 34)),                                                      # ° small ring near figure top
+    (0x0025, "percent", 480, lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 338, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (368, 600))], 34, 34))),  # % two rings + stroke
 ]
 for cp, name, width, fn in PUNCT:
     cs, xmin = _make(fn, width); glyph_order.append(name); cmap[cp] = name; charstrings[name] = cs; metrics[name] = (width, xmin)
@@ -567,6 +579,7 @@ for nm, cp, src, scp, iscap in REUSE_DESKEW:
     glyph_order.append(nm); charstrings[nm] = t2.getCharString(); metrics[nm] = (adv, int(round(minx + hshift))); cmap[cp] = nm
 for cp, gn in LATIN_HOMO.items():
     cmap[cp] = gn
+cmap[0x00A0] = "space"   # no-break space: same advance as space, so it never shows tofu or breaks layout
 
 # ========================= compile =========================
 ATTRIB = ('Derived from "Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), licensed CC BY-SA 3.0.')
@@ -576,21 +589,30 @@ LICENSE = ('Derivative of "Macedonian cursive script" by MacedonianBoy '
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
-fb.setupCFF(PS, {"version": "0.9.15", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.9.16", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.15",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.15", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.16",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.16", "copyright": ATTRIB,
     "description": "Macedonian cursive display font; letters traced from a CC BY-SA 3.0 chart, digits designed to match.",
     "designer": "MacedonianBoy (original cursive letterforms)",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
 })
-fb.setupOS2(sTypoAscender=780, sTypoDescender=-220, sTypoLineGap=90, usWinAscent=ascent, usWinDescent=abs(descent))
+fb.setupOS2(sTypoAscender=780, sTypoDescender=-220, sTypoLineGap=90, usWinAscent=ascent, usWinDescent=abs(descent),
+            sxHeight=264, sCapHeight=685)   # measured: round x-height ~264, cap body ~685 (were 0)
 fb.setupPost(italicAngle=-18.0)
 fb.font["OS/2"].fsSelection = 0x40     # REGULAR bit, so it pairs with the Bold member
 fb.font["head"].macStyle = 0x0000
+# ---- v0.9.16 font-table correctness (see handoff) ----
+_os2 = fb.font["OS/2"]
+_os2.fsType = 0x0000                    # installable embedding — the CC BY-SA license permits redistribution (was 0x0004 "restricted")
+_os2.achVendID = "GARS"                 # 4-char vendor tag (was the unset placeholder "????")
+_os2.ulCodePageRange1 = 0x00000005      # advertise Latin-1 (1252, bit0) + Cyrillic (1251, bit2) so pickers offer it for MK text (was 0)
+_os2.ulCodePageRange2 = 0x00000000
+_hhea = fb.font["hhea"]                 # slant the text caret to match the 18° italic angle (was vertical 1/0)
+_hhea.caretSlopeRise = 1000; _hhea.caretSlopeRun = int(round(1000 * math.tan(math.radians(18))))
 otf = os.path.join(OUTDIR, "MakedonkaCursive-Regular.otf")
 fb.save(otf); print("saved", otf)
 

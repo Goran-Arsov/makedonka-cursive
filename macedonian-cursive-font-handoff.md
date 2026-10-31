@@ -177,6 +177,21 @@ vectorizing the Wikimedia chart (see *Source material* below).
   their LEFT sidebearing on the x-height body, not the far-left descender, in the NEUT loop). Also: Latin `d`
   bowl widened + `LAT_RSP["d"]=-7`; `LAT_SPACE["i"]=15` (was 55). The Latin exit-hair trim (`LAT_HAIRTRIM`) was
   built then **reverted** — the lavish hairs are kept.
+- **(v0.9.16) coverage glyphs + font-table correctness:** added 7 punctuation glyphs to the `PUNCT` table,
+  all drawn with the existing calligraphic pen helpers (so they slant 15° and centre via `_make`, matching
+  the rest): `/` solidus and `%` stroke via `ribbon_prof`; `…` and `·` via `_oval` (same dot as the period —
+  middot is the period raised to mid x-height ~132); `« »` guillemets via two `ribbon_prof` chevrons; `°` and
+  the two `%` rings via a new **`_ring(pen, cx, cy, R, r)`** helper (outer CCW + inner CW so nonzero winding
+  leaves a hole — verified hollow in both weights, incl. after the Bold's D=14 dilation). A **no-break space**
+  is mapped with `cmap[0x00A0] = "space"` (no new glyph — same advance). Bold inherits all of this automatically
+  (it reads the Regular's cmap/order). Then OS/2 + hhea were corrected in **both** build scripts: `fsType`
+  0x0004→**0** (installable — FontBuilder's default `0x0004` said "Preview&Print restricted", which contradicts
+  the CC BY-SA grant to redistribute/adapt), `achVendID` `"????"`→**"GARS"**, `sxHeight`/`sCapHeight` 0→**264/685**
+  (measured: round-letter x-height ≈264, cap body ≈685), `ulCodePageRange1`→**0x5** (Latin-1 1252 + Cyrillic 1251,
+  so legacy pickers offer the font for MK text), and `hhea.caretSlopeRise/Run`→**1000/325** = tan(18°) so the text
+  caret leans with the script (was vertical 1/0). *Vertical line metrics were left unchanged* (hhea/win are
+  bbox-based and tall by design; changing them alters current layout — flagged as an opt-in, not done). Nothing
+  else touched: a glyph-by-glyph diff vs v0.9.15 shows no existing advance or outline changed.
 - **Known limits (open for v2+):** consecutive capitals overlap (built for
   one-capital words); kerning is algorithmic connection-kerning, not hand-tuned per pair; true contextual
   joining (v2 — entry/exit substitution) not done; display face only. Bold is a faux-bold (dilation), not

@@ -36,17 +36,20 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
 - **Install & use guide** (public, non-technical): `claude.ai/artifact/3z5jJ3FRbKJa6e4jKD5mQs` — a separate
   shareable page explaining install (Windows/Mac/Linux) + web use. Private; owner shares via the Share menu.
 
-## Current state (v0.9.17 — BUILT + committed locally, NOT pushed; 2026-10-31)
-- **Ship status: v0.9.17 committed locally, NOT pushed (2026-10-31).** **Solved the "known limitations":**
+## Current state (v0.9.17 — SHIPPED; 2026-10-31)
+- **Ship status: v0.9.17 SHIPPED (2026-10-31).** **Solved the "known limitations":**
   added **uppercase spacing kerning** so consecutive capitals / all-caps now read (both weights; `kern_util.py`;
   see v0.9.17 changelog). The other three limitations were judged inherent and documented honestly, not
   force-fixed: true contextual joining stays v2; the faux-bold's lower contrast needs a redraw the trace can't
   give (an anisotropic emboldening was evaluated + rejected as marginal); "display-only/unhinted" is the nature
   of an ornate copperplate. Project dir rebuilt (Reg+Bold × otf/ttf/woff2/woff + `specimen.png`); README
   `**0.9.17**` + known-limitations rewritten + a kerning note; `?v=28` in demo+css; OTFs reinstalled to
-  `~/.local/share/fonts/` (+fc-cache; restart LibreOffice). **Still the user's steps:** push, zip the suite, cut
-  GitHub release v0.9.17, refresh the live specimen artifact. amici unchanged. Regression: glyph diff vs v0.9.16
-  shows **no advance/outline change** (pure kerning); pairs 609→1865 Reg / 439→1735 Bold, woff2 +~2 KB/weight.
+  `~/.local/share/fonts/` (+fc-cache; restart LibreOffice). **Pushed** to `main` (commits `9454aaf` v0.9.16 +
+  `3e5e39a` v0.9.17); `MakedonkaCursive-v0.9.17.zip` built; GitHub **release v0.9.17** cut (Latest) with the zip;
+  live specimen artifact refreshed to v0.9.17 (same URL `S4zAoxN5AhUYGLMoXyXBTk`, now with an all-caps line).
+  **Only remaining: amici** — still ships the old files and doesn't display the font (unchanged; don't re-enable
+  without asking). Regression: glyph diff vs v0.9.16 shows **no advance/outline change** (pure kerning); pairs
+  609→1865 Reg / 439→1735 Bold, woff2 +~2 KB/weight.
 - **Ship status: v0.9.16 committed locally, NOT pushed (2026-10-31).** 7 punctuation glyphs (`/ … · « » ° %`) +
   NBSP alias + font-table metadata fixes (commit `9454aaf`). OTFs installed to `~/.local/share/fonts/`. Not
   pushed/zipped/released. (Superseded by v0.9.17 above — both are in the unpushed local history.)

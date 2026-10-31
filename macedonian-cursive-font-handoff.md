@@ -9,23 +9,24 @@
 
 ## ✅ Build status: v0.9.17 shipped (updated 2026-10-31)
 
-**Current: v0.9.17** — Regular + Bold, 153 glyphs: all 31 Macedonian letters (+ grave-accented ѐ/ѝ),
+**Current: v0.9.18** — Regular + Bold, 153 glyphs: all 31 Macedonian letters (+ grave-accented ѐ/ѝ),
 a full Latin alphabet, digits, and calligraphic punctuation, with GPOS **connection kerning + uppercase
-spacing kerning** (all-caps reads). Pushed to GitHub + released; installed for LibreOffice; **wired into
-amici** (`script_font = :makedonka`). The per-version history and every tuning knob are in the dated
-changelog further down; the snapshot below is the **original v1 milestone (2026-10-30)**, kept for context.
+spacing kerning** (all-caps reads). Authored by **Goran Arsov** — a derivative of MacedonianBoy's CC BY-SA 3.0
+cursive chart (attribution kept). Pushed to GitHub + released; installed for LibreOffice; also wired into a
+separate website. The per-version history and every tuning knob are in the dated changelog further down; the
+snapshot below is the **original v1 milestone (2026-10-30)**, kept for context.
 
 **v1 (original milestone)** — a working Macedonian cursive font made by
 vectorizing the Wikimedia chart (see *Source material* below).
 
-- **Deliverable:** `/home/goran/IT/Rails/macedonian-font/` —
+- **Deliverable:** the repo root —
   `MakedonkaCursive-Regular.{woff2,woff,otf}`, `makedonka-cursive.css`,
   `demo.html`, `README.md`, `specimen.png`.
 - **Coverage:** all 62 letters (31 upper + 31 lower, correct Macedonian forms) +
   **digits 0–9** (designed calligraphic numerals) + space + 15 punctuation marks
   (incl. Macedonian „ " quotes). (v0.8 — digits, „ " quotes, connection-band
   spacing; per-glyph fixes: Ј/Р/Ч/з baselines, Ф/з/ѕ size, Ч overhang.)
-- **Reproducible build:** `/home/goran/IT/Rails/macedonian-font/build/` — source
+- **Reproducible build:** `build/` — source
   SVG, `paths.json`, `scripts/`, `requirements.txt`. Rebuild:
   ```
   python3 -m venv venv && . venv/bin/activate
@@ -209,6 +210,13 @@ vectorizing the Wikimedia chart (see *Source material* below).
   (unchanged). Pure kerning: a glyph diff vs v0.9.16 shows **no advance or outline changed**; pairs 609→1865 (Reg) /
   439→1735 (Bold), woff2 +~2 KB/weight (feaLib compacts them into the one kern lookup). The anisotropic
   contrast-preserving Bold was **evaluated and rejected** (only a marginal change — not worth re-tuning the shipped weight).
+- **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
+  (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
+  original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →
+  `ATTRIB`/`LICENSE`, `designer`, `manufacturer`). `LICENSE` + `README` updated to match; CC BY-SA 3.0 unchanged.
+  Specimen regenerated to showcase the v0.9.16 punctuation (`«Охрид» · 3/4 · 50% · 20° … и така`) and an
+  all-caps word (`МАКЕДОНИЈА`, spaced via the specimen's body-spacing since PIL can't apply GPOS, mirroring what
+  the kerning delivers in real apps). **Metadata + specimen only — glyph outlines/advances unchanged** (153 glyphs).
 - **Known limits (open for v2+):** **true contextual joining** (v2 — entry/exit strokes + `calt` substitution)
   is not done; lowercase connection kerning is algorithmic (not hand-tuned per pair). **Bold is a faux-bold**
   (dilation), not redrawn strokes, so its contrast is lower than the Regular's (a true Bold needs a heavier

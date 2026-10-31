@@ -16,11 +16,10 @@ A Macedonian cursive display font, vectorized from a CC BY-SA 3.0 chart.
   `build/scripts/build_font.py`), `requirements.txt`. Rebuild steps are in the handoff.
 
 ## Where the font also lives (keep in sync if the font changes)
-- LibreOffice/desktop: `~/.local/share/fonts/MakedonkaCursive-Regular.otf` (then `fc-cache -f`).
-- amici project: `/home/goran/IT/Rails/MyApps/amici/public/fonts/` + `@font-face` in its
-  Tailwind CSS (cache-buster `?v=N`, currently **?v=14** / v0.9.17). **Enabled** on the home page via
-  `config.x.script_font = :makedonka` (shows the footer CC BY-SA credit). On updates: copy the new
-  `woff2`/`woff` there, bump `?v=`, and rerun `bin/rails tailwindcss:build`.
+- LibreOffice/desktop: `~/.local/share/fonts/` (then `fc-cache -f`).
+- A separate Rails website serves the font from its `public/fonts/` with an `@font-face` in its
+  Tailwind CSS (cache-buster `?v=N`). On updates there: copy the new `woff2`/`woff`, bump `?v=`, and
+  rebuild the site's CSS.
 
 ## License
 CC BY-SA 3.0, derived from "Macedonian cursive script" by MacedonianBoy (Wikimedia Commons).

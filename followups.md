@@ -28,15 +28,20 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   6. install for LibreOffice/desktop: copy both OTFs to `~/.local/share/fonts/` then `fc-cache -f`
      (LibreOffice must be fully restarted to pick up a replaced file)
   7. commit (include new files like `build/scripts/kern_util.py`), push, GitHub release, update this file + the handoff
-- **Live specimen** (optional "see it" page): `claude.ai/artifact/BdGyojA5uWSarU4Y8wiK9b` — an HTML specimen
-  with both `.woff2` embedded as base64 `@font-face`; browser renders the kern natively. Its source
-  (`specimen_src.html`, with `__REG__`/`__BOLD__` placeholders) lives **only in the ephemeral scratch dir**
-  and is lost between sessions — recover it by reading the published artifact, then swap in the new base64
-  woff2 and republish to the same URL. (See Open work #11 — consider committing the source.)
-- **Install & use guide** (public, non-technical): `claude.ai/artifact/3z5jJ3FRbKJa6e4jKD5mQs` — a separate
-  shareable page explaining install (Windows/Mac/Linux) + web use. Private; owner shares via the Share menu.
+- **Private preview pages (owner-only, not in this repo):** a browser specimen (both `.woff2` embedded as
+  base64 `@font-face`, so the kern renders natively) and a non-technical install/use guide exist as private
+  shareable pages; the owner holds the links. Regenerate the specimen from the current `.woff2` when the font
+  changes. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.17 — SHIPPED; 2026-10-31)
+## Current state (v0.9.18 — SHIPPED; 2026-10-31)
+- **Ship status: v0.9.18 SHIPPED (2026-10-31).** **Authorship + specimen + public-ready cleanup.** Name-table
+  now credits **Goran Arsov** as the font author (designer/manufacturer/copyright), keeping MacedonianBoy's
+  attribution for the source letterforms; `LICENSE`/`README` updated; CC BY-SA 3.0 unchanged. Specimen
+  regenerated (now crops to content; adds an all-caps word + the punctuation set). Repo **sanitized for a
+  possible public release**: removed local absolute paths, private preview URLs, and the separate site's deploy
+  internals from the docs; added repo topics. Metadata+specimen only — **no glyph changed** (outline/advance
+  diff vs v0.9.17 = 0). Rebuilt Reg+Bold × otf/ttf/woff2/woff; `?v=29` in demo+css. Pushed + GitHub release +
+  LibreOffice reinstall below. (Repo still PRIVATE — flipping to public is the owner's call.)
 - **Ship status: v0.9.17 SHIPPED (2026-10-31).** **Solved the "known limitations":**
   added **uppercase spacing kerning** so consecutive capitals / all-caps now read (both weights; `kern_util.py`;
   see v0.9.17 changelog). The other three limitations were judged inherent and documented honestly, not
@@ -46,9 +51,9 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   `**0.9.17**` + known-limitations rewritten + a kerning note; `?v=28` in demo+css; OTFs reinstalled to
   `~/.local/share/fonts/` (+fc-cache; restart LibreOffice). **Pushed** to `main` (commits `9454aaf` v0.9.16 +
   `3e5e39a` v0.9.17); `MakedonkaCursive-v0.9.17.zip` built; GitHub **release v0.9.17** cut (Latest) with the zip;
-  live specimen artifact refreshed to v0.9.17 (same URL `S4zAoxN5AhUYGLMoXyXBTk`, now with an all-caps line).
-  **amici: wired in + pushed** (v0.9.17 enabled); CI green but **auto-deploy is blocked** (missing Actions
-  secrets — see the amici bullet below), so not live until that's fixed or a manual deploy runs.
+  the live specimen (private preview page) refreshed to v0.9.17 with an all-caps line.
+  **The separate website: wired in + pushed** (font enabled); live once that site's own deploy runs (see the
+  website bullet below).
   Regression: glyph diff vs v0.9.16 shows **no advance/outline change** (pure kerning); pairs
   609→1865 Reg / 439→1735 Bold, woff2 +~2 KB/weight.
 - **Ship status: v0.9.16 committed locally, NOT pushed (2026-10-31).** 7 punctuation glyphs (`/ … · « » ° %`) +
@@ -58,7 +63,7 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   `specimen.png`; README + `?v=26` bumped; `MakedonkaCursive-v0.9.15.zip` built; both OTFs installed to
   `~/.local/share/fonts/` (+ fc-cache; restart LibreOffice to pick them up); committed + pushed to `main`
   (`build/scripts/kern_util.py` now tracked); GitHub **release v0.9.15** cut with the zip; live specimen
-  artifact updated. (amici was wired in later, at v0.9.17 — see the amici bullet below.)
+  live specimen updated. (The separate website was wired in later, at v0.9.17 — see its bullet below.)
 - **Coverage — 153 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower), plus the grave-accented
   **ѐ/ѝ** (U+0450/U+045D); a full **Latin** alphabet A–Z/a–z (drawn letters + de-skewed copies of Cyrillic
   sources — `LATIN_HOMO` is empty, so no Latin letter shares a Cyrillic glyph); digits 0–9 (equal height);
@@ -76,24 +81,19 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   (no contextual substitution) — true entry/exit joining is still v2 (Open #3), but the kern reads connected.
 - **Size:** `UPM=700`, so it renders at a normal-font size for a given point size (caps ~1.2× DejaVu,
   x-height ~0.67×). Line height is tall (flourishes) — set fixed line spacing in the app if needed.
-- **amici: WIRED IN to v0.9.17 + pushed; NOT YET LIVE — deploy blocked (2026-10-31).** Commit `d2205cc` on
-  amici `main`; **CI passed** but the **Deploy workflow fails** (`error: missing server host`): the amici repo
-  has **no Actions secrets set** (`gh secret list` is empty), so `deploy.yml`'s `secrets.DEPLOY_HOST` /
-  `DEPLOY_SSH_KEY` are empty. This is **pre-existing** (it also failed the prior `5beba31` SEO commit's deploy),
-  not caused by this change. **To go live:** set `DEPLOY_HOST` + `DEPLOY_SSH_KEY` in the amici repo's Actions
-  secrets, then re-run Deploy (`workflow_dispatch`) — or SSH to the server and run `bin/deploy` manually. What
-  the commit did: set `config.x.script_font = :makedonka`
-  (the opt-in flag; `ApplicationHelper#makedonka_font?` adds `.script-makedonka` to `<body>`, overriding
-  `--font-script` and showing the footer CC BY-SA credit); refreshed `public/fonts/MakedonkaCursive-{Regular,Bold}.{woff2,woff}`
-  to v0.9.17; bumped the `@font-face` cache-buster to `?v=14` in `app/assets/tailwind/application.css` + reran
-  `bin/rails tailwindcss:build`. The "Amici" wordmark + script accents now render in Makedonka's own Latin
-  (Caveat fallback). This superseded a stale uncommitted WIP (older small font files + `?v=13`). Verified:
-  full test suite green (397 runs), Brakeman + bundler-audit clean, `footer_test` covers both states.
-  **On future font updates:** re-copy the woff/woff2, bump `?v=`, rerun `tailwindcss:build`, commit+push
-  (auto-deploys *once the Actions deploy secrets are set*; until then, deploy manually on the server). The
-  compiled `app/assets/builds/tailwind.css` is gitignored — deploy rebuilds it.
+- **Separate website: font enabled at v0.9.17 (committed + pushed there).** The font is turned on for a
+  separate Rails site via a config flag, which also shows the required footer CC BY-SA credit (gated so the
+  credit only appears when the font is actually served). That site's `public/fonts/` carry the v0.9.17
+  `woff2`/`woff` at a bumped cache-buster, and its CSS was rebuilt; its wordmark + script accents now render in
+  Makedonka's own Latin (with a script fallback). Verified green there (full test suite + security scans).
+  **To update that site on a font change:** re-copy the `woff/woff2`, bump `?v=`, rebuild its CSS, commit —
+  that site's own pipeline handles the rest. Whether/when it goes live is that site's concern, not this repo's.
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.18** — **authorship + specimen.** Name-table credits **Goran Arsov** as the font author (keeping
+  MacedonianBoy's attribution for the original letterforms; CC BY-SA 3.0 unchanged); `LICENSE` + `README`
+  updated to match. Specimen regenerated to show the punctuation set + an all-caps word. Metadata + specimen
+  only — no glyph changed.
 - **v0.9.17** — **uppercase spacing kerning (consecutive-caps limitation solved).** `kern_util.py` now also
   emits a capital→capital GPOS kern: measure each cap's dense-body edges (specimen method), push each cap pair's
   body gap up to `CAP_GAP=300` (positive-only), so all-caps reads while flourishes still cross. Fires only
@@ -162,15 +162,15 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
    GitHub release v0.9.15). See Ship status above.
 10. ~~**Update the handoff**~~ — **DONE 2026-10-31**: the handoff now has a v0.9.15 section covering the
     kerning (`kern_util.py` + params) and the `LAT_LSP` / `BODY_LSB` knobs; "known limits" corrected.
-11. **Save `specimen_src.html`** — the live-specimen source exists only in the ephemeral scratch dir (gone
-    next session). Recover by reading artifact `BdGyojA5uWSarU4Y8wiK9b`; consider committing it to the repo.
+11. **Save `specimen_src.html`** — the live-specimen preview source isn't committed; consider adding a
+    specimen-source page to the repo so it can be regenerated from the current `.woff2` without the private page.
 
 ## Done (resolved)
 - ~~**Full Latin alphabet**~~ — DONE (v0.9.2), refined through v0.9.14.
-- ~~**Visible attribution in amici**~~ — DONE (public footer links the Wikimedia source + CC BY-SA 3.0;
-  pinned by `test/integration/footer_test.rb`).
+- ~~**Visible attribution on the site that serves it**~~ — DONE (its public footer links the Wikimedia source
+  + CC BY-SA 3.0, shown only when the font is active, and pinned by a test there).
 - ~~**Latin `d` too narrow/floating; Latin `i` floating; Cyrillic `р`/`ј` displaced right; Cyrillic `о–н`
   disconnected; Latin `n–k` too tight; Bold unkerned; small `k` left too loose**~~ — all addressed in v0.9.15
   (bowl/spacing, `LAT_SPACE["i"]`, `BODY_LSB`, GPOS kern both scripts & weights, `LAT_LSP`). See changelog.
-- ~~**ѐ/ѝ in demo + public install guide**~~ — DONE: demo.html shows ѐ/ѝ samples (uncommitted); install/use
-  guide published as artifact `3z5jJ3FRbKJa6e4jKD5mQs`.
+- ~~**ѐ/ѝ in demo + public install guide**~~ — DONE: demo.html shows ѐ/ѝ samples; a non-technical install/use
+  guide exists as a private shareable page (owner holds the link).

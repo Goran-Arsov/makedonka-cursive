@@ -582,22 +582,26 @@ for cp, gn in LATIN_HOMO.items():
 cmap[0x00A0] = "space"   # no-break space: same advance as space, so it never shows tofu or breaks layout
 
 # ========================= compile =========================
-ATTRIB = ('Derived from "Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), licensed CC BY-SA 3.0.')
-LICENSE = ('Derivative of "Macedonian cursive script" by MacedonianBoy '
-           '(https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), CC BY-SA 3.0. '
-           'This font is distributed under CC BY-SA 3.0: keep attribution and license derivatives alike.')
+AUTHOR = "Goran Arsov"
+ATTRIB = (f'Makedonka Cursive. © 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
+          '"Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), CC BY-SA 3.0; changes were made. '
+          'Distributed under CC BY-SA 3.0.')
+LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursive script" by MacedonianBoy '
+           '(https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), CC BY-SA 3.0. The digits, '
+           f'punctuation, Bold weight, Latin alphabet, spacing and kerning are by {AUTHOR}. Distributed under '
+           'CC BY-SA 3.0: keep attribution and license derivatives alike.')
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
-fb.setupCFF(PS, {"version": "0.9.17", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.9.18", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.17",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.17", "copyright": ATTRIB,
-    "description": "Macedonian cursive display font; letters traced from a CC BY-SA 3.0 chart, digits designed to match.",
-    "designer": "MacedonianBoy (original cursive letterforms)",
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.18",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.18", "copyright": ATTRIB,
+    "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
+    "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
 })
 fb.setupOS2(sTypoAscender=780, sTypoDescender=-220, sTypoLineGap=90, usWinAscent=ascent, usWinDescent=abs(descent),
@@ -626,7 +630,7 @@ for fl in ("woff2", "woff"):
 # ---- specimen with baseline guide lines ----
 from PIL import ImageFont
 face = ImageFont.truetype(otf, 100); dig = ImageFont.truetype(otf, 120); small = ImageFont.truetype(otf, 70)
-img = Image.new("RGB", (2100, 1600), "white"); dr = ImageDraw.Draw(img); y = 20
+img = Image.new("RGB", (2100, 2900), "white"); dr = ImageDraw.Draw(img); y = 20   # cropped to actual content height before save
 def line(txt, font, fill):
     global y
     asc, desc = font.getmetrics()
@@ -656,10 +660,13 @@ def line_caps(txt, font, fill, gap=44.0):
     y += asc + desc + 24
 for L in ["АБВГДЃЕЖЗЅИЈ", "КЛЉМНЊОПРСТЌ", "УФХЦЧЏШ"]:
     line_caps(L, face, "black")
+line_caps("МАКЕДОНИЈА", face, (90, 20, 20))   # all-caps word reads (uppercase kerning spaces the bodies; flourishes cross)
 for L in ["абвгдѓежзѕиј", "клљмнњопрстќ", "уфхцчџш"]:
     line(L, face, "black")
 line("0 1 2 3 4 5 6 7 8 9", dig, (120, 20, 20))
+line("«Охрид» · 3/4 · 50% · 20° … и така", small, (20, 20, 90))   # the v0.9.16 punctuation set
 for L in ["Скопје 2025 — Македонија", "Охрид, Битола, Прилеп!", "100 денари; (бр. 7)", "вода, леб и убавина?"]:
     line(L, small, (20, 20, 90))
 line("Latin: Makedonija, Ohrid — Amici (abvgd...)", small, (90, 20, 20))
-img.save(os.path.join(OUTDIR, "specimen.png")); print("saved specimen.png")
+img = img.crop((0, 0, 2100, min(img.height, int(y) + 20)))   # trim trailing whitespace to the real content height
+img.save(os.path.join(OUTDIR, "specimen.png")); print(f"saved specimen.png ({img.height}px)")

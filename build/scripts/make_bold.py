@@ -18,7 +18,7 @@ import pathops
 
 REG, OUTDIR = sys.argv[1], sys.argv[2]
 D = float(sys.argv[3]) if len(sys.argv) > 3 else 14.0
-VER = "0.9.17"
+VER = "0.9.18"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
@@ -48,10 +48,14 @@ for g in order:
     t2 = T2CharStringPen(newadv, None); sh.draw(t2)
     charstrings[g] = t2.getCharString(); metrics[g] = (newadv, int(round(b[0])) if b else lsb)
 
-ATTRIB = ('Derived from "Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), licensed CC BY-SA 3.0.')
-LICENSE = ('Derivative of "Macedonian cursive script" by MacedonianBoy '
-           '(https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), CC BY-SA 3.0. '
-           'This font is distributed under CC BY-SA 3.0: keep attribution and license derivatives alike.')
+AUTHOR = "Goran Arsov"
+ATTRIB = (f'Makedonka Cursive. © 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
+          '"Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), CC BY-SA 3.0; changes were made. '
+          'Distributed under CC BY-SA 3.0.')
+LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursive script" by MacedonianBoy '
+           '(https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), CC BY-SA 3.0. The digits, '
+           f'punctuation, Bold weight, Latin alphabet, spacing and kerning are by {AUTHOR}. Distributed under '
+           'CC BY-SA 3.0: keep attribution and license derivatives alike.')
 PS = "MakedonkaCursive-Bold"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(order); fb.setupCharacterMap(cmap)
@@ -63,8 +67,8 @@ fb.setupHorizontalHeader(ascent=asc, descent=desc, lineGap=0)
 fb.setupNameTable({
     "familyName": "Makedonka Cursive", "styleName": "Bold", "uniqueFontIdentifier": f"MakedonkaCursive;{VER};Bold",
     "fullName": "Makedonka Cursive Bold", "psName": PS, "version": f"Version {VER}", "copyright": ATTRIB,
-    "description": "Macedonian cursive display font, Bold weight (dilated from the Regular).",
-    "designer": "MacedonianBoy (original cursive letterforms)",
+    "description": "Macedonian cursive display font by Goran Arsov, Bold weight (dilated from the Regular); letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy.",
+    "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
 })
 o2 = f["OS/2"]

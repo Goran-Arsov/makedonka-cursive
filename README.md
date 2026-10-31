@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.17.**
+**Version 0.9.18** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 
 ![specimen](specimen.png)
 
@@ -95,10 +95,11 @@ h1.strong { font-weight: 700; }
 
 ## License & attribution — **required**
 
-This font is a **derivative work** of
+**Makedonka Cursive** is by **Goran Arsov** (the digits, punctuation, Bold, the full Latin alphabet,
+and all spacing/kerning/engineering). It is a **derivative work** of
 [*"Macedonian cursive script"* by **MacedonianBoy**](https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg)
-(Wikimedia Commons), licensed **Creative Commons Attribution-ShareAlike 3.0 Unported
-(CC BY-SA 3.0)**. Therefore:
+(Wikimedia Commons), whose Macedonian cursive letterforms it traces, licensed **Creative Commons
+Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)**. Therefore:
 
 - You **must keep attribution** to MacedonianBoy and the CC BY-SA 3.0 license wherever you
   distribute or ship the font (a credits/colophon page, a CSS comment, or an "about" note is

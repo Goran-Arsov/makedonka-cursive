@@ -47,17 +47,17 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   `~/.local/share/fonts/` (+fc-cache; restart LibreOffice). **Pushed** to `main` (commits `9454aaf` v0.9.16 +
   `3e5e39a` v0.9.17); `MakedonkaCursive-v0.9.17.zip` built; GitHub **release v0.9.17** cut (Latest) with the zip;
   live specimen artifact refreshed to v0.9.17 (same URL `S4zAoxN5AhUYGLMoXyXBTk`, now with an all-caps line).
-  **Only remaining: amici** — still ships the old files and doesn't display the font (unchanged; don't re-enable
-  without asking). Regression: glyph diff vs v0.9.16 shows **no advance/outline change** (pure kerning); pairs
+  **amici: wired in + deployed** (v0.9.17 enabled, pushed → CI auto-deploy) — see the amici bullet below.
+  Regression: glyph diff vs v0.9.16 shows **no advance/outline change** (pure kerning); pairs
   609→1865 Reg / 439→1735 Bold, woff2 +~2 KB/weight.
 - **Ship status: v0.9.16 committed locally, NOT pushed (2026-10-31).** 7 punctuation glyphs (`/ … · « » ° %`) +
   NBSP alias + font-table metadata fixes (commit `9454aaf`). OTFs installed to `~/.local/share/fonts/`. Not
-  pushed/zipped/released. (Superseded by v0.9.17 above — both are in the unpushed local history.)
+  pushed/zipped/released separately. (Superseded by v0.9.17 above; both commits are now pushed to `origin/main`.)
 - **Ship status: v0.9.15 SHIPPED (2026-10-31).** Project dir has the final Reg+Bold × otf/ttf/woff2/woff +
   `specimen.png`; README + `?v=26` bumped; `MakedonkaCursive-v0.9.15.zip` built; both OTFs installed to
   `~/.local/share/fonts/` (+ fc-cache; restart LibreOffice to pick them up); committed + pushed to `main`
   (`build/scripts/kern_util.py` now tracked); GitHub **release v0.9.15** cut with the zip; live specimen
-  artifact updated. amici still NOT updated (below).
+  artifact updated. (amici was wired in later, at v0.9.17 — see the amici bullet below.)
 - **Coverage — 153 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower), plus the grave-accented
   **ѐ/ѝ** (U+0450/U+045D); a full **Latin** alphabet A–Z/a–z (drawn letters + de-skewed copies of Cyrillic
   sources — `LATIN_HOMO` is empty, so no Latin letter shares a Cyrillic glyph); digits 0–9 (equal height);
@@ -75,13 +75,16 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   (no contextual substitution) — true entry/exit joining is still v2 (Open #3), but the kern reads connected.
 - **Size:** `UPM=700`, so it renders at a normal-font size for a given point size (caps ~1.2× DejaVu,
   x-height ~0.67×). Line height is tall (flourishes) — set fixed line spacing in the app if needed.
-- **amici: NOT updated (the user's step).** amici still ships the OLD v0.9 files and does not display the
-  font anyway (`--font-script` switched to Nunito in an uncommitted refactor; `font-makedonka` defined but
-  used in no view). The visible CC BY-SA credit IS present in amici's public footer. Don't re-enable the
-  font on the site without asking — removal looks intentional. *To display it there (re-verify against
-  amici's current code first):* copy the current woff2/woff to amici `public/fonts/`, bump `?v=` in
-  `app/assets/tailwind/application.css`, run `bin/rails tailwindcss:build`, and set
-  `config.x.script_font = :makedonka` (the opt-in flag; `ApplicationHelper#makedonka_font?` adds `.script-makedonka`).
+- **amici: WIRED IN to v0.9.17 + DEPLOYED (2026-10-31).** Commit `d2205cc` on amici `main` (pushed →
+  GitHub Actions CI → auto-deploy to the live site). What it did: set `config.x.script_font = :makedonka`
+  (the opt-in flag; `ApplicationHelper#makedonka_font?` adds `.script-makedonka` to `<body>`, overriding
+  `--font-script` and showing the footer CC BY-SA credit); refreshed `public/fonts/MakedonkaCursive-{Regular,Bold}.{woff2,woff}`
+  to v0.9.17; bumped the `@font-face` cache-buster to `?v=14` in `app/assets/tailwind/application.css` + reran
+  `bin/rails tailwindcss:build`. The "Amici" wordmark + script accents now render in Makedonka's own Latin
+  (Caveat fallback). This superseded a stale uncommitted WIP (older small font files + `?v=13`). Verified:
+  full test suite green (397 runs), Brakeman + bundler-audit clean, `footer_test` covers both states.
+  **On future font updates:** re-copy the woff/woff2, bump `?v=`, rerun `tailwindcss:build`, commit+push
+  (auto-deploys). The compiled `app/assets/builds/tailwind.css` is gitignored — deploy rebuilds it.
 
 ## Changelog (one line each; details + knobs are in the handoff)
 - **v0.9.17** — **uppercase spacing kerning (consecutive-caps limitation solved).** `kern_util.py` now also

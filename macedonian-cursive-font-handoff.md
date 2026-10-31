@@ -7,9 +7,15 @@
 
 ---
 
-## ✅ Build status (2026-10-30): v1 shipped
+## ✅ Build status: v0.9.17 shipped (updated 2026-10-31)
 
-**v1 is built and packaged** — a working Macedonian cursive font made by
+**Current: v0.9.17** — Regular + Bold, 153 glyphs: all 31 Macedonian letters (+ grave-accented ѐ/ѝ),
+a full Latin alphabet, digits, and calligraphic punctuation, with GPOS **connection kerning + uppercase
+spacing kerning** (all-caps reads). Pushed to GitHub + released; installed for LibreOffice; **wired into
+amici** (`script_font = :makedonka`). The per-version history and every tuning knob are in the dated
+changelog further down; the snapshot below is the **original v1 milestone (2026-10-30)**, kept for context.
+
+**v1 (original milestone)** — a working Macedonian cursive font made by
 vectorizing the Wikimedia chart (see *Source material* below).
 
 - **Deliverable:** `/home/goran/IT/Rails/macedonian-font/` —

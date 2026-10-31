@@ -37,8 +37,8 @@ Plus `makedonka-cursive.css` (ready `@font-face` rules for both weights), `demo.
 Use the `.otf` by default; use the `.ttf` only if an app won't accept the `.otf`.
 
 It's an ornate **copperplate display** face — use it **large** (headings, logos, titles,
-hero text), not for body copy or small sizes. It covers **Macedonian Cyrillic only** —
-Latin letters fall back to another font.
+hero text), not for body copy or small sizes. It covers all 31 **Macedonian** letters plus a
+full **Latin** alphabet, digits and punctuation (see **Coverage** below).
 
 ## Use it on the web
 

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="mk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Makedonka Cursive — demo</title>
+<style>
+  @font-face {
+    font-family: "Makedonka Cursive";
+    src: url("MakedonkaCursive-Regular.woff2?v=22") format("woff2"),
+         url("MakedonkaCursive-Regular.woff?v=22") format("woff");
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: "Makedonka Cursive";
+    src: url("MakedonkaCursive-Bold.woff2?v=22") format("woff2"),
+         url("MakedonkaCursive-Bold.woff?v=22") format("woff");
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  :root { color-scheme: light dark; }
+  body {
+    margin: 0; padding: 2.5rem 1.5rem 4rem;
+    font-family: system-ui, sans-serif;
+    background: #fbfbfa; color: #1a1a1a;
+    max-width: 60rem; margin-inline: auto;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #14140f; color: #eee; }
+  }
+  h1 { font-family: system-ui, sans-serif; font-size: 1rem; font-weight: 600;
+       letter-spacing: .08em; text-transform: uppercase; opacity: .55; }
+  .mk { font-family: "Makedonka Cursive", cursive; line-height: 1.5; }
+  .alpha { font-size: 3.2rem; word-spacing: .15em; margin: .4em 0; }
+  .big   { font-size: 4.5rem; margin: .2em 0; }
+  .mid   { font-size: 2.4rem; margin: .3em 0; opacity: .9; }
+  .row   { display: flex; gap: 2rem; flex-wrap: wrap; align-items: baseline; }
+  .size  { font-size: 1.6rem; }
+  footer { margin-top: 3rem; font-size: .8rem; line-height: 1.5; opacity: .7;
+           border-top: 1px solid #8884; padding-top: 1rem; }
+  a { color: inherit; }
+  code { background: #8882; padding: .1em .35em; border-radius: 4px; font-size: .85em; }
+</style>
+</head>
+<body>
+  <h1>Makedonka Cursive</h1>
+
+  <div class="mk big">Скопје, Македонија</div>
+
+  <div class="mk alpha">А<span style="margin-left:0.366em">Б</span><span style="margin-left:0.186em">В</span><span style="margin-left:0.199em">Г</span><span style="margin-left:0.382em">Д</span><span style="margin-left:0.192em">Ѓ</span><span style="margin-left:0.625em">Е</span><span style="margin-left:0.083em">Ж</span><span style="margin-left:0.232em">З</span><span style="margin-left:0.294em">Ѕ</span><span style="margin-left:0.614em">И</span><span style="margin-left:0.236em">Ј</span><br>К<span style="margin-left:0.254em">Л</span><span style="margin-left:0.227em">Љ</span><span style="margin-left:0.087em">М</span><span style="margin-left:0.052em">Н</span><span style="margin-left:0.046em">Њ</span><span style="margin-left:0.312em">О</span><span style="margin-left:0.059em">П</span><span style="margin-left:0.291em">Р</span><span style="margin-left:0.476em">С</span><span style="margin-left:0.004em">Т</span><span style="margin-left:0.151em">Ќ</span><br>У<span style="margin-left:0.184em">Ф</span><span style="margin-left:0.447em">Х</span><span style="margin-left:0.291em">Ц</span><span style="margin-left:0.156em">Ч</span><span style="margin-left:0.361em">Џ</span><span style="margin-left:0.266em">Ш</span></div>
+  <div class="mk alpha">абвгдѓежзѕиј<br>клљмнњопрстќ<br>уфхцчџш</div>
+
+  <div class="mk mid">Охрид, Битола, Прилеп, Тетово — убавина!</div>
+  <div class="mk mid">„Виножито над Вардар.“</div>
+  <div class="mk mid">0 1 2 3 4 5 6 7 8 9 — 100 денари, бр. 7</div>
+
+  <div class="mk big" style="margin-top:.2em">Обично <span style="font-weight:700">Задебелено</span></div>
+
+  <div class="row" style="margin-top:2rem">
+    <span class="mk size">ситно</span>
+    <span class="mk mid">средно</span>
+    <span class="mk big" style="font-size:3rem">крупно</span>
+  </div>
+
+  <footer>
+    <strong>Makedonka Cursive</strong> — a Macedonian cursive display font.<br>
+    Letterforms derived from
+    <a href="https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg">“Macedonian cursive script” by MacedonianBoy</a>
+    (Wikimedia Commons), licensed
+    <a href="https://creativecommons.org/licenses/by-sa/3.0/">CC&nbsp;BY-SA&nbsp;3.0</a>.
+    This font is distributed under the same license; keep this attribution when you use it.<br>
+    Use it like any web font: <code>font-family: "Makedonka Cursive", cursive;</code>
+  </footer>
+</body>
+</html>

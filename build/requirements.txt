@@ -1,0 +1,9 @@
+fonttools
+brotli
+skia-pathops
+cairosvg
+svglib
+reportlab
+pillow
+numpy
+lxml

@@ -1,0 +1,13 @@
+# Python build env / cache
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Release package — regenerable from the build; distribute via GitHub Releases, not the tree
+MakedonkaCursive-v*.zip
+
+# OS / editor junk
+.DS_Store
+*.swp
+tmp/

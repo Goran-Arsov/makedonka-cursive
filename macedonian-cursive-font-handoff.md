@@ -151,6 +151,10 @@ vectorizing the Wikimedia chart (see *Source material* below).
   stay a touch short). `CAP_H`/`CAP_SCALE` = 0.90/0.89. `LAT_XCOMP` horizontally squeezes a too-wide copy
   (`o.lat` 0.88); the Latin o's spacing was already consistent (6px gap, same as other letters) — it was just
   the widest glyph, so narrowing it (not re-spacing) was the fix.
+- **(v0.9.12) ш/Ш underline:** Macedonian cursive `ш` (U+0448) / `Ш` (U+0428) get an underline bar beneath the
+  letter — added in the NEUT build loop (gated on `cp`), a filled rect across the letter width just below the
+  baseline (`_dy = basey - 60`, thickness 28, 8% side inset). Matches the `т` overbar convention; advance/spacing
+  unchanged (the bar stays within the letter's width). Must be inlined, not via `_rect` (which is defined later).
 - **Known limits (open for v2+):** consecutive capitals overlap (built for
   one-capital words); no pair kerning; true contextual joining (v2) not done; no
   Latin; display face only. Bold is a faux-bold (dilation), not redrawn strokes,

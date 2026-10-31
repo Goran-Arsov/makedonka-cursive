@@ -21,6 +21,7 @@ M_BODY = float(sys.argv[3]) if len(sys.argv) > 3 else 8.0
 BODY_TRIM = 0.07   # fraction of ink mass trimmed from each side -> that (thin) flourish overhangs
 CONN_LO, CONN_HI = -25.0, 300.0   # x-height join band (relative to baseline) for side bearings
 LEFT_CAP = 220.0   # max leftward ink overhang past the join band (stops caps crashing the previous word)
+BODY_LSB = {0x0440, 0x0458}   # р ј: descender swings far left — anchor the LEFT sidebearing on the x-height body, not the descender
 d = json.load(open(DATA))
 recs = {p["i"]: p for p in d["paths"]}
 UPM = 700          # smaller em => the glyphs (cap height fixed at ~700 units) fill more of it, so the
@@ -377,7 +378,12 @@ for g, cp, path in NEUT:
         _dp.moveTo((_xL, _dy - _th/2)); _dp.lineTo((_xR, _dy - _th/2))
         _dp.lineTo((_xR, _dy + _th/2)); _dp.lineTo((_xL, _dy + _th/2)); _dp.closePath()
         path.simplify()
-    bl = min(bl, minx + LEFT_CAP)            # cap leftward overhang (fixes offset-bottom caps like Ч)
+    if cp in BODY_LSB:                       # р ј: far-left descender — base the LEFT sidebearing on the x-height
+        _fp = FlattenPen(); path.draw(_fp)   # body (above the baseline) so the body sits centred, descender trails left
+        _bx = [x for c in _fp.contours for (x, y) in c if basey + 25 <= y <= basey + CONN_HI]
+        if _bx: bl = min(_bx)
+    else:
+        bl = min(bl, minx + LEFT_CAP)        # cap leftward overhang (fixes offset-bottom caps like Ч)
     hshift = M_BODY - bl
     vshift = -basey
     adv = int(round((br - bl) + 2 * M_BODY))
@@ -452,8 +458,10 @@ LAT_STRETCH = {"i":1.36,"t":1.25,"l":1.52,"k":1.63,"n":1.72,"h":1.73,"b":1.68,"d
                "q":1.67,"f":1.06,"v":1.80,"w":1.52,"z":1.22,
                "D":1.55,"F":1.48,"G":1.50,"I":1.35,"L":1.75,"N":1.62,"Q":1.65,"R":1.72,"U":1.78,"V":1.78,"W":1.75,"Z":1.52}
 # extra side-spacing (units each side) for drawn letters that read too tight — adds whitespace, not glyph width:
-LAT_SPACE = {"b":40,"d":40,"h":40,"i":55,"l":40,"r":40,"t":40,"z":40}
-LAT_RSP = {"r":-38, "v":45}   # extra RIGHT-side space only (negative = less): r tucks closer right, v gets room after
+LAT_SPACE = {"b":40,"h":40,"i":15,"l":40,"r":40,"t":40,"z":40}   # d: none — its round bowl sits like o/e (8 each side)
+LAT_RSP = {"r":-38, "v":45, "d":-7}    # extra RIGHT-side space only (negative = less): r tucks closer right, v gets room after;
+                                       # d's right stem slants right, so its ink edge is measured high (above x-height) — pull it back in
+LAT_LSP = {"k": -6}                    # less LEFT-side space (space in front of the letter); k's ascender loop leaves optical room
 CAP_H = 0.90                  # drawn caps: scale height (before slant, so the 15° tilt is kept)
 CAP_SCALE = 0.89              # reused ornate caps: uniform scale (round caps lifted via BASEFRAC to match)
 LAT_XCOMP = {"o.lat": 0.88}   # horizontal squeeze for specific reused copies (the Latin o read too wide/open)
@@ -478,7 +486,7 @@ def _L_l(p): _loopasc(p,62,LASC); ribbon_dir(p,[('M',(74,17)),('C',(84,0),(112,8
 def _L_n(p): _archright(p,42,108)
 def _L_h(p): _loopasc(p,48,LASC); ribbon_dir(p,[('M',(64,14)),('C',(63,LXH*0.5),(64,LXH*0.86),(68,LXH*0.99)),('C',(84,LXH*1.07),(118,LXH*1.02),(126,LXH*0.6)),('C',(127,LXH*0.33),(126,18),(126,14))],40,8)
 def _L_b(p): _loopasc(p,54,LASC); _lbowl(p,98,LXH*0.5,38,LXH*0.5)
-def _L_d(p): _lbowl(p,66,LXH*0.5,38,LXH*0.5); ribbon_dir(p,[('M',(108,LASC)),('C',(104,LXH*0.6),(103,20),(104,14))],44,12)
+def _L_d(p): _lbowl(p,55,LXH*0.5,50,LXH*0.5); ribbon_dir(p,[('M',(108,LASC)),('C',(104,LXH*0.6),(103,20),(104,14))],44,12)
 def _L_r(p): ribbon_dir(p,[('M',(46,LXH-4)),('C',(41,LXH*0.55),(41,20),(43,14))],44,12); ribbon_dir(p,[('M',(42,LXH*0.6)),('C',(56,LXH*0.95),(84,LXH*1.0),(104,LXH*0.8))],28,9)
 def _L_q(p): _lbowl(p,66,LXH*0.5,38,LXH*0.5); ribbon_dir(p,[('M',(108,LXH-2)),('C',(104,LXH*0.5),(100,-60),(98,LDESC*0.9))],44,12)
 def _L_f(p): ribbon_dir(p,[('M',(66,LASC*0.55)),('C',(60,LASC*0.92),(84,LASC*1.12),(104,LASC*0.96)),('C',(120,LASC*0.82),(100,LASC*0.6),(72,LASC*0.58)),('C',(58,LASC*0.5),(54,LXH),(50,LXH*0.1)),('C',(46,-70),(34,LDESC),(14,LDESC*0.82))],44,11); ribbon_prof(p,[('M',(18,LXH+6)),('L',(96,LXH-2))],17,17)
@@ -519,7 +527,7 @@ for nm, cp, fn in LATIN_DRAWN:
         ph2 = pathops.Path(); pth.draw(TransformPen(ph2.getPen(), (1, 0, 0, CAP_H, 0, 0))); ph2.simplify(); pth = ph2
     sl = pathops.Path(); pth.draw(TransformPen(sl.getPen(), (1, 0, SLANT, 1, 0, 0))); sl.simplify()
     bl, br = _latin_sb(sl); b = sl.bounds; minx = b[0] if b else bl
-    sp = LAT_SPACE.get(nm, 0); rsp = LAT_RSP.get(nm, 0); hshift = M_BODY + sp - bl; adv = int(round((br - bl) + 2 * (M_BODY + sp) + rsp))
+    sp = LAT_SPACE.get(nm, 0); rsp = LAT_RSP.get(nm, 0); lsp = LAT_LSP.get(nm, 0); hshift = M_BODY + sp + lsp - bl; adv = int(round((br - bl) + 2 * (M_BODY + sp) + rsp + lsp))
     t2 = T2CharStringPen(adv, None); sl.draw(TransformPen(t2, (1, 0, 0, 1, hshift, 0)))
     glyph_order.append(nm); charstrings[nm] = t2.getCharString(); metrics[nm] = (adv, int(round(minx + hshift))); cmap[cp] = nm
 # De-skewed Latin copies of Cyrillic sources, so these Latin letters stand more upright than the
@@ -568,13 +576,13 @@ LICENSE = ('Derivative of "Macedonian cursive script" by MacedonianBoy '
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
-fb.setupCFF(PS, {"version": "0.9.14", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.9.15", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.14",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.14", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.15",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.15", "copyright": ATTRIB,
     "description": "Macedonian cursive display font; letters traced from a CC BY-SA 3.0 chart, digits designed to match.",
     "designer": "MacedonianBoy (original cursive letterforms)",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -585,6 +593,11 @@ fb.font["OS/2"].fsSelection = 0x40     # REGULAR bit, so it pairs with the Bold 
 fb.font["head"].macStyle = 0x0000
 otf = os.path.join(OUTDIR, "MakedonkaCursive-Regular.otf")
 fb.save(otf); print("saved", otf)
+
+# ---- connection kerning (both scripts): even the cursive joins — loosen crowded pairs, tighten loose ones
+from kern_util import add_kern
+print(f"kerning: {add_kern(otf)} pairs")
+
 for fl in ("woff2", "woff"):
     f = TTFont(otf); f.flavor = fl; f.save(os.path.join(OUTDIR, f"MakedonkaCursive-Regular.{fl}"))
 

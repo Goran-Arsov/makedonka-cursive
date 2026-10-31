@@ -167,10 +167,20 @@ vectorizing the Wikimedia chart (see *Source material* below).
   `BASEFRAC[0x0450]=0.015` lifts the round е-based baseline (round-body mis-detect); ѝ (upright и) needs none.
   Same turn the ш underline shifted left to **0.00–0.60** and the Ш underline trimmed to **0.205–0.659** of
   minx..maxx (5% of the bar length off each end). Re-tune by eye if the glyphs are redrawn.
+- **(v0.9.15) connection kerning + spacing knobs:** the build now ends by calling
+  `build/scripts/kern_util.py::add_kern(otf)` (from both `build_font.py` and `make_bold.py`), adding a **GPOS
+  `kern`** feature per weight. Algorithm: for each within-script lowercase pair, measure the white area +
+  nearest approach in the x-height band, then **loosen** crowded pairs up toward `W_LOW` and **tighten** loose
+  joins down toward `W_HIGH`, capped by the nearest floor `N_FLOOR` (no collisions). Params at the top of
+  `kern_util.py` (115/180/14/60). **PIL does not apply GPOS** — preview in a browser or lay out glyphs by hand.
+  New knobs: `LAT_LSP` (left-side space for drawn Latin; `k:-6`), `BODY_LSB` (`{0x0440,0x0458}` — р/ј anchor
+  their LEFT sidebearing on the x-height body, not the far-left descender, in the NEUT loop). Also: Latin `d`
+  bowl widened + `LAT_RSP["d"]=-7`; `LAT_SPACE["i"]=15` (was 55). The Latin exit-hair trim (`LAT_HAIRTRIM`) was
+  built then **reverted** — the lavish hairs are kept.
 - **Known limits (open for v2+):** consecutive capitals overlap (built for
-  one-capital words); no pair kerning; true contextual joining (v2) not done; no
-  Latin; display face only. Bold is a faux-bold (dilation), not redrawn strokes,
-  so its contrast is lower than the Regular's.
+  one-capital words); kerning is algorithmic connection-kerning, not hand-tuned per pair; true contextual
+  joining (v2 — entry/exit substitution) not done; display face only. Bold is a faux-bold (dilation), not
+  redrawn strokes, so its contrast is lower than the Regular's.
 
 ---
 

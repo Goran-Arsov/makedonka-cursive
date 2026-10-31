@@ -18,7 +18,7 @@ import pathops
 
 REG, OUTDIR = sys.argv[1], sys.argv[2]
 D = float(sys.argv[3]) if len(sys.argv) > 3 else 14.0
-VER = "0.9.14"
+VER = "0.9.15"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
@@ -75,5 +75,7 @@ fb.font["head"].macStyle |= 0x01
 fb.setupPost(italicAngle=-18.0)
 otf = os.path.join(OUTDIR, "MakedonkaCursive-Bold.otf")
 fb.save(otf); print("saved", otf, "D=", D)
+from kern_util import add_kern                       # kern the Bold on its own (dilated) metrics
+print(f"kerning (bold): {add_kern(otf)} pairs")
 for fl in ("woff2", "woff"):
     g = TTFont(otf); g.flavor = fl; g.save(os.path.join(OUTDIR, f"MakedonkaCursive-Bold.{fl}"))

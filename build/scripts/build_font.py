@@ -360,11 +360,13 @@ charstrings["space"] = T2CharStringPen(300, None).getCharString(); metrics["spac
 for g, cp, path in NEUT:
     glyph_order.append(g); cmap[cp] = g
     minx, maxx, bl, br, basey = measure(path, cp)
-    if cp in (0x0448, 0x0428):               # Macedonian cursive ш/Ш: an underline beneath the letter (like т's overbar)
-        _dy = basey - 60; _th = 28; _ins = (maxx - minx) * 0.08
+    if cp in (0x0448, 0x0428):               # Macedonian cursive ш/Ш: underline beneath the letter — its ends
+        _fL, _fR = {0x0448: (0.18, 0.78), 0x0428: (0.15, 0.76)}[cp]   # track the first/last stroke, not the flourishes
+        _w = maxx - minx; _xL = minx + _fL*_w; _xR = minx + _fR*_w
+        _dy = basey - 60; _th = 28
         _dp = path.getPen()
-        _dp.moveTo((minx + _ins, _dy - _th/2)); _dp.lineTo((maxx - _ins, _dy - _th/2))
-        _dp.lineTo((maxx - _ins, _dy + _th/2)); _dp.lineTo((minx + _ins, _dy + _th/2)); _dp.closePath()
+        _dp.moveTo((_xL, _dy - _th/2)); _dp.lineTo((_xR, _dy - _th/2))
+        _dp.lineTo((_xR, _dy + _th/2)); _dp.lineTo((_xL, _dy + _th/2)); _dp.closePath()
         path.simplify()
     bl = min(bl, minx + LEFT_CAP)            # cap leftward overhang (fixes offset-bottom caps like Ч)
     hshift = M_BODY - bl
@@ -557,13 +559,13 @@ LICENSE = ('Derivative of "Macedonian cursive script" by MacedonianBoy '
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
-fb.setupCFF(PS, {"version": "0.9.12", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.9.13", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.12",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.12", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.13",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.13", "copyright": ATTRIB,
     "description": "Macedonian cursive display font; letters traced from a CC BY-SA 3.0 chart, digits designed to match.",
     "designer": "MacedonianBoy (original cursive letterforms)",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",

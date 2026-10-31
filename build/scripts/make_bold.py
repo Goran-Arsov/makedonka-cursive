@@ -18,7 +18,7 @@ import pathops
 
 REG, OUTDIR = sys.argv[1], sys.argv[2]
 D = float(sys.argv[3]) if len(sys.argv) > 3 else 14.0
-VER = "0.9.12"
+VER = "0.9.13"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 

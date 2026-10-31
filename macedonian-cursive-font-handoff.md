@@ -155,6 +155,10 @@ vectorizing the Wikimedia chart (see *Source material* below).
   letter — added in the NEUT build loop (gated on `cp`), a filled rect across the letter width just below the
   baseline (`_dy = basey - 60`, thickness 28, 8% side inset). Matches the `т` overbar convention; advance/spacing
   unchanged (the bar stays within the letter's width). Must be inlined, not via `_rect` (which is defined later).
+- **(v0.9.13) ш/Ш underline ends:** the bar ends are now per-glyph fractions of the letter width (ш 0.18–0.78,
+  Ш 0.15–0.76 of minx..maxx) so they track the first/last *stroke* rather than the entry/exit flourishes (which
+  made the raw-ink-width bar too wide and mis-aligned on the slanted strokes). Hand-tuned by eye on the two
+  glyphs — re-tune if those glyphs are redrawn. Vertical depth unchanged.
 - **Known limits (open for v2+):** consecutive capitals overlap (built for
   one-capital words); no pair kerning; true contextual joining (v2) not done; no
   Latin; display face only. Bold is a faux-bold (dilation), not redrawn strokes,

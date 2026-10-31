@@ -47,7 +47,8 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   `~/.local/share/fonts/` (+fc-cache; restart LibreOffice). **Pushed** to `main` (commits `9454aaf` v0.9.16 +
   `3e5e39a` v0.9.17); `MakedonkaCursive-v0.9.17.zip` built; GitHub **release v0.9.17** cut (Latest) with the zip;
   live specimen artifact refreshed to v0.9.17 (same URL `S4zAoxN5AhUYGLMoXyXBTk`, now with an all-caps line).
-  **amici: wired in + deployed** (v0.9.17 enabled, pushed → CI auto-deploy) — see the amici bullet below.
+  **amici: wired in + pushed** (v0.9.17 enabled); CI green but **auto-deploy is blocked** (missing Actions
+  secrets — see the amici bullet below), so not live until that's fixed or a manual deploy runs.
   Regression: glyph diff vs v0.9.16 shows **no advance/outline change** (pure kerning); pairs
   609→1865 Reg / 439→1735 Bold, woff2 +~2 KB/weight.
 - **Ship status: v0.9.16 committed locally, NOT pushed (2026-10-31).** 7 punctuation glyphs (`/ … · « » ° %`) +
@@ -75,8 +76,13 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   (no contextual substitution) — true entry/exit joining is still v2 (Open #3), but the kern reads connected.
 - **Size:** `UPM=700`, so it renders at a normal-font size for a given point size (caps ~1.2× DejaVu,
   x-height ~0.67×). Line height is tall (flourishes) — set fixed line spacing in the app if needed.
-- **amici: WIRED IN to v0.9.17 + DEPLOYED (2026-10-31).** Commit `d2205cc` on amici `main` (pushed →
-  GitHub Actions CI → auto-deploy to the live site). What it did: set `config.x.script_font = :makedonka`
+- **amici: WIRED IN to v0.9.17 + pushed; NOT YET LIVE — deploy blocked (2026-10-31).** Commit `d2205cc` on
+  amici `main`; **CI passed** but the **Deploy workflow fails** (`error: missing server host`): the amici repo
+  has **no Actions secrets set** (`gh secret list` is empty), so `deploy.yml`'s `secrets.DEPLOY_HOST` /
+  `DEPLOY_SSH_KEY` are empty. This is **pre-existing** (it also failed the prior `5beba31` SEO commit's deploy),
+  not caused by this change. **To go live:** set `DEPLOY_HOST` + `DEPLOY_SSH_KEY` in the amici repo's Actions
+  secrets, then re-run Deploy (`workflow_dispatch`) — or SSH to the server and run `bin/deploy` manually. What
+  the commit did: set `config.x.script_font = :makedonka`
   (the opt-in flag; `ApplicationHelper#makedonka_font?` adds `.script-makedonka` to `<body>`, overriding
   `--font-script` and showing the footer CC BY-SA credit); refreshed `public/fonts/MakedonkaCursive-{Regular,Bold}.{woff2,woff}`
   to v0.9.17; bumped the `@font-face` cache-buster to `?v=14` in `app/assets/tailwind/application.css` + reran
@@ -84,7 +90,8 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   (Caveat fallback). This superseded a stale uncommitted WIP (older small font files + `?v=13`). Verified:
   full test suite green (397 runs), Brakeman + bundler-audit clean, `footer_test` covers both states.
   **On future font updates:** re-copy the woff/woff2, bump `?v=`, rerun `tailwindcss:build`, commit+push
-  (auto-deploys). The compiled `app/assets/builds/tailwind.css` is gitignored — deploy rebuilds it.
+  (auto-deploys *once the Actions deploy secrets are set*; until then, deploy manually on the server). The
+  compiled `app/assets/builds/tailwind.css` is gitignored — deploy rebuilds it.
 
 ## Changelog (one line each; details + knobs are in the handoff)
 - **v0.9.17** — **uppercase spacing kerning (consecutive-caps limitation solved).** `kern_util.py` now also

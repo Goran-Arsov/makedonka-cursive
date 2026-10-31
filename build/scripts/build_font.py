@@ -50,7 +50,7 @@ MAP = [
 #   Ј ј = top-heavy single strokes;  д = g-form with a wide descender loop.
 BASEFRAC = {0x0408: 0.30, 0x0458: 0.42, 0x0434: 0.50, 0x0420: 0.0, 0x0427: 0.0,
             0x0437: 0.31,  # Ј lifted; Р,Ч rest on baseline; з given back its descender (was floating)
-            0x043E: 0.015, 0x0435: 0.015, 0x0441: 0.015, 0x0447: 0.015,  # о е с ч sat ~25u low (round-body baseline mis-detect)
+            0x043E: 0.015, 0x0435: 0.015, 0x0441: 0.015, 0x0447: 0.015, 0x0450: 0.015,  # о е с ч ѐ — round-body baseline mis-detect
             0x041E: 0.01}  # О (cap) dipped ~46u low (round-body issue); lifts Cyrillic О + Latin O.lat. С/Е have bottom
                            # swashes that defeat a fraction-based lift, so they're left as-is.
 SCALE_OVERRIDE = {0x0424: 0.82, 0x0437: 0.76, 0x0455: 0.78}   # Ф, з, ѕ are drawn oversize in the source
@@ -357,11 +357,20 @@ nd.moveTo((60, 0)); nd.lineTo((540, 0)); nd.lineTo((540, 700)); nd.lineTo((60, 7
 charstrings[".notdef"] = nd.getCharString(); metrics[".notdef"] = (600, 60)
 charstrings["space"] = T2CharStringPen(300, None).getCharString(); metrics["space"] = (300, 0)
 
+# Macedonian accented letters: ѐ (е + grave) and ѝ (и + grave) — base trace + a calligraphic grave accent.
+def _grave(pen, cx, cy):     # short pen grave `, thick→thin, descending left→right, centred ~(cx, cy)
+    ribbon_dir(pen, [('M',(cx-28,cy+26)),('C',(cx-10,cy+9),(cx+8,cy-9),(cx+26,cy-28))], 43.7, 13.3)
+_accsrc = {cpx: pth for (gnx, cpx, pth) in NEUT}
+for _anm, _acp, _ascp, _agx, _agy in [("uni0450",0x0450,0x0435,8,330),("uni045D",0x045D,0x0438,16,330)]:
+    _ab = _accsrc[_ascp]; _am = measure(_ab, _ascp); _acx = (_am[0]+_am[1])/2 + _agx
+    _ap = pathops.Path(); _ab.draw(_ap.getPen()); _grave(_ap.getPen(), _acx, _am[4]+_agy); _ap.simplify()
+    NEUT.append((_anm, _acp, _ap))
+
 for g, cp, path in NEUT:
     glyph_order.append(g); cmap[cp] = g
     minx, maxx, bl, br, basey = measure(path, cp)
     if cp in (0x0448, 0x0428):               # Macedonian cursive ш/Ш: underline beneath the letter — its ends
-        _fL, _fR = {0x0448: (0.18, 0.78), 0x0428: (0.15, 0.76)}[cp]   # track the first/last stroke, not the flourishes
+        _fL, _fR = {0x0448: (0.00, 0.60), 0x0428: (0.205, 0.659)}[cp]   # track the first/last stroke, not the flourishes
         _w = maxx - minx; _xL = minx + _fL*_w; _xR = minx + _fR*_w
         _dy = basey - 60; _th = 28
         _dp = path.getPen()
@@ -559,13 +568,13 @@ LICENSE = ('Derivative of "Macedonian cursive script" by MacedonianBoy '
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
-fb.setupCFF(PS, {"version": "0.9.13", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.9.14", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, {})
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.13",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.13", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.14",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.14", "copyright": ATTRIB,
     "description": "Macedonian cursive display font; letters traced from a CC BY-SA 3.0 chart, digits designed to match.",
     "designer": "MacedonianBoy (original cursive letterforms)",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",

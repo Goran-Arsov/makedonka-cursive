@@ -159,6 +159,14 @@ vectorizing the Wikimedia chart (see *Source material* below).
   Ш 0.15–0.76 of minx..maxx) so they track the first/last *stroke* rather than the entry/exit flourishes (which
   made the raw-ink-width bar too wide and mis-aligned on the slanted strokes). Hand-tuned by eye on the two
   glyphs — re-tune if those glyphs are redrawn. Vertical depth unchanged.
+- **(v0.9.14) ѐ/ѝ + bar/grave tuning:** added the grave-accented **ѐ** (U+0450) and **ѝ** (U+045D). Built in a
+  small loop *before* the NEUT render: copy the cursive е/и path (`_accsrc[0x0435]`/`[0x0438]`) and overlay a
+  calligraphic grave via `_grave(pen, cx, cy)` — a `ribbon_dir` stroke (46→14 thinned to **43.7→13.3**, descending
+  left→right) centred at `((minx+maxx)/2 + _agx, basey + _agy)`, with `_agx` 8/16 and `_agy` **330** (raised from
+  300 so the accent clears the letter top — grave top ≈ y371/373 in the 700-UPM space, letter top ≈ y263/267).
+  `BASEFRAC[0x0450]=0.015` lifts the round е-based baseline (round-body mis-detect); ѝ (upright и) needs none.
+  Same turn the ш underline shifted left to **0.00–0.60** and the Ш underline trimmed to **0.205–0.659** of
+  minx..maxx (5% of the bar length off each end). Re-tune by eye if the glyphs are redrawn.
 - **Known limits (open for v2+):** consecutive capitals overlap (built for
   one-capital words); no pair kerning; true contextual joining (v2) not done; no
   Latin; display face only. Bold is a faux-bold (dilation), not redrawn strokes,

@@ -29,8 +29,9 @@ never the glyphs by hand.
   with both `.woff2` embedded as base64 `@font-face`. Its source is **not in the repo** (was in the temp
   scratch dir). To update: read the published artifact, swap in the new base64 woff2, republish to the same URL.
 
-## Current state (v0.9.13, 2026-10-31)
-- **Coverage — 144 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower); a full **Latin**
+## Current state (v0.9.14, 2026-10-31)
+- **Coverage — 146 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower), plus the grave-accented
+  **ѐ/ѝ** (U+0450/U+045D); a full **Latin**
   alphabet A–Z/a–z (drawn letters + de-skewed copies of Cyrillic sources — `LATIN_HOMO` is empty, so
   no Latin letter shares a Cyrillic glyph); digits 0–9 (equal height); punctuation incl. Latin "up"
   quotes `“ ” ‘ ’` and Macedonian `„ "`.
@@ -39,7 +40,7 @@ never the glyphs by hand.
 - **Size:** `UPM=700`, so it renders at a normal-font size for a given point size (caps ~1.2× DejaVu,
   x-height ~0.67×). Line height is tall (flourishes) — set fixed line spacing in the app if needed.
 - **Shipped to:** project dir (Reg+Bold × otf/ttf/woff2/woff + specimen + README + LICENSE),
-  `MakedonkaCursive-v0.9.13.zip`, `~/.local/share/fonts/` (both OTFs, fc-cache), demo/css `?v=24`,
+  `MakedonkaCursive-v0.9.14.zip`, `~/.local/share/fonts/` (both OTFs, fc-cache), demo/css `?v=25`,
   and the live specimen artifact (above).
 - **amici: NOT updated this session (the user's step).** amici still ships the OLD v0.9 files and does
   not display the font anyway (`--font-script` switched to Nunito in an uncommitted refactor;
@@ -51,6 +52,7 @@ never the glyphs by hand.
   `ApplicationHelper#makedonka_font?` adds `.script-makedonka`).
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.14** — added grave-accented **ѐ** (U+0450) and **ѝ** (U+045D) — cursive е/и + a calligraphic grave; re-trimmed the ш/Ш underline bars (ш shifted left to 0.00–0.60, Ш to 0.205–0.659) and raised + slightly thinned the grave accent.
 - **v0.9.13** — repositioned the ш / Ш underline so its ends track the first/last stroke (not the flourishes).
 - **v0.9.12** — added the Macedonian underline beneath cursive ш / Ш (authentic form; complements the т overbar).
 - **v0.9.11** — equalized drawn vs ornate cap heights (round cap `О` baseline-lifted to match); narrowed the too-wide Latin o.

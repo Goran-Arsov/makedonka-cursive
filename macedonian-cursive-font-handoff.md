@@ -221,6 +221,19 @@ vectorizing the Wikimedia chart (see *Source material* below).
   specimen's `line_caps` uses the same model (`gap=23` px @ size 100 ≡ 160 units) and the specimen canvas widened
   **2100→2460** for the now-wider 12-cap rows. Pairs Reg **2246** / Bold **2224**. Still **cap-before-cap only**,
   so Title-case/lowercase is byte-identical; FontBakery still 0 FAIL/0 ERROR; 243 glyphs unchanged.
+- **(v0.9.26) typographic colour unified — digits/symbols/Latin to the Cyrillic weight:** the disk-brush
+  categories rendered much heavier (darker) than the traced Cyrillic body — measured mean stroke width
+  (`2*area/perimeter`): **digits ~2.4x**, **math symbols ~1.8x**, **drawn Latin ~1.3x** the Cyrillic. Added a
+  per-category weight multiplier **`_WT`** applied to every disk-brush radius — in `_disk`, and now also in the
+  filled-geometry helpers `_rect`/`_oval`/`_ring` (the `+ − = ÷ ± # |` bars, `. : … ·` dots, `° % ‰` rings bypass
+  the ribbon brush). `_sample` step and `ribbon_oval` point count scale with `_WT` so a thinned stroke's disks still
+  overlap (no dotted gaps). Set per category around its build: **`DIGIT_WT=0.45`**, **`LAT_WT=0.70`** (drawn Latin
+  only — homoglyph *copies* never touch the brush, so they already matched), and two symbol tiers
+  **`SYM_HEAVY_WT=0.55`** (`SYM_HEAVY` set: math operators, bars, dots, dashes) / **`SYM_MILD_WT=0.80`** (quotes,
+  commas, `! ?`, braces…). Heavy drawn letters fine-tuned via `LAT_LIGHTEN` (adds I N L R F D Z U V, i p t n).
+  Result: every category lands **~0.85–1.15x** the Cyrillic on **both weights** (Regular: digits 1.08x, Latin 0.98x;
+  Bold: 1.05x / 0.93x). Cyrillic untouched (never uses the brush). 243 glyphs, FontBakery 0 FAIL/0 ERROR. Known
+  residuals (bypass the brush): brackets `[ ]` (`_poly`, still ~2x) and lowercase `p` — minor, rarely used.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

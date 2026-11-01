@@ -125,9 +125,12 @@ def _emit(pen, pts, ccw=True):
     if (_area(pts) < 0) == ccw:
         pts = pts[::-1]
     pen.moveTo(pts[0]); [pen.lineTo(q) for q in pts[1:]]; pen.closePath()
-def _sample(segs, step=6.0):
+def _sample(segs, step=None):
     # uniform ~step-spaced points along every segment (lines too) so the disk
-    # brush always overlaps, even on thin hairlines.
+    # brush always overlaps, even on thin hairlines. step scales with _WT so a
+    # weight-thinned ribbon's smaller disks still overlap (no dotted gaps).
+    if step is None:
+        step = max(2.0, 6.0 * _WT)
     pts = []; cur = None
     for s in segs:
         if s[0] == 'M':
@@ -148,9 +151,24 @@ def _sample(segs, step=6.0):
             cur = p1
     return pts
 WMAX_SCALE, WMIN_SCALE = 0.78, 0.55
+# --- per-category typographic-colour weight (v0.9.26) ---
+# The disk-brush digits/symbols/drawn-Latin rendered heavier (darker typographic colour) than the
+# traced Cyrillic body — measured mean stroke width ~2.4x (digits), ~1.8x (math symbols), ~1.3x
+# (drawn Latin) the Cyrillic. `_WT` scales every disk-brush RADIUS so each category matches the
+# Cyrillic colour; it is set per category around that category's build (1.0 = unchanged). Traced
+# Cyrillic never touches the disk brush, so it is the fixed reference and is unaffected.
+_WT = 1.0
+DIGIT_WT, LAT_WT = 0.45, 0.70
+# Symbols/punct come in two weight tiers: heavy geometric marks (math operators, bars, dots, dashes —
+# originally ~1.7-2.0x the Cyrillic) thin hard; the mild ribbon punctuation (quotes, commas, !, ?, …
+# ~1.1-1.5x) thins gently so it isn't over-lightened.
+SYM_HEAVY_WT, SYM_MILD_WT = 0.55, 0.80
+SYM_HEAVY = {0x002B, 0x2212, 0x003D, 0x00D7, 0x00F7, 0x003C, 0x003E, 0x00B1, 0x2116, 0x0023, 0x007C,
+             0x002E, 0x003A, 0x2026, 0x00B7, 0x002D, 0x2013, 0x2014}
 def _disk(pen, cx, cy, r, n=16):
     # a filled polygon disk; circles never fold/flip winding, so unioning a trail
     # of them along a centerline always fills solid (no slivers / no counters mid-stroke).
+    r *= _WT
     _emit(pen, [(cx + r*math.cos(2*math.pi*j/n), cy + r*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=True)
 def ribbon_open(pen, segs, maxw=96, minw=24):
     maxw *= WMAX_SCALE; minw *= WMIN_SCALE
@@ -162,6 +180,7 @@ def ribbon_open(pen, segs, maxw=96, minw=24):
         _disk(pen, p[0], p[1], (minw+(maxw-minw)*wgt)/2)
 def ribbon_oval(pen, cx, cy, rx, ry, maxw=92, minw=30, n=140):
     maxw *= WMAX_SCALE; minw *= WMIN_SCALE
+    n = int(round(n * max(1.0, 1.0 / _WT)))   # more disks when thinned, so the oval stays solid
     pts = [(cx+rx*math.cos(2*math.pi*i/n), cy+ry*math.sin(2*math.pi*i/n)) for i in range(n)]
     for i in range(n):
         a = pts[(i-1) % n]; b = pts[(i+1) % n]; dx, dy = b[0]-a[0], b[1]-a[1]; L = math.hypot(dx, dy) or 1.0
@@ -195,6 +214,7 @@ def ribbon_prof(pen, segs, w0, w1, gamma=1.4):
         t = i/(m-1) if m > 1 else 0.0
         _disk(pen, p[0], p[1], (w1 + (w0-w1)*((1-t)**gamma))/2)
 def _oval(pen, cx, cy, rx, ry, n=24):
+    rx *= _WT; ry *= _WT                       # filled dots/bowls honour the per-category weight too
     _emit(pen, [(cx+rx*math.cos(2*math.pi*j/n), cy+ry*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=True)
 def _pencomma(pen, cx, cy, s=1.0, up=False):
     # a pointed-pen comma: swelling head tapering to a fine curved tail.
@@ -268,8 +288,10 @@ def gname(cp):
     return "uni%04X" % cp if cp > 0x40 else {0x30: "zero", 0x31: "one", 0x32: "two", 0x33: "three",
         0x34: "four", 0x35: "five", 0x36: "six", 0x37: "seven", 0x38: "eight", 0x39: "nine"}[cp]
 
-NEUT = [(gname(cp), cp, letter_path(idxs, cp)) for nm, cp, idxs in MAP] + \
-       [(gname(cp), cp, digit_path(fn)) for ch, cp, fn in DIGITS]
+NEUT = [(gname(cp), cp, letter_path(idxs, cp)) for nm, cp, idxs in MAP]
+_WT = DIGIT_WT                      # digits are disk-brush drawn — thin them to the Cyrillic colour
+NEUT += [(gname(cp), cp, digit_path(fn)) for ch, cp, fn in DIGITS]
+_WT = 1.0
 
 # ========================= measurement (flatten + raster) =========================
 class FlattenPen:
@@ -416,10 +438,19 @@ def _circle(pen, cx, cy, r):
     k = 0.5523*r
     pen.moveTo((cx+r, cy)); pen.curveTo((cx+r, cy+k), (cx+k, cy+r), (cx, cy+r)); pen.curveTo((cx-k, cy+r), (cx-r, cy+k), (cx-r, cy))
     pen.curveTo((cx-r, cy-k), (cx-k, cy-r), (cx, cy-r)); pen.curveTo((cx+k, cy-r), (cx+r, cy-k), (cx+r, cy)); pen.closePath()
-def _rect(pen, x0, y0, x1, y1): pen.moveTo((x0, y0)); pen.lineTo((x1, y0)); pen.lineTo((x1, y1)); pen.lineTo((x0, y1)); pen.closePath()
+def _rect(pen, x0, y0, x1, y1):
+    if _WT != 1.0:                             # thin the bar's NARROW dimension toward its centre
+        w, h = x1 - x0, y1 - y0
+        if abs(w) < abs(h):
+            c = (x0 + x1) / 2.0; x0, x1 = c - w*_WT/2.0, c + w*_WT/2.0
+        else:
+            c = (y0 + y1) / 2.0; y0, y1 = c - h*_WT/2.0, c + h*_WT/2.0
+    pen.moveTo((x0, y0)); pen.lineTo((x1, y0)); pen.lineTo((x1, y1)); pen.lineTo((x0, y1)); pen.closePath()
 def _poly(pen, pts): pen.moveTo(pts[0]); [pen.lineTo(q) for q in pts[1:]]; pen.closePath()
 def _ring(pen, cx, cy, R, r, n=48):
     # a hollow ring (° and %): outer CCW + inner CW so nonzero winding leaves the hole
+    if _WT != 1.0:                             # thin the ring band toward its mean radius
+        m = (R + r) / 2.0; half = (R - r) * _WT / 2.0; R, r = m + half, m - half
     _emit(pen, [(cx+R*math.cos(2*math.pi*j/n), cy+R*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=True)
     _emit(pen, [(cx+r*math.cos(2*math.pi*j/n), cy+r*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=False)
 def _paren(pen, width, left=True):
@@ -522,8 +553,10 @@ PUNCT = [
     (0x2032, "prime", 160, lambda p: ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20)),
     (0x2033, "doubleprime", 270, lambda p: (ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), ribbon_prof(p, [('M', (176, 640)), ('L', (222, 456))], 44, 20))),
 ]
-for cp, name, width, fn in PUNCT:
+for cp, name, width, fn in PUNCT:   # unify symbol/punct colour to the Cyrillic (two weight tiers)
+    _WT = SYM_HEAVY_WT if cp in SYM_HEAVY else SYM_MILD_WT
     cs, xmin = _make(fn, width); glyph_order.append(name); cmap[cp] = name; charstrings[name] = cs; metrics[name] = (width, xmin)
+_WT = 1.0
 
 # ========================= Latin =========================
 # ~27 Latin letters reuse a visually identical Cyrillic glyph (homoglyphs: incl. g=д,
@@ -552,7 +585,10 @@ LAT_NAT = {
     0x0410:28,0x0412:24,0x0421:22,0x0415:23,0x041D:28,0x0408:30,0x041A:30,0x041C:30,     # А В С Е Н Ј К М
     0x041E:22,0x0420:28,0x0405:30,0x0422:28,0x0425:28,0x0423:26}                         # О Р Ѕ Т Х У
 def _dsk(scp): return math.tan(math.radians(LAT_NAT[scp])) - SLANT
-LAT_LIGHTEN = {"h":0.84, "w":0.82, "b":0.90}            # per-glyph weight scale for the dense ones
+LAT_LIGHTEN = {"h":0.84, "w":0.82, "b":0.90,            # per-glyph weight scale for the dense ones
+               # drawn letters still heavier than the Cyrillic body after LAT_WT — thin to match:
+               "I":0.62, "N":0.56, "L":0.70, "R":0.72, "F":0.74, "D":0.82, "Z":0.80, "U":0.84, "V":0.90,
+               "i":0.82, "p":0.80, "t":0.84, "n":0.86}
 def _loopasc(pen, x, top, mx=46, mn=9):
     ribbon_dir(pen, [('M',(x+4,16)),('C',(x-8,top*0.5),(x-26,top*0.88),(x+22,top)),('C',(x+56,top*1.08),(x+58,top*0.8),(x+32,top*0.70)),('C',(x+12,top*0.6),(x+18,top*0.42),(x+16,16))], mx, mn)
 def _lbowl(pen, cx, cy, rx, ry):
@@ -600,9 +636,9 @@ def _latin_sb(path):          # side bearings from ink in the x-height join band
     return min(seq), max(seq)
 latin_paths = {}          # positioned Latin outlines, kept to compose the diacritic letters below
 for nm, cp, fn in LATIN_DRAWN:
-    _LATIN_MODE = True; _LSX = LAT_STRETCH.get(nm, 1.0); _LWT = LAT_LIGHTEN.get(nm, 1.0)
+    _LATIN_MODE = True; _LSX = LAT_STRETCH.get(nm, 1.0); _LWT = LAT_LIGHTEN.get(nm, 1.0); _WT = LAT_WT
     pth = pathops.Path(); fn(pth.getPen()); pth.simplify()
-    _LATIN_MODE = False; _LSX = 1.0; _LWT = 1.0
+    _LATIN_MODE = False; _LSX = 1.0; _LWT = 1.0; _WT = 1.0
     if nm.isupper():          # shrink drawn-cap height before the slant, so the slant stays 15°
         ph2 = pathops.Path(); pth.draw(TransformPen(ph2.getPen(), (1, 0, 0, CAP_H, 0, 0))); ph2.simplify(); pth = ph2
     sl = pathops.Path(); pth.draw(TransformPen(sl.getPen(), (1, 0, SLANT, 1, 0, 0))); sl.simplify()
@@ -695,13 +731,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.925", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.926", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.925",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.925", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.926",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.926", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -723,7 +759,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.925    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.926    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

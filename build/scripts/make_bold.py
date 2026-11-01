@@ -10,7 +10,7 @@ clean, and tagged as the Bold member of the "Makedonka Cursive" family.
   argv[1]=Regular.otf   argv[2]=OUTDIR   argv[3]=D (dilation, default 13)
 """
 import sys, os, math
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.pens.transformPen import TransformPen
@@ -102,6 +102,14 @@ for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=8, bProportion=3, bCont
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_b.panose, _k, _v)          # PANOSE: Latin hand-written / script, bold
 fb.font["head"].fontRevision = 0.920
+# STAT (Bold's position on the Weight axis) + meta (design/supported scripts), matching the
+# Regular. Placed BEFORE the Mac-name strip so buildStatTable's platform-1 names are removed too.
+from fontTools.otlLib.builder import buildStatTable
+buildStatTable(fb.font, [dict(tag="wght", name="Weight",
+                              values=[dict(value=700, name="Bold", flags=0x0)])],
+               elidedFallbackName="Regular")
+_meta = newTable("meta"); _meta.data = {"dlng": "Latn, Cyrl", "slng": "Latn, Cyrl"}
+fb.font["meta"] = _meta
 fb.font["name"].removeNames(platformID=1)   # drop legacy Macintosh name records
 _bh = fb.font["hhea"]
 _bh.caretSlopeRise = 1; _bh.caretSlopeRun = 0   # vertical caret (upright-classified; italicAngle 0)

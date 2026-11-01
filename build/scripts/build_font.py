@@ -12,7 +12,7 @@ from fontTools.svgLib.path import parse_path
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
 from fontTools.fontBuilder import FontBuilder
-from fontTools.ttLib import TTFont
+from fontTools.ttLib import TTFont, newTable
 from PIL import Image, ImageDraw
 import pathops
 
@@ -631,6 +631,17 @@ for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bCont
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
 fb.font["head"].fontRevision = 0.920    # match the name-table version (was the default 1.0)
+# STAT (this face's position on the Weight axis — the modern standard for a multi-style
+# family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
+# Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the
+# Mac-name strip below so buildStatTable's re-added platform-1 names are removed with the
+# rest (the Windows records remain, so STAT still resolves).
+from fontTools.otlLib.builder import buildStatTable
+buildStatTable(fb.font, [dict(tag="wght", name="Weight",
+                              values=[dict(value=400, name="Regular", flags=0x2)])],
+               elidedFallbackName="Regular")
+_meta = newTable("meta"); _meta.data = {"dlng": "Latn, Cyrl", "slng": "Latn, Cyrl"}
+fb.font["meta"] = _meta
 fb.font["name"].removeNames(platformID=1)   # drop legacy Macintosh name records (keep Windows platform 3)
 _hhea = fb.font["hhea"]
 _hhea.caretSlopeRise = 1; _hhea.caretSlopeRun = 0   # vertical caret (upright-classified; italicAngle 0)

@@ -167,6 +167,18 @@ whether the kern actually applies.
 - **`UPM=700`** is a FontBakery WARN (not a power of two / not 1000) but is a deliberate render-size choice —
   leave it unless a specific renderer misbehaves (changing it rescales the whole font).
 
+**D. Professional build improvements STAGED (build-script only — NOT yet in the shipped files).**
+Committed to `main` (not pushed); regenerate the font suite at the next release to bake them in. All verified
+**purely additive** — CFF outlines, `hmtx` advances and GPOS kerning are byte-identical to the shipped v0.9.20
+fonts (confirmed by table diff); only metadata/degenerate-contour cleanups. Per-format FontBakery stays **0
+FAIL** (OTF family: only the UPM WARN; TTF family: intrinsic WARNs, with the overlap one reduced).
+- `otf2ttf.py` — drops degenerate zero-area **speck contours** (overlap-WARN reduction; see C above).
+- `build_font.py` + `make_bold.py` — add a **STAT** table (static family, Weight axis: Regular=400 elidable /
+  Bold=700, elided fallback "Regular" — the modern standard for multi-style families; Adobe/InDesign use it for
+  family grouping) and a **`meta`** table (`dlng`/`slng` = "Latn, Cyrl"). Built *before* the existing
+  platform-1 name strip so `buildStatTable`'s re-added Mac names are removed too (Windows names keep STAT valid;
+  `no_mac_entries` still passes). GDEF deliberately NOT added — this GPOS has only `kern`, no mark features.
+
 *(Design / feature backlog — true joining v2, other-Cyrillic, `№`/`&`/symbols, Latin diacritics, drawn-Latin
 contrast — is in "Open / optional work" below.)*
 

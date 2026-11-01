@@ -41,11 +41,13 @@ def generate_figures(base_paths, charstrings, metrics, glyph_order, cmap):
         p = base_paths[d]; b = p.bounds; cx = (b[0]+b[2])/2.0
         add(d+".tf", _xf(p, (1, 0, 0, 1, TAB/2.0-cx, 0)), TAB)
 
-    # scaled figure variants (scale about the baseline origin keeps the slant)
+    # scaled figure variants (scale about the baseline origin keeps the slant).
+    # numr/dnom sit snug around the fraction bar, so they get less side spacing than sups/subs.
     for d in DIG:
         for suf, dy in (("sups", 300), ("subs", -70), ("numr", 290), ("dnom", 10)):
             s = _xf(base_paths[d], (SC, 0, 0, SC, 0, 0)); b = s.bounds
-            add(d+"."+suf, _xf(s, (1, 0, 0, 1, -b[0], dy)), int(round((b[2]-b[0])+20)))
+            pad = 6 if suf in ("numr", "dnom") else 20
+            add(d+"."+suf, _xf(s, (1, 0, 0, 1, -b[0], dy)), int(round((b[2]-b[0])+pad)))
 
     # slashed zero — a diagonal bar through the counter
     pz = base_paths["zero"]; b = pz.bounds
@@ -88,7 +90,13 @@ lookup FRAC_NUMR { sub @figs by @numr; } FRAC_NUMR;
 lookup FRAC_DNOM { sub @figs by @dnom; } FRAC_DNOM;
 feature frac {
     sub slash by fraction;
+    # numerators: up to three figures before the fraction bar (longest match first)
+    sub @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR fraction;
+    sub @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR fraction;
     sub @figs' lookup FRAC_NUMR fraction;
+    # denominators: up to three figures after the fraction bar
+    sub fraction @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM;
+    sub fraction @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM;
     sub fraction @figs' lookup FRAC_DNOM;
 } frac;
 """

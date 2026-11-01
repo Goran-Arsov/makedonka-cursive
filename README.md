@@ -7,9 +7,10 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.21** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
-**Hinted** (PostScript + TrueType), with a contrast-preserving Bold and an **OpenType figures suite** —
-tabular figures, slashed zero, super/subscripts and automatic fractions (type `1/2` → ½).
+**Version 0.9.22** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
+(tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½), and
+**math + ASCII symbols** (`+ − = × ÷ < > ± № # * [ ] { } …`).
 
 ![specimen](specimen.png)
 
@@ -68,6 +69,16 @@ h1.strong { font-weight: 700; }
 (Rails: drop the web files in `public/fonts/` and reference `/fonts/…`, or put them in
 `app/assets/fonts/` for the asset pipeline.)
 
+**CDN (no download):** this public repo is served by **jsDelivr** automatically — pin a release tag:
+
+```css
+@font-face {
+  font-family: "Makedonka Cursive";
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.22/MakedonkaCursive-Regular.woff2") format("woff2");
+  font-weight: 400; font-display: swap;
+}
+```
+
 ## Coverage
 - **Letters:** all 31 Macedonian letters, upper + lowercase (62 glyphs), with the correct
   Macedonian/Serbian-style cursive forms (overbarred г/п/т, g-shaped д, dotted ј, …).
@@ -90,8 +101,10 @@ h1.strong { font-weight: 700; }
   Turn them on in any OpenType-aware app (InDesign, Illustrator, Word's advanced typography) or on the
   web with CSS `font-feature-settings` / `font-variant`. Both weights carry a **STAT** table so the
   family groups correctly across apps.
-- **Not included:** other-Cyrillic (Russian/Serbian-specific letters), and ASCII math symbols
-  (`= + × ÷`).
+- **Math & symbols:** `+ − = × ÷ < > ±` operators, `№` numero, and the ASCII set `# * _ | ~ \ ^ [ ] { }` —
+  calligraphic pen forms matching the figures.
+- **Not included:** other-Cyrillic (Russian/Serbian-specific letters), and a few ornamental symbols
+  (`& @ $ ©`) not yet drawn.
 
 ## Scope & roadmap
 - **A display face — use it large.** An ornate copperplate for headings, logos, titles and short text.

@@ -433,6 +433,20 @@ def _make(fn, width):
     out = pathops.Path(); sl.draw(TransformPen(out.getPen(), (1, 0, 0, 1, dx, 0))); out.simplify()
     t2 = T2CharStringPen(width, None); out.draw(t2); ob = out.bounds
     return t2.getCharString(), int(round(ob[0])) if ob else 0
+# ---- v0.9.22 symbol helpers (drawn upright; _make slants + centres) ----
+def _asterisk(pen, cx, cy, r, n=6):
+    for k in range(n):
+        a = math.pi/2 + k*2*math.pi/n
+        ribbon_prof(pen, [('M', (cx, cy)), ('L', (cx+r*math.cos(a), cy+r*math.sin(a)))], 28, 13)
+def _brace(pen, left=True):
+    s = 1 if left else -1; x = 150        # sharper inward cusp at mid-height so it reads as a brace, not a paren
+    ribbon_prof(pen, [('M', (x+s*74, 702)), ('C', (x+s*30, 650), (x+s*18, 452), (x-s*40, 322))], 27, 27)
+    ribbon_prof(pen, [('M', (x-s*40, 322)), ('C', (x+s*18, 192), (x+s*30, -6), (x+s*74, -58))], 27, 27)
+def _numero(pen):   # № : an upright N, a raised small ring (o), and its underline
+    ribbon_prof(pen, [('M', (44, 24)), ('L', (44, 500))], 48, 48)
+    ribbon_prof(pen, [('M', (44, 500)), ('L', (232, 24))], 42, 42)
+    ribbon_prof(pen, [('M', (232, 24)), ('L', (232, 500))], 48, 48)
+    _ring(pen, 338, 432, 72, 36); _rect(pen, 270, 352, 406, 392)
 # Calligraphic set: dots are slanted ovals, comma/quotes are pen-commas, ! and ?
 # are tapered/direction-weighted ribbons; every mark is slanted 18° in _make. In
 # colon/semicolon the upper dot is pre-shifted by −SLANT·Δy so it stacks truly
@@ -462,6 +476,27 @@ PUNCT = [
     (0x00BB, "guillemotright", 310, lambda p: (ribbon_prof(p, [('M', (48, 232)), ('L', (124, 130)), ('L', (48, 28))], 26, 26), ribbon_prof(p, [('M', (160, 232)), ('L', (236, 130)), ('L', (160, 28))], 26, 26))),  # »
     (0x00B0, "degree", 210, lambda p: _ring(p, 98, 470, 62, 34)),                                                      # ° small ring near figure top
     (0x0025, "percent", 480, lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 338, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (368, 600))], 34, 34))),  # % two rings + stroke
+    # ---- v0.9.22: math operators + ASCII tech symbols + № numero ----
+    (0x002B, "plus", 360, lambda p: (_rect(p, 52, 272, 308, 328), _rect(p, 152, 180, 208, 420))),
+    (0x2212, "minus", 360, lambda p: _rect(p, 52, 272, 308, 328)),
+    (0x003D, "equal", 360, lambda p: (_rect(p, 52, 236, 308, 288), _rect(p, 52, 318, 308, 370))),
+    (0x00D7, "multiply", 340, lambda p: (ribbon_prof(p, [('M', (84, 196)), ('L', (256, 404))], 42, 42), ribbon_prof(p, [('M', (256, 196)), ('L', (84, 404))], 42, 42))),
+    (0x00F7, "divide", 360, lambda p: (_rect(p, 52, 272, 308, 328), _oval(p, 180, 398, 31, 34), _oval(p, 180, 202, 31, 34))),
+    (0x003C, "less", 330, lambda p: ribbon_prof(p, [('M', (266, 172)), ('L', (72, 300)), ('L', (266, 428))], 40, 40)),
+    (0x003E, "greater", 330, lambda p: ribbon_prof(p, [('M', (64, 172)), ('L', (258, 300)), ('L', (64, 428))], 40, 40)),
+    (0x00B1, "plusminus", 360, lambda p: (_rect(p, 152, 250, 208, 470), _rect(p, 52, 332, 308, 388), _rect(p, 52, 150, 308, 206))),
+    (0x002A, "asterisk", 300, lambda p: _asterisk(p, 150, 486, 92)),
+    (0x0023, "numbersign", 420, lambda p: (_rect(p, 128, 120, 172, 540), _rect(p, 258, 120, 302, 540), _rect(p, 58, 238, 372, 286), _rect(p, 58, 372, 372, 420))),
+    (0x005F, "underscore", 360, lambda p: _rect(p, 20, -66, 340, -12)),
+    (0x007C, "bar", 240, lambda p: _rect(p, 96, -140, 150, 620)),
+    (0x007E, "asciitilde", 360, lambda p: ribbon_prof(p, [('M', (46, 286)), ('C', (96, 346), (150, 346), (194, 302)), ('C', (236, 262), (286, 262), (318, 314))], 30, 30)),
+    (0x005C, "backslash", 300, lambda p: ribbon_prof(p, [('M', (74, 586)), ('L', (226, -46))], 40, 40)),
+    (0x005E, "asciicircum", 340, lambda p: ribbon_prof(p, [('M', (72, 468)), ('L', (170, 624)), ('L', (268, 468))], 36, 36)),
+    (0x005B, "bracketleft", 230, lambda p: _poly(p, [(66, -78), (196, -78), (196, -26), (120, -26), (120, 646), (196, 646), (196, 698), (66, 698)])),
+    (0x005D, "bracketright", 230, lambda p: _poly(p, [(164, -78), (34, -78), (34, -26), (110, -26), (110, 646), (34, 646), (34, 698), (164, 698)])),
+    (0x007B, "braceleft", 280, lambda p: _brace(p, True)),
+    (0x007D, "braceright", 280, lambda p: _brace(p, False)),
+    (0x2116, "numero", 470, _numero),
 ]
 for cp, name, width, fn in PUNCT:
     cs, xmin = _make(fn, width); glyph_order.append(name); cmap[cp] = name; charstrings[name] = cs; metrics[name] = (width, xmin)
@@ -609,13 +644,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.921", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.922", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.921",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.921", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.922",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.922", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -637,7 +672,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.921    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.922    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

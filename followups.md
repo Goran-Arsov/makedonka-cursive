@@ -17,7 +17,9 @@ automatically at the end of each build.
   (`uharfbuzz`) to preview GPOS kerning + GSUB features (PIL applies neither). Compare old vs new.
   **Slant/width is unreliable to measure on round/ornate glyphs** — judge those by eye.
 - **Ship a version** — once it looks right, rebuild the whole suite into the project dir:
-  1. `build_font.py build/paths.json .`  → Regular `.otf`/`.woff2`/`.woff` + `specimen.png` (auto kern + GSUB)
+  1. `build_font.py build/paths.json .`  → Regular `.otf`/`.woff2`/`.woff` + `specimen.png` (auto kern + GSUB).
+     `specimen.png` now shows **both** the Cyrillic AND the full **Latin** alphabet (caps + MAKEDONIJA + lowercase +
+     diacritics) — generated every build, so it stays in sync with each version (specimen canvas is 4200px tall).
   2. `make_bold.py MakedonkaCursive-Regular.otf . 16`  → Bold (faux-bold dilation D=16; auto kern + GSUB)
   3. `otf2ttf.py <in>.otf <out>.ttf` for each weight  → the two `.ttf` (auto speck-drop + ttfautohint)
   4. **bump the version** everywhere: `0.92N` in `build_font.py` (**4 strings**: CFF version, uniqueFontIdentifier,

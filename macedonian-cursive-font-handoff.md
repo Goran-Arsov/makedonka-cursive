@@ -203,7 +203,8 @@ vectorizing the Wikimedia chart (see *Source material* below).
 - **(v0.9.17) uppercase spacing kerning — consecutive-caps fixed:** `kern_util.py` now also emits a
   **capital→capital** GPOS kern. For each cap it measures the dense-body left/right edge by ink-mass
   percentile (the same method `build_font.py`'s specimen uses to space the cap chart — new helpers `_CFP`,
-  `_cap_body`), then for each cap pair pushes the body gap up to **`CAP_GAP=300`** (positive-only, floor
+  `_cap_body`), then for each cap pair pushes the body gap up to **`CAP_GAP=300`** (raised to **440** in
+  v0.9.24 to further open all-caps; the specimen's `line_caps` gap moved 44→63 px to match) (positive-only, floor
   `MIN_CAP_KERN=10`), so all-caps reads while the flourishes still cross. It fires **only capital-before-capital**
   (both scripts), so the approved **capital→lowercase tuck is untouched** — this is the insight that resolves
   the old tension (open-work #5 feared a RIGHT_CAP sidebearing fix would hurt the tuck; kerning is context-specific,

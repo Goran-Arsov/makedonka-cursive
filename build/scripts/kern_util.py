@@ -26,7 +26,7 @@ _LAT = "abcdefghijklmnopqrstuvwxyz"
 # Push each cap->cap DENSE-BODY gap up to CAP_GAP (the specimen's even-body-spacing target);
 # flourishes still cross. It fires ONLY capital-before-capital, so the approved capital->lowercase
 # tuck-under is untouched. Positive-only — it never tightens, so it can only fix overlap.
-CAP_GAP, MIN_CAP_KERN = 300, 10
+CAP_GAP, MIN_CAP_KERN = 440, 10
 _CYR_CAPS = "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШ"
 _LAT_CAPS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 

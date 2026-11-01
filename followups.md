@@ -37,10 +37,10 @@ automatically at the end of each build.
   base64 `@font-face`, so the kern renders natively) and a non-technical install/use guide exist as private
   shareable pages; the owner holds the links. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.32 — SHIPPED + repo PUBLIC; updated 2026-11-01)
-- **Shipped + public.** `origin/main` is at **v0.9.32**; GitHub releases v0.9.15–v0.9.32 are live (each with its
+## Current state (v0.9.33 — SHIPPED + repo PUBLIC; updated 2026-11-01)
+- **Shipped + public.** `origin/main` is at **v0.9.33**; GitHub releases v0.9.15–v0.9.33 are live (each with its
   zip). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
-  Font-internal version **"0.932"**, demo/CSS `?v=43`.
+  Font-internal version **"0.933"**, demo/CSS `?v=44`.
 - **Coverage — 243 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
   uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
   South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ / … · ° %);
@@ -59,7 +59,7 @@ automatically at the end of each build.
   CAP_BAND_HI=590`u above baseline, rendered glyph), ignoring the flourishes that loop above cap-height/below
   baseline — equalised both directions so the **perceived** whitespace is uniform (body-band spread ~**1px**/word,
   both weights; was ~96px). Supersedes the v0.9.27 full-height ink-mass measure, which the flourishes skewed so
-  Ѕ/Ј/С/Е read with extra space in front. Only cap-before-cap, so Title-case/lowercase unchanged. Regular/Bold **2266** pairs.
+  Ѕ/Ј/С/Е read with extra space in front. Only cap-before-cap, so Title-case/lowercase unchanged. Regular/Bold **2265 / 2220** pairs.
 - **OpenType features (GSUB):** `tnum` tabular figures · `zero` slashed zero · `sups`/`subs` · `numr`/`dnom` ·
   `frac` fractions (multi-digit, 2–3). Built from the digit outlines by `features.py`; HarfBuzz-verified. Both
   weights also carry a **STAT** table (Weight axis) + a **`meta`** table (dlng/slng = Latn, Cyrl). GSUB + the kern
@@ -75,9 +75,9 @@ automatically at the end of each build.
 ## What should still be done
 
 **A. Propagate the latest release to the two places OUTSIDE this repo (owner's).**
-- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.32, pushed** (amici commit `b04ad47`:
-  new Regular+Bold `woff`/`woff2`, cache-buster `?v=17→18`, Tailwind CSS rebuilt). amici's own cache-buster
-  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.31=`?v=23`, v0.9.32=`?v=24`). **Only
+- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.33, pushed** (amici commit `30efb27`:
+  new Regular+Bold `woff`/`woff2`, cache-buster `?v=24→25`, Tailwind CSS rebuilt). amici's own cache-buster
+  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.32=`?v=24`, v0.9.33=`?v=25`). **Only
   the live DEPLOY remains** — its GitHub Actions deploy is blocked on missing secrets, so it needs a manual deploy
   or the secrets set; the live site state can't be verified from this checkout. (`app/assets/builds/tailwind.css`
   is gitignored there — regenerated on deploy, so the commit carries only the source CSS + the font binaries.)
@@ -97,6 +97,13 @@ speck-drop in `otf2ttf.py` reduced it (Regular 24→15, Bold 185→62), render-i
 non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a manual Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.33** — **Latin T reworked + I hair removed:** the Latin cap **T** is no longer a drawn glyph — it is the
+  Cyrillic Т's own strokes: its top **cap** (left curl/swash cut off → plain bar) + its **middle pipe** (lifted
+  whole, unedited), de-skewed onto the Latin slant (`_dsk(0x0422)`) + `CAP_SCALE` like the other reused caps. The
+  pipe is moved right ~10% of the width (`T_STEM_PCT`), the bar auto-seated onto its top (one contour), and the T
+  is spaced by the **stem** (x-height join band, + `T_RSP=60`) so the bar's right arm overhangs and the next letter
+  tucks under it (flows in words). Latin cap **I** — bottom hair removed (`_U_I`: stem + top swash only). Only T/I
+  changed; 243 glyphs; FontBakery 0 FAIL.
 - **v0.9.32** — **N/L/T flourish refinements:** N — removed right exit hair, longer left swash + small twist. L —
   same longer upper swash + twist, and thicker bottom bar ending in a twist. T — removed footer hair, cap sweeps
   left into a **big open loop** (built as an explicit oval path) echoing the ornate Cyrillic Т's cap. Only N/L/T
@@ -213,6 +220,10 @@ non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a m
   specimen now shows the full Latin alphabet too; re-propagated to amici (`?v=23`; deploy owner-side).
 - **N/L/T flourish refinements (v0.9.32)** — N left-hair twist (right hair removed), L thicker bottom bar + twists,
   T cap sweeping into a big left loop like Cyrillic Т; re-propagated to amici (`?v=24`; deploy owner-side).
+- **Latin T from Cyrillic Т cap + middle pipe (v0.9.33)** — T rebuilt from the Cyrillic Т's own cap (left curl cut
+  off → plain bar) + its middle pipe (lifted whole, unedited); pipe moved right ~10% and spaced by the stem (so the
+  bar overhangs and the next letter tucks under it, flows in words); Latin I bottom hair removed; re-propagated to
+  amici (`?v=25`; deploy owner-side).
 - **OpenType figures features + STAT/meta** (v0.9.21), **math/ASCII symbols + multi-digit frac** (v0.9.22),
   **South-Slavic Latin diacritics + more symbols** (v0.9.23).
 - **Full Latin alphabet** (v0.9.2, refined through v0.9.14). **GPOS pair kerning** (v0.9.15). **Even consecutive

@@ -107,7 +107,8 @@ vectorizing the Wikimedia chart (see *Source material* below).
   `build_font.py`: `make_bold.py <Regular.otf> <outdir> [D]`.
 - **Latin alphabet (v0.9.2):** full A–Z/a–z, in the `# Latin` section of `build_font.py`.
   `LATIN_HOMO` maps ~27 Latin codepoints to identical Cyrillic glyphs via cmap (no new
-  outlines; incl. g=д, u=и, m=м). `LATIN_DRAWN` holds the 25 letters with no look-alike,
+  outlines; incl. g=д, u=и, m=м). `LATIN_DRAWN` holds the 26 drawn letters with no look-alike
+  (the Latin **T** is built separately from the Cyrillic Т's own strokes — see v0.9.33),
   drawn via `_L_x`/`_U_X` functions (ribbon_dir/ribbon_prof/_oval + `_loopasc`/`_lbowl`/
   `_archright` helpers) at LXH=247/LASC=553/LCAP=653/LDESC=-240, slanted 18°, spaced by the
   x-height band (`_latin_sb`) with baseline 0. The clean-arch trick (n, h): the up-stroke
@@ -292,6 +293,26 @@ vectorizing the Wikimedia chart (see *Source material* below).
   fills a tight one and it reads small) — build the loop as an explicit oval path (4 segments) and compare at size
   against the reference glyph. The big left loops widen the glyphs' left side-bearing (handled by `_latin_sb` + the
   cap kern, like the ornate caps). Only N/L/T outlines changed; 243 glyphs; both weights; FontBakery 0 FAIL/0 ERROR.
+- **(v0.9.33) Latin T from the Cyrillic Т's own strokes + I hair removed:** per request, the drawn `_U_T` (and the
+  v0.9.31/32 loop work) was **removed**; `T` is now built by `_build_T_latin()`. The cursive Cyrillic Т (`uni0422`)
+  is drawn as **four contours** — the top CAP, a big left loop+first-pipe stroke, the MIDDLE pipe, the right pipe.
+  The builder splits `_neut["uni0422"]` into contours (via `RecordingPen`), picks the **CAP** (= contour whose ink
+  reaches highest) and the **MIDDLE pipe** (= median left-edge of the other three), de-skews each onto the single
+  Latin slant (`_dsk(0x0422)`) + `CAP_SCALE` exactly like a `REUSE_DESKEW` cap. Then three placement steps (knobs
+  at the top of the block): **(1) cut the cap's left curl** — `intersection` keeps `x ≥ cap_left + T_CURL_CUT`
+  (=360 post-scale) so the loop/swash is removed and the bar reads plain (360 not ~318 — a shorter cut leaves a
+  small loop **sliver** as a stray contour). **(2) move the pipe right** `T_STEM_PCT` (=0.10) of the (bar+pipe)
+  width — the pipe is never reshaped, only translated. **(3) auto-seat** the bar onto the moved pipe's top: the bar
+  rises to the right, so a fixed seat leaves a gap; measure the bar's underside right at the pipe-tip x (narrow ±18
+  window) and lower the bar to overlap by `T_CAP_SEAT` (=10) → one solid contour. Spacing: don't use `measure()`
+  (its baseline detector mis-fires on this dense-bar/thin-stem shape — baseline is 0 by construction, force it) and
+  don't space by the bar tip (huge right gap, stands off from the next letter); space the **right** by the STEM via
+  `_latin_sb` (x-height join band) `+ T_RSP` (=60) so the long bar arm **overhangs** and the following letter tucks
+  under it (cursive flow). The design target was a user screenshot (plain bar, left curl cut, stem leaning left,
+  moved ~10% right). **I** — `_U_I` bottom hair removed (stem + top swash loop only). Note: a FontBakery FAIL
+  `bold_italic_unique_for_nameid1` is **spurious when OTF+TTF of a weight are checked together** (same name/bold
+  bits collide) — check each format set separately (per-format = 0 FAIL). Only T/I changed; 243 glyphs; both
+  weights; FontBakery 0 FAIL/0 ERROR per-format.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

@@ -143,12 +143,27 @@ at display sizes — plus the kerning, all-caps (`МАКЕДОНИЈА`), `Ѐ/Ѝ
 macOS**. Watch for filled counters, flourish clipping between lines, hinting distortion at small sizes, and
 whether the kern actually applies.
 
-**C. Optional polish (all FontBakery WARN-level from the v0.9.20 QA — none blocking).**
-- Remove the disk-brush **overlapping path segments** (a production nicety; they render fine via nonzero fill).
-  Try `fontTools removeOverlaps` on the final fonts; re-verify outlines + hinting don't regress.
-- Cross-check with a second validator (**Microsoft FontValidator**) for anything FontBakery's profile misses.
-- **Version scheme:** the font reports **"0.920"** while the project/release is **"0.9.20"** (nameID 5 must be
-  `X.YYY`, not `0.9.20`, to pass the version check). Decide whether to adopt `0.920` everywhere or keep both.
+**C. Optional polish (all FontBakery WARN-level from the v0.9.20 QA — none blocking). Investigated 2026-11-01.**
+- **Overlapping path segments — root-caused; partial SAFE fix now in the build, full fix deferred to Open #7.**
+  The check is **TTF-only** (`is_ttf`) — the OTFs are already clean. The segments are **intrinsic to the
+  disk-brush / ribbon / faux-bold construction**: the outlines self-touch at pinch points, which are *valid*
+  nonzero boundaries. The suggested `fontTools removeOverlaps` was tested and **makes it WORSE** (skia
+  re-tessellation + integer rounding reintroduces coincident segments); cu2qu `MAX_ERR` has no effect and
+  re-`simplify()` is negative too — all go through skia and reproduce the same self-touching boundary. So the
+  WARN is **not clearable by any safe automated outline pass.** True baseline is bigger than the v0.9.20 note
+  implied — **Regular 24 segs / Bold 185 segs** across the drawn-Latin, punctuation and emboldened glyphs (not
+  just a couple of digits). **`build/scripts/otf2ttf.py` now drops the degenerate zero-area "speck" contours**
+  the union leaves behind (13 Regular / 364 Bold) → WARN **Regular 24→15, Bold 185→62**, verified
+  **render-identical** (0.000% ink change; XOR-area 0.003%/0.053%; advances + hinting intact; FontBakery still
+  0 FAIL/0 ERROR). This is an **uncommitted working-tree change**; the shipped TTFs were deliberately NOT
+  regenerated (owner's call: "keep build-script change only" 2026-11-01), so the cleaner outlines fold into the
+  **next release** — a TTF-only outline change (OTF/woff byte-identical), bump the version when that build runs.
+  Full clearance needs the **non-self-intersecting stroker (Open #7)** — a design change, not polish.
+- **Microsoft FontValidator cross-check:** a manual **Windows/.NET** step (not installed in this build env; it's
+  a validator, not a fix). Run on Windows if wanted — FontBakery already passes 0 FAIL / 0 ERROR.
+- **Version scheme: DECIDED — keep both (2026-11-01).** The font is internally consistent at **"0.920"**
+  (nameID 5 / fontRevision / CFF — the valid `X.YYY` form; the version check passes, no WARN). Marketing/release
+  stays **"0.9.20"**. No change: a font-internal version differing from the marketing version is normal.
 - **`UPM=700`** is a FontBakery WARN (not a power of two / not 1000) but is a deliberate render-size choice —
   leave it unless a specific renderer misbehaves (changing it rescales the whole font).
 
@@ -222,8 +237,11 @@ contrast — is in "Open / optional work" below.)*
    Tune the all-caps body gap via `CAP_GAP` (currently 300); could still be hand-refined per pair.
 6. **Other-Cyrillic coverage** — Russian/Serbian/Bulgarian/Ukrainian-specific letters (Ё Й Щ Ъ Ы Э Ю Я …):
    new designed glyphs. (Latin is DONE.)
-7. **Sharper digit edges** — the disk-brush gives a soft pen edge; a non-self-intersecting stroker would
-   be crisper. Cosmetic; the solid-fill requirement is met. (Middot `·` added in v0.9.16.)
+7. **Sharper digit edges / non-self-intersecting stroker** — the disk-brush gives a soft pen edge; a
+   non-self-intersecting stroker would be crisper. Cosmetic; the solid-fill requirement is met. (Middot `·`
+   added in v0.9.16.) **This is also the real/full fix for the FontBakery `overlapping_path_segments` WARN**
+   (see "What should still be done → C"): the brush/embolden outlines self-touch at pinch points that no safe
+   automated pass can remove — only redrawing with a non-self-intersecting stroker (or hand-drawn forms) clears it.
    **Still-missing glyphs (deferred, lower necessity / higher design risk):** `№` numero + `&` ampersand
    (both high-value for Cyrillic/wordmarks but hard to draw cleanly in this hand — worth a careful pass);
    `© × ÷ ‰ ′ ″`, ASCII tech `# $ & * + < = > @ [ ] { } | \ ^ _ ~`; Latin diacritics `š č ž ć đ` for

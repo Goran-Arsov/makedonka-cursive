@@ -35,10 +35,10 @@ automatically at the end of each build.
   base64 `@font-face`, so the kern renders natively) and a non-technical install/use guide exist as private
   shareable pages; the owner holds the links. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.26 — SHIPPED + repo PUBLIC; updated 2026-11-01)
-- **Shipped + public.** `origin/main` is at **v0.9.26**; GitHub releases v0.9.15–v0.9.26 are live (each with its
+## Current state (v0.9.27 — SHIPPED + repo PUBLIC; updated 2026-11-01)
+- **Shipped + public.** `origin/main` is at **v0.9.27**; GitHub releases v0.9.15–v0.9.27 are live (each with its
   zip). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
-  Font-internal version **"0.926"**, demo/CSS `?v=37`.
+  Font-internal version **"0.927"**, demo/CSS `?v=38`.
 - **Coverage — 243 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
   uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
   South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ / … · ° %);
@@ -52,11 +52,12 @@ automatically at the end of each build.
   `LAT_LIGHTEN` for heavy caps. Every category now ~0.85–1.15× the Cyrillic on **both weights**; Cyrillic unchanged
   (never uses the brush). Residuals (bypass the brush): brackets `[ ]` (~2×) + lowercase `p` — minor, see Open #12.
 - **Kerning:** GPOS `kern` on both weights, algorithmic (`kern_util.py`, params at its top), registered under
-  DFLT+latn+cyrl. Bidirectional connection kerning + an **even-visual-ink-gap cap→cap kern** (**`CAP_VIS_GAP=160`**
-  since v0.9.25; replaced the v0.9.17–24 body-gap model): each cap's leftmost ink clears the previous cap's rightmost
-  ink by 160 units, widening *or* tightening to one gap — so all-caps Cyrillic is lined up, evenly distanced, and
-  provably non-overlapping (МАКЕДОНИЈА gap spread 65px→3px). Only cap-before-cap, so Title-case/lowercase unchanged.
-  Regular **2246** / Bold **2224** pairs.
+  DFLT+latn+cyrl. Bidirectional connection kerning + an **even dense-BODY-gap cap→cap kern** (**`CAP_BODY_GAP=620`**
+  since v0.9.27): equalises each cap pair's dense-body gap (body edges = 15/85 % of column ink-mass of the *rendered*
+  glyph, so counters are empty), widening *or* tightening to one gap — so **every** all-caps word has a uniform body
+  rhythm (body-gap spread **0u** on МАКЕДОНИЈА/ОХРИД/MAKEDONIJA, both weights). Replaced the v0.9.25 visual-ink-gap
+  model, which evened the flourish TIPS but left the bodies irregular (read as chaotic). Only cap-before-cap, so
+  Title-case/lowercase unchanged. Regular/Bold **2266** pairs.
 - **OpenType features (GSUB):** `tnum` tabular figures · `zero` slashed zero · `sups`/`subs` · `numr`/`dnom` ·
   `frac` fractions (multi-digit, 2–3). Built from the digit outlines by `features.py`; HarfBuzz-verified. Both
   weights also carry a **STAT** table (Weight axis) + a **`meta`** table (dlng/slng = Latn, Cyrl). GSUB + the kern
@@ -72,9 +73,9 @@ automatically at the end of each build.
 ## What should still be done
 
 **A. Propagate the latest release to the two places OUTSIDE this repo (owner's).**
-- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.26, pushed** (amici commit `3658e00`:
+- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.27, pushed** (amici commit `e1cc143`:
   new Regular+Bold `woff`/`woff2`, cache-buster `?v=17→18`, Tailwind CSS rebuilt). amici's own cache-buster
-  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.25=`?v=17`, v0.9.26=`?v=18`). **Only
+  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.26=`?v=18`, v0.9.27=`?v=19`). **Only
   the live DEPLOY remains** — its GitHub Actions deploy is blocked on missing secrets, so it needs a manual deploy
   or the secrets set; the live site state can't be verified from this checkout. (`app/assets/builds/tailwind.css`
   is gitignored there — regenerated on deploy, so the commit carries only the source CSS + the font binaries.)
@@ -94,6 +95,11 @@ speck-drop in `otf2ttf.py` reduced it (Regular 24→15, Bold 185→62), render-i
 non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a manual Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.27** — **even BODY rhythm for all-caps:** v0.9.25 evened the flourish-TIP gaps, but the ornate flourishes
+  reach by different amounts, so the letter BODIES stayed at irregular intervals (chaotic-looking). Switched the cap
+  kern to equalise the dense-BODY gap both directions (`CAP_BODY_GAP=620`); `_cap_body` now measures the *rendered*
+  glyph (counters empty) instead of polygon-filling the outline (which filled О/Д/Б holes). Every all-caps word now
+  has body-gap spread **0u** (both weights). Cap-before-cap only; outlines unchanged; 243 glyphs; FontBakery 0 FAIL.
 - **v0.9.26** — **unified typographic colour:** digits/symbols/drawn-Latin were heavier (darker) than the traced
   Cyrillic (digits ~2.4×, symbols ~1.8×, Latin ~1.3×) — the numbers read as bolded. Added a per-category weight
   `_WT` on every disk-brush radius (`_disk` + `_rect`/`_oval`/`_ring`); `DIGIT_WT=0.45`, `LAT_WT=0.70`, symbol tiers
@@ -167,6 +173,8 @@ non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a m
   vary (inherent to the hand-drawn caps) — a glyph-level normalization is a separate pass if wanted.
 - **Typographic colour (v0.9.26)** — digits/symbols/Latin unified to the Cyrillic stroke weight (the "bolded numbers"
   fixed); re-propagated to amici (pushed, `?v=18`; live deploy owner-side).
+- **Even all-caps body rhythm (v0.9.27)** — equal dense-body gaps so any all-caps word is evenly spaced (fixed the
+  "chaotic" МАКЕДОНИЈА spacing); re-propagated to amici (pushed, `?v=19`; live deploy owner-side).
 - **OpenType figures features + STAT/meta** (v0.9.21), **math/ASCII symbols + multi-digit frac** (v0.9.22),
   **South-Slavic Latin diacritics + more symbols** (v0.9.23).
 - **Full Latin alphabet** (v0.9.2, refined through v0.9.14). **GPOS pair kerning** (v0.9.15). **Even consecutive

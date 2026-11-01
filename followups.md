@@ -33,9 +33,17 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   shareable pages; the owner holds the links. Regenerate the specimen from the current `.woff2` when the font
   changes. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.20 — professional QA pass; repo still PRIVATE; updated 2026-11-01)
-- **v0.9.20 — professional pre-release QA (FontBakery): 24 FAIL + 2 ERROR → 0 FAIL, 0 ERROR.** Committed
-  locally (NOT pushed — see the publish-pending note below). Fixes: **vertical metrics harmonised** (typo =
+## Current state (v0.9.21 — SHIPPED + repo PUBLIC; updated 2026-11-01)
+- **v0.9.21 — SHIPPED + PUBLISHED (2026-11-01).** The session's staged build improvements are now baked into the
+  shipped fonts and released: **OpenType figures suite** (tnum/zero/sups/subs/numr/dnom/frac — 155→**207 glyphs**,
+  shape-verified with HarfBuzz), **STAT** + **meta** tables, and **TTF speck-contour cleanup**. The 155 base
+  glyphs are byte-identical to v0.9.20 (purely additive). FontBakery **0 FAIL / 0 ERROR** (universal + Adobe).
+  Font version **"0.921"**, README 0.9.21, `?v=32`. **Pushed** to `origin/main` (release commit `dc14ff5` + the
+  4 build commits + v0.9.20); **GitHub release v0.9.21** cut with the zip; both OTFs reinstalled to
+  `~/.local/share/fonts/` (+fc-cache); **repo flipped to PUBLIC**. New build file: `build/scripts/features.py`.
+  Still TODO outside this repo: the separate website + the live specimen preview page (see A below).
+- **v0.9.20 — professional pre-release QA (FontBakery): 24 FAIL + 2 ERROR → 0 FAIL, 0 ERROR.** (Superseded by
+  v0.9.21; both now pushed.) Fixes: **vertical metrics harmonised** (typo =
   hhea = win = 901/-410, lineGap 0) + **USE_TYPO_METRICS** set on BOTH weights (OS/2 bumped to **v4**, needed
   for that bit) → identical line height in every app; **GPOS `kern` now registered under DFLT + latn + cyrl**
   (was DFLT only — strict shapers now kern Cyrillic/Latin); **italicAngle 0 + vertical caret** (upright-classified
@@ -46,16 +54,11 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   are WARNs only, all intentional/benign: UPM=700 (deliberate render-size choice), contour-count (custom design),
   post v3 (valid), disk-brush overlapping segments (render correctly via nonzero fill). New QA-only tool (not a
   build dep): `fontbakery`. 155 glyphs. Rebuilt all; README `0.9.20`, `?v=31`.
-- **PENDING — make the GitHub repo public (owner's call, not done yet).** v0.9.19/0.9.20 are shipped locally,
-  but the repo is **still PRIVATE** (v0.9.20 not pushed/released yet either). The CURRENT files are
-  sanitized (no local paths / private URLs / secrets), so it's ready to publish. **Decision reached 2026-11-01:**
-  publish it **as-is — NO history rewrite.** Rationale: the owner doesn't care about old versions, and the
-  pre-sanitization commits only hold home-dir paths, private (un-openable) preview URLs, and another project's
-  deploy *variable names* — **no real secrets were ever committed** (verified across all history). The single
-  command to go public (gated for the AI's tools — run it as the owner, e.g. with a `!` prefix):
-  `gh repo edit Goran-Arsov/makedonka-cursive --visibility public --accept-visibility-change-consequences`.
-  (Note: a clean-history squash was prototyped then **abandoned** — the owner judged it not worth it; local
-  `main` was reset back in sync with `origin/main`, so there is no leftover orphan state.)
+- **DONE — the GitHub repo is PUBLIC (2026-11-01).** Published **as-is, no history rewrite** (the decided path):
+  the pre-sanitization commits hold only home-dir paths, un-openable private preview URLs and another project's
+  deploy *variable names* — **no real secrets**, verified across all history. `origin/main` is at v0.9.21.
+  (On this gh (2.45.0) the public flip is `gh repo edit Goran-Arsov/makedonka-cursive --visibility public` — the
+  newer `--accept-visibility-change-consequences` flag does not exist yet here.)
 - **Ship status: v0.9.19 SHIPPED (2026-10-31).** **Tackled the three remaining "Known limitations":**
   (1) **true joining** — attempted auto-generated connecting strokes, which **degraded** the design (tested by
   render: doubled strokes / collisions), so NOT shipped; it genuinely needs hand-drawn connected forms →
@@ -125,16 +128,14 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
 
 ## What should still be done (prioritised)
 
-**A. Finish shipping v0.9.20 + publish (immediate).** v0.9.20 is committed **locally only** (`main` is 1 ahead
-of origin). To release it: **push** `main`; build the `MakedonkaCursive-v0.9.20.zip` and cut/refresh the GitHub
-**release v0.9.20**; **reinstall** both OTFs to `~/.local/share/fonts/` (+`fc-cache`) for LibreOffice; **make the
-repo public** — decided as-is, no history rewrite:
-`gh repo edit Goran-Arsov/makedonka-cursive --visibility public --accept-visibility-change-consequences`;
-update the font on the **separate website** (it still serves v0.9.17 — copy the new woff/woff2, bump `?v=`,
-rebuild its CSS; that site's CI deploy is blocked on missing Actions secrets, so it needs a manual deploy or
-the secrets set); and **refresh the live specimen preview page** (stale at v0.9.17 — re-embed the v0.9.20 woff2
-so it shows the contrast Bold + hinting + Ѐ/Ѝ). Force-push / release-delete / visibility are gated for the AI's
-tools — run them yourself (e.g. with a `!` prefix).
+**A. Propagate v0.9.21 to the two places OUTSIDE this repo (still TODO — owner's).** The repo itself is fully
+released + public (push, GitHub release v0.9.21 with the zip, local OTF install, visibility — all DONE; see
+Current state). What remains is the two external mirrors:
+- **Separate website** — still serves v0.9.17. Copy the new `woff`/`woff2` (both weights) into its
+  `public/fonts/`, bump `?v=`, rebuild its CSS, commit. Its CI deploy is blocked on missing Actions secrets, so
+  it needs a manual deploy or the secrets set. (That site is a separate repo; its location is the owner's.)
+- **Live specimen preview page** — stale; re-embed the v0.9.21 `woff2` so it shows the new OpenType features +
+  the contrast Bold. Owner holds the private link.
 
 **B. Render-test in real apps before a wide release.** This session validated via **FontBakery** (0 FAIL),
 HarfBuzz and PIL, but **not** in the actual target environments. Install the OTF/TTF and eyeball Regular + Bold

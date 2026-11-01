@@ -284,6 +284,14 @@ vectorizing the Wikimedia chart (see *Source material* below).
   MAKEDONIJA + lowercase + diacritics) every build (canvas 4200px). Only the 6 cap outlines changed; 243 glyphs;
   both weights; FontBakery 0 FAIL/0 ERROR. (D/G/Q/U/V/W are still the plain drawn caps — fair game for the same
   treatment if wanted.)
+- **(v0.9.32) N/L/T flourish refinements:** per request — **N**: removed the right exit hair, lengthened the left
+  entry swash and added a small spiral **twist**. **L**: same longer-upper-swash-with-twist, and the bottom bar made
+  **thicker** (`ribbon_prof` w 42/24) ending in a twist. **T**: removed the footer hair; the cap now **sweeps left
+  into a big open loop** (explicitly constructed top→left→bottom→right→spiral-tail centreline) echoing the ornate
+  **Cyrillic Т**'s cap. Lesson: a big calligraphic **loop won't form from a vague 3-point Bézier** (the disk brush
+  fills a tight one and it reads small) — build the loop as an explicit oval path (4 segments) and compare at size
+  against the reference glyph. The big left loops widen the glyphs' left side-bearing (handled by `_latin_sb` + the
+  cap kern, like the ornate caps). Only N/L/T outlines changed; 243 glyphs; both weights; FontBakery 0 FAIL/0 ERROR.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

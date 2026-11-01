@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.31** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.32** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 **Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
 (tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½),
 **South-Slavic Latin diacritics** (`š č ž ć đ` / `Š Č Ž Ć Đ`), and **math + symbols**
@@ -75,7 +75,7 @@ h1.strong { font-weight: 700; }
 ```css
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.31/MakedonkaCursive-Regular.woff2") format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.32/MakedonkaCursive-Regular.woff2") format("woff2");
   font-weight: 400; font-display: swap;
 }
 ```

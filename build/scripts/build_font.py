@@ -615,8 +615,8 @@ def _U_I(p):
     ribbon_prof(p,[('M',(76,28)),('C',(78,2),(122,0),(162,34))],30,19)                                                                                               # bottom flourish
 def _U_L(p):
     ribbon_dir(p,[('M',(70,LCAP*0.96)),('C',(58,LCAP*0.5),(50,LCAP*0.16),(56,22))],58,15)                                                                             # stem
-    ribbon_prof(p,[('M',(72,LCAP*0.90)),('C',(56,LCAP*1.08),(8,LCAP*1.10),(-6,LCAP*0.90)),('C',(-12,LCAP*0.80),(6,LCAP*0.76),(28,LCAP*0.82))],30,19)                  # top swash loop
-    ribbon_prof(p,[('M',(56,22)),('C',(72,-2),(128,2),(182,40)),('C',(200,52),(204,76),(194,96))],32,19)                                                             # bottom sweep + curl
+    ribbon_prof(p,[('M',(70,LCAP*0.90)),('C',(50,LCAP*1.12),(-8,LCAP*1.15),(-32,LCAP*0.98)),('C',(-54,LCAP*0.84),(-40,LCAP*0.69),(-14,LCAP*0.70)),('C',(4,LCAP*0.71),(8,LCAP*0.82),(-6,LCAP*0.88))],30,17)   # long upper swash + small twist (like N)
+    ribbon_prof(p,[('M',(56,22)),('C',(74,-8),(136,-4),(192,34)),('C',(220,52),(226,92),(204,110)),('C',(190,120),(172,113),(176,96)),('C',(179,85),(192,86),(195,95))],42,24)   # thick bottom bar + twist
 def _U_D(p): ribbon_dir(p,[('M',(58,LCAP)),('C',(52,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(60,LCAP-6)),('C',(170,LCAP*0.98),(196,LCAP*0.55),(188,LCAP*0.3)),('C',(176,LCAP*0.08),(120,14),(58,16))],30,30)
 def _U_F(p):
     ribbon_dir(p,[('M',(62,LCAP*0.90)),('C',(54,LCAP*0.5),(52,LXH*0.3),(48,-30)),('C',(44,-82),(22,-112),(2,-92))],54,12)                                             # stem + descender
@@ -627,8 +627,7 @@ def _U_N(p):
     ribbon_dir(p,[('M',(50,LCAP*0.96)),('C',(44,LCAP*0.5),(42,18),(44,14))],54,14)                                                                                   # left stem
     ribbon_dir(p,[('M',(46,LCAP*0.94)),('C',(88,LCAP*0.60),(128,LCAP*0.34),(160,16))],56,16)                                                                         # diagonal
     ribbon_dir(p,[('M',(160,LCAP*0.94)),('C',(156,LCAP*0.5),(154,20),(156,16))],54,14)                                                                               # right stem
-    ribbon_prof(p,[('M',(50,LCAP*0.90)),('C',(34,LCAP*1.08),(-10,LCAP*1.10),(-24,LCAP*0.90)),('C',(-30,LCAP*0.80),(-12,LCAP*0.76),(10,LCAP*0.82))],30,19)             # entry swash (left)
-    ribbon_prof(p,[('M',(160,LCAP*0.94)),('C',(176,LCAP*1.10),(220,LCAP*1.06),(236,LCAP*0.88))],30,19)                                                               # exit flourish (right)
+    ribbon_prof(p,[('M',(50,LCAP*0.90)),('C',(30,LCAP*1.12),(-28,LCAP*1.15),(-52,LCAP*0.98)),('C',(-74,LCAP*0.84),(-60,LCAP*0.69),(-34,LCAP*0.70)),('C',(-16,LCAP*0.71),(-12,LCAP*0.82),(-26,LCAP*0.88))],30,17)   # long entry swash + small twist (right hair removed)
 def _U_U(p): ribbon_dir(p,[('M',(52,LCAP)),('C',(44,LCAP*0.28),(50,14),(92,11)),('C',(134,8),(168,LCAP*0.3),(160,LCAP*0.72))],58,15); ribbon_dir(p,[('M',(158,LCAP)),('C',(156,LCAP*0.6),(158,LCAP*0.75),(160,LCAP*0.72))],44,16)
 def _U_V(p): ribbon_dir(p,[('M',(44,LCAP)),('C',(66,LCAP*0.5),(90,24),(100,18)),('C',(114,24),(136,LCAP*0.5),(162,LCAP))],58,13)
 def _U_W(p): ribbon_dir(p,[('M',(32,LCAP)),('C',(50,LCAP*0.5),(70,22),(80,18)),('C',(92,24),(106,LCAP*0.5),(112,LCAP*0.9))],56,13); ribbon_dir(p,[('M',(112,LCAP*0.9)),('C',(118,LCAP*0.5),(132,22),(144,18)),('C',(156,24),(178,LCAP*0.5),(198,LCAP))],56,13)
@@ -640,9 +639,13 @@ def _U_R(p): ribbon_dir(p,[('M',(60,LCAP)),('C',(54,LCAP*0.5),(52,20),(56,14))],
 def _U_G(p): ribbon_prof(p,[('M',(176,LCAP*0.82)),('C',(150,LCAP*1.06),(40,LCAP*1.06),(40,LCAP*0.5)),('C',(40,LCAP*-0.06),(150,LCAP*-0.06),(176,LCAP*0.2)),('C',(182,LCAP*0.3),(182,LCAP*0.42),(176,LCAP*0.46))],30,16); ribbon_prof(p,[('M',(176,LCAP*0.46)),('C',(140,LCAP*0.44),(122,LCAP*0.46),(118,LCAP*0.46))],24,24)
 def _U_Q(p): ribbon_prof(p,[('M',(112,LCAP)),('C',(42,LCAP*0.98),(42,LCAP*0.02),(112,0)),('C',(182,LCAP*0.02),(182,LCAP*0.98),(112,LCAP))],30,20); ribbon_dir(p,[('M',(120,LCAP*0.36)),('C',(140,LCAP*0.25),(162,LCAP*0.12),(188,-40))],50,13)
 def _U_T(p):   # Latin T: a horizontal cap bar + a central vertical stem, with flourished terminals
-    ribbon_prof(p,[('M',(2,LCAP-20)),('C',(26,LCAP-2),(62,LCAP-6),(114,LCAP-6)),('C',(166,LCAP-6),(202,LCAP-2),(230,LCAP-20))],28,18)   # cap bar, ends curl down
-    ribbon_dir(p,[('M',(114,LCAP-6)),('C',(108,LCAP*0.5),(106,LXH*0.3),(110,24))],54,13)                                                # central stem
-    ribbon_prof(p,[('M',(110,24)),('C',(112,2),(150,2),(178,34))],30,19)                                                               # bottom flourish
+    ribbon_prof(p,[('M',(240,LCAP-12)),('C',(200,LCAP-2),(150,LCAP-8),(96,LCAP-8)),          # cap top, across over the stem
+                   ('C',(20,LCAP-8),(-60,LCAP*0.80),(-70,LCAP*0.66)),                         # sweep down to the top of the loop
+                   ('C',(-122,LCAP*0.62),(-168,LCAP*0.48),(-168,LCAP*0.40)),                  # loop: left side
+                   ('C',(-168,LCAP*0.26),(-122,LCAP*0.13),(-70,LCAP*0.13)),                   # loop: bottom
+                   ('C',(-18,LCAP*0.13),(28,LCAP*0.26),(28,LCAP*0.40)),                       # loop: right side
+                   ('C',(28,LCAP*0.50),(2,LCAP*0.57),(-26,LCAP*0.54))],30,14)                 # spiral tail (the twist)
+    ribbon_dir(p,[('M',(114,LCAP-6)),('C',(108,LCAP*0.5),(106,LXH*0.3),(110,22))],54,13)                                                # central stem (footer hair removed)
 LATIN_HOMO = {}   # none: every Latin letter is now drawn or a de-skewed copy (built below),
 # so the Macedonian Cyrillic glyphs are never reused directly and keep their steeper slant.
 LATIN_DRAWN = [("i",0x69,_L_i),("t",0x74,_L_t),("l",0x6C,_L_l),("k",0x6B,_L_k),("n",0x6E,_L_n),("h",0x68,_L_h),("b",0x62,_L_b),
@@ -753,13 +756,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.931", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.932", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.931",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.931", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.932",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.932", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -781,7 +784,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.931    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.932    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

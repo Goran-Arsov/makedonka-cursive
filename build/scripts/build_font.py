@@ -11,6 +11,7 @@ from fontTools.misc.transform import Transform
 from fontTools.svgLib.path import parse_path
 from fontTools.pens.transformPen import TransformPen
 from fontTools.pens.t2CharStringPen import T2CharStringPen
+from fontTools.pens.recordingPen import RecordingPen
 from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont, newTable
 from PIL import Image, ImageDraw
@@ -611,8 +612,7 @@ def _L_z(p): ribbon_dir(p,[('M',(32,LXH*0.78)),('C',(46,LXH*1.05),(96,LXH*1.0),(
 def _L_k(p): _loopasc(p,52,LASC); ribbon_dir(p,[('M',(132,LXH*0.98)),('C',(102,LXH*0.78),(76,LXH*0.6),(62,LXH*0.5))],30,9); ribbon_dir(p,[('M',(62,LXH*0.5)),('C',(86,LXH*0.33),(110,LXH*0.17),(138,14))],46,12)
 def _U_I(p):
     ribbon_dir(p,[('M',(84,LCAP*0.96)),('C',(78,LCAP*0.5),(74,LCAP*0.2),(76,28))],56,15)                                                                              # stem
-    ribbon_prof(p,[('M',(86,LCAP*0.90)),('C',(70,LCAP*1.08),(20,LCAP*1.10),(6,LCAP*0.90)),('C',(0,LCAP*0.80),(18,LCAP*0.76),(40,LCAP*0.82))],30,19)                   # top swash loop
-    ribbon_prof(p,[('M',(76,28)),('C',(78,2),(122,0),(162,34))],30,19)                                                                                               # bottom flourish
+    ribbon_prof(p,[('M',(86,LCAP*0.90)),('C',(70,LCAP*1.08),(20,LCAP*1.10),(6,LCAP*0.90)),('C',(0,LCAP*0.80),(18,LCAP*0.76),(40,LCAP*0.82))],30,19)                   # top swash loop (bottom hair removed)
 def _U_L(p):
     ribbon_dir(p,[('M',(70,LCAP*0.96)),('C',(58,LCAP*0.5),(50,LCAP*0.16),(56,22))],58,15)                                                                             # stem
     ribbon_prof(p,[('M',(70,LCAP*0.90)),('C',(50,LCAP*1.12),(-8,LCAP*1.15),(-32,LCAP*0.98)),('C',(-54,LCAP*0.84),(-40,LCAP*0.69),(-14,LCAP*0.70)),('C',(4,LCAP*0.71),(8,LCAP*0.82),(-6,LCAP*0.88))],30,17)   # long upper swash + small twist (like N)
@@ -638,20 +638,14 @@ def _U_Z(p):
 def _U_R(p): ribbon_dir(p,[('M',(60,LCAP)),('C',(54,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(58,LCAP-6)),('C',(150,LCAP),(168,LCAP*0.72),(140,LCAP*0.58)),('C',(112,LCAP*0.46),(70,LCAP*0.52),(58,LCAP*0.52))],26,18); ribbon_dir(p,[('M',(96,LCAP*0.52)),('C',(120,LCAP*0.4),(150,LCAP*0.2),(170,16))],52,14)
 def _U_G(p): ribbon_prof(p,[('M',(176,LCAP*0.82)),('C',(150,LCAP*1.06),(40,LCAP*1.06),(40,LCAP*0.5)),('C',(40,LCAP*-0.06),(150,LCAP*-0.06),(176,LCAP*0.2)),('C',(182,LCAP*0.3),(182,LCAP*0.42),(176,LCAP*0.46))],30,16); ribbon_prof(p,[('M',(176,LCAP*0.46)),('C',(140,LCAP*0.44),(122,LCAP*0.46),(118,LCAP*0.46))],24,24)
 def _U_Q(p): ribbon_prof(p,[('M',(112,LCAP)),('C',(42,LCAP*0.98),(42,LCAP*0.02),(112,0)),('C',(182,LCAP*0.02),(182,LCAP*0.98),(112,LCAP))],30,20); ribbon_dir(p,[('M',(120,LCAP*0.36)),('C',(140,LCAP*0.25),(162,LCAP*0.12),(188,-40))],50,13)
-def _U_T(p):   # Latin T: a horizontal cap bar + a central vertical stem, with flourished terminals
-    ribbon_prof(p,[('M',(240,LCAP-12)),('C',(200,LCAP-2),(150,LCAP-8),(96,LCAP-8)),          # cap top, across over the stem
-                   ('C',(20,LCAP-8),(-60,LCAP*0.80),(-70,LCAP*0.66)),                         # sweep down to the top of the loop
-                   ('C',(-122,LCAP*0.62),(-168,LCAP*0.48),(-168,LCAP*0.40)),                  # loop: left side
-                   ('C',(-168,LCAP*0.26),(-122,LCAP*0.13),(-70,LCAP*0.13)),                   # loop: bottom
-                   ('C',(-18,LCAP*0.13),(28,LCAP*0.26),(28,LCAP*0.40)),                       # loop: right side
-                   ('C',(28,LCAP*0.50),(2,LCAP*0.57),(-26,LCAP*0.54))],30,14)                 # spiral tail (the twist)
-    ribbon_dir(p,[('M',(114,LCAP-6)),('C',(108,LCAP*0.5),(106,LXH*0.3),(110,22))],54,13)                                                # central stem (footer hair removed)
+# Latin T is no longer a drawn pen glyph: it is built by clipping the Cyrillic Т (uni0422) down to its
+# top CAP + central stem (left curl and outer pipes removed) — see the "Latin T" block after REUSE_DESKEW.
 LATIN_HOMO = {}   # none: every Latin letter is now drawn or a de-skewed copy (built below),
 # so the Macedonian Cyrillic glyphs are never reused directly and keep their steeper slant.
 LATIN_DRAWN = [("i",0x69,_L_i),("t",0x74,_L_t),("l",0x6C,_L_l),("k",0x6B,_L_k),("n",0x6E,_L_n),("h",0x68,_L_h),("b",0x62,_L_b),
     ("d",0x64,_L_d),("r",0x72,_L_r),("q",0x71,_L_q),("f",0x66,_L_f),("v",0x76,_L_v),("w",0x77,_L_w),("z",0x7A,_L_z),
     ("D",0x44,_U_D),("F",0x46,_U_F),("G",0x47,_U_G),("I",0x49,_U_I),("L",0x4C,_U_L),("N",0x4E,_U_N),
-    ("Q",0x51,_U_Q),("R",0x52,_U_R),("T",0x54,_U_T),("U",0x55,_U_U),("V",0x56,_U_V),("W",0x57,_U_W),("Z",0x5A,_U_Z)]
+    ("Q",0x51,_U_Q),("R",0x52,_U_R),("U",0x55,_U_U),("V",0x56,_U_V),("W",0x57,_U_W),("Z",0x5A,_U_Z)]   # T built separately (clip of Cyrillic Т)
 def _latin_sb(path):          # side bearings from ink in the x-height join band (baseline 0)
     fpn = FlattenPen(); path.draw(fpn)
     pts = [q for c in fpn.contours for q in c]
@@ -709,6 +703,77 @@ for nm, cp, src, scp, iscap in REUSE_DESKEW:
     glyph_order.append(nm); charstrings[nm] = t2.getCharString(); metrics[nm] = (adv, int(round(minx + hshift))); cmap[cp] = nm
     _lp = pathops.Path(); de.draw(TransformPen(_lp.getPen(), (1, 0, 0, 1, hshift, -basey))); latin_paths[nm] = _lp
 
+# ---- Latin T: the Cyrillic Т's top CAP (left curl cut) + its MIDDLE pipe (taken whole, unedited) ----
+# The cursive Cyrillic Т is drawn as four separate strokes (contours): the top CAP, a big left
+# loop+first-pipe stroke, the MIDDLE pipe, and the right pipe. The Latin T is the CAP and the MIDDLE pipe:
+# each is lifted verbatim and de-skewed onto the single Latin slant (_dsk(0x0422)) + scaled CAP_SCALE like
+# every reused ornate cap. Then, per the design: (1) the cap's own left CURL/swash is cut off so the cap
+# reads as a plain bar; (2) the MIDDLE pipe (never reshaped) is moved right T_STEM_PCT of the glyph width;
+# (3) the bar is seated a few units onto the pipe's top so the join is solid.
+T_CURL_CUT = 360.0  # cut the cap this many (post-scale) units in from its left edge — removes the left curl/swash cleanly
+T_CAP_SEAT = 10.0   # overlap the bar onto the pipe's top by this many units (seat is otherwise auto-computed)
+T_STEM_PCT = 0.10   # move the middle pipe right this fraction of the (bar+pipe) width, per request
+T_RSP      = 60.0   # extra right-side room past the stem, so the next letter isn't jammed under the bar
+def _build_T_latin():
+    src0 = _neut["uni0422"]
+    basey0 = measure(src0, 0x0422)[4]
+    base0 = pathops.Path(); src0.draw(TransformPen(base0.getPen(), (1, 0, 0, 1, 0, -basey0))); base0.simplify()
+    rp = RecordingPen(); base0.draw(rp)                          # split into its strokes (contours)
+    conts = []; cur = []
+    for cmd, pts in rp.value:
+        cur.append((cmd, pts))
+        if cmd in ("closePath", "endPath"): conts.append(cur); cur = []
+    def _rebuild(c):
+        p = pathops.Path(); pen = p.getPen()
+        for cmd, pts in c:
+            if pts: getattr(pen, cmd)(*pts)
+            else:   getattr(pen, cmd)()
+        return p
+    def _deskew(p):                                              # onto the single Latin slant + cap scale
+        s = pathops.Path(); p.draw(TransformPen(s.getPen(), (1, 0, -_dsk(0x0422), 1, 0, 0))); s.simplify()
+        d = pathops.Path(); s.draw(TransformPen(d.getPen(), (CAP_SCALE, 0, 0, CAP_SCALE, 0, 0))); d.simplify(); return d
+    def _bb(p):
+        fp = FlattenPen(); p.draw(fp); q = [pt for cc in fp.contours for pt in cc]
+        return min(x for x, y in q), max(x for x, y in q), min(y for x, y in q), max(y for x, y in q)
+    def _box(x0, y0, x1, y1):
+        p = pathops.Path(); pen = p.getPen()
+        pen.moveTo((x0, y0)); pen.lineTo((x1, y0)); pen.lineTo((x1, y1)); pen.lineTo((x0, y1)); pen.closePath(); return p
+    def _tr(p, dx=0.0, dy=0.0):
+        o = pathops.Path(); p.draw(TransformPen(o.getPen(), (1, 0, 0, 1, dx, dy))); return o
+    raw = [_deskew(_rebuild(c)) for c in conts]
+    bbs = [_bb(p) for p in raw]
+    cap_i = max(range(len(raw)), key=lambda i: bbs[i][3])        # CAP = the stroke whose ink reaches highest
+    rest = sorted([i for i in range(len(raw)) if i != cap_i], key=lambda i: bbs[i][0])
+    mid_i = rest[len(rest) // 2]                                 # MIDDLE pipe = the median-left-edge of the rest
+    capP, midP, cb = raw[cap_i], raw[mid_i], bbs[cap_i]
+    capbar = pathops.Path()                                      # cut the left curl off -> plain bar
+    pathops.intersection([capP], [_box(cb[0] + T_CURL_CUT, cb[2] - 60, cb[1] + 60, cb[3] + 60)], capbar.getPen())
+    base = pathops.Path(); pathops.union([capbar, midP], base.getPen())   # (unmoved) width, for the 10% stem shift
+    wb = _bb(base); dx = T_STEM_PCT * (wb[1] - wb[0])
+    movedmid = _tr(midP, dx=dx)
+    # seat the bar onto the (moved) pipe's top: lower the bar so its underside near the pipe meets the pipe top
+    fpm = FlattenPen(); movedmid.draw(fpm); mp = [pt for c in fpm.contours for pt in c]
+    sy = max(y for x, y in mp); sx = sum(x for x, y in mp if y > sy - 12) / max(1, sum(1 for x, y in mp if y > sy - 12))
+    fpc = FlattenPen(); capbar.draw(fpc); cp = [pt for c in fpc.contours for pt in c]
+    near = [y for x, y in cp if abs(x - sx) < 18]                  # bar underside right at the pipe tip
+    seat = (min(near) - sy + T_CAP_SEAT) if near else T_CAP_SEAT   # lower the bar so it overlaps the pipe top by T_CAP_SEAT
+    de = pathops.Path()
+    pathops.union([_tr(capbar, dy=-seat), movedmid], de.getPen()); de.simplify()
+    return de
+_T = _build_T_latin()
+# Baseline is 0 by construction (base0 was shifted to it; shears/scale about y=0 preserve it), so DON'T
+# ask measure to re-detect it — the clipped T (dense top bar, thin stem) fools the baseline detector.
+_bT = _T.bounds; minx, maxx = _bT[0], _bT[2]; basey = 0.0
+# Space the RIGHT by the STEM (x-height join band), not the far-right bar tip: the bar's right arm then
+# overhangs and the next letter tucks under it, so the T flows in the word instead of standing off from it.
+_sbl, _sbr = _latin_sb(_T)
+bl = minx                                     # left: the bar's left tip (unchanged)
+br = _sbr + T_RSP                             # right: stem edge + a little room, so the arm overhangs but the next letter isn't jammed
+hshift = M_BODY - bl; adv = int(round((br - bl) + 2 * M_BODY))
+t2 = T2CharStringPen(adv, None); _T.draw(TransformPen(t2, (1, 0, 0, 1, hshift, -basey)))
+glyph_order.append("T"); charstrings["T"] = t2.getCharString(); metrics["T"] = (adv, int(round(minx + hshift))); cmap[0x54] = "T"
+_lp = pathops.Path(); _T.draw(TransformPen(_lp.getPen(), (1, 0, 0, 1, hshift, -basey))); latin_paths["T"] = _lp
+
 # ---- South-Slavic Latin diacritics: base letter + a pen caron / acute / stroke ----
 def _acc_glyph(base, kind):
     bp = latin_paths[base]; b = bp.bounds
@@ -756,13 +821,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.932", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.933", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.932",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.932", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.933",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.933", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -784,7 +849,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.932    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.933    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

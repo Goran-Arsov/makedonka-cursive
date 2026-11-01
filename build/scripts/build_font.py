@@ -352,6 +352,7 @@ def measure(path, cp, body_thresh=130, base_frac=0.40, sc=0.3):
 
 # ========================= assemble glyphs =========================
 glyph_order = [".notdef", "space"]; charstrings = {}; metrics = {}; cmap = {0x20: "space"}
+base_paths = {}          # positioned digit outlines, kept for the figure features (features.py)
 gy_min, gy_max = 1e9, -1e9
 nd = T2CharStringPen(600, None)
 nd.moveTo((60, 0)); nd.lineTo((540, 0)); nd.lineTo((540, 700)); nd.lineTo((60, 700)); nd.closePath()
@@ -395,6 +396,8 @@ for g, cp, path in NEUT:
     t2 = T2CharStringPen(adv, None)
     path.draw(TransformPen(t2, (1, 0, 0, 1, hshift, vshift)))
     charstrings[g] = t2.getCharString()
+    if 0x30 <= cp <= 0x39:                   # keep the positioned digit outline for the figure features
+        _bp = pathops.Path(); path.draw(TransformPen(_bp.getPen(), (1, 0, 0, 1, hshift, vshift))); base_paths[g] = _bp
     metrics[g] = (adv, int(round(minx + hshift)))
     b = path.bounds
     if b:
@@ -586,6 +589,10 @@ for cp, gn in LATIN_HOMO.items():
     cmap[cp] = gn
 cmap[0x00A0] = "space"   # no-break space: same advance as space, so it never shows tofu or breaks layout
 
+# ---- OpenType figures features: tabular, slashed zero, sups/subs, fractions (features.py) ----
+from features import generate_figures
+_FIGURE_FEA = generate_figures(base_paths, charstrings, metrics, glyph_order, cmap)
+
 # ========================= compile =========================
 AUTHOR = "Goran Arsov"
 ATTRIB = (f'Makedonka Cursive. (c) 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
@@ -650,7 +657,7 @@ fb.save(otf); print("saved", otf)
 
 # ---- connection kerning (both scripts): even the cursive joins — loosen crowded pairs, tighten loose ones
 from kern_util import add_kern
-print(f"kerning: {add_kern(otf)} pairs")
+print(f"kerning: {add_kern(otf, _FIGURE_FEA)} pairs")   # kern GPOS + figures GSUB, one compile
 
 # ---- hinting: psautohint adds PostScript stem hints keyed off the Private-dict alignment zones above
 # (best-effort: a couple of disk-brush glyphs self-overlap and warn, which is non-fatal)

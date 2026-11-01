@@ -117,7 +117,8 @@ fb.setupPost(italicAngle=0.0)
 otf = os.path.join(OUTDIR, "MakedonkaCursive-Bold.otf")
 fb.save(otf); print("saved", otf, "D=", D)
 from kern_util import add_kern                       # kern the Bold on its own (dilated) metrics
-print(f"kerning (bold): {add_kern(otf)} pairs")
+from features import FIGURE_FEA                       # figure features come via the emboldened variant glyphs
+print(f"kerning (bold): {add_kern(otf, FIGURE_FEA)} pairs")   # kern GPOS + figures GSUB, one compile
 # hinting: psautohint stem hints keyed off the Private-dict alignment zones (best-effort)
 import subprocess
 try:

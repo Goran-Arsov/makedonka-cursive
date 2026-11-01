@@ -168,16 +168,28 @@ whether the kern actually applies.
   leave it unless a specific renderer misbehaves (changing it rescales the whole font).
 
 **D. Professional build improvements STAGED (build-script only — NOT yet in the shipped files).**
-Committed to `main` (not pushed); regenerate the font suite at the next release to bake them in. All verified
-**purely additive** — CFF outlines, `hmtx` advances and GPOS kerning are byte-identical to the shipped v0.9.20
-fonts (confirmed by table diff); only metadata/degenerate-contour cleanups. Per-format FontBakery stays **0
-FAIL** (OTF family: only the UPM WARN; TTF family: intrinsic WARNs, with the overlap one reduced).
+Committed to `main` (not pushed); regenerate the font suite at the next release to bake them in. The existing
+**155 base glyphs are byte-identical** to the shipped v0.9.20 fonts in both weights (outlines + `hmtx` +
+GPOS kerning, confirmed by table diff) — everything below only ADDS tables/glyphs or cleans degenerate contours.
+Per-format FontBakery stays **0 FAIL / 0 ERROR** (OTF family: only the UPM WARN; TTF: intrinsic WARNs, overlap reduced).
 - `otf2ttf.py` — drops degenerate zero-area **speck contours** (overlap-WARN reduction; see C above).
 - `build_font.py` + `make_bold.py` — add a **STAT** table (static family, Weight axis: Regular=400 elidable /
   Bold=700, elided fallback "Regular" — the modern standard for multi-style families; Adobe/InDesign use it for
   family grouping) and a **`meta`** table (`dlng`/`slng` = "Latn, Cyrl"). Built *before* the existing
   platform-1 name strip so `buildStatTable`'s re-added Mac names are removed too (Windows names keep STAT valid;
   `no_mac_entries` still passes). GDEF deliberately NOT added — this GPOS has only `kern`, no mark features.
+- **OpenType figures features** (`build/scripts/features.py`, new): a figures suite built from the digit
+  outlines — **tnum** (tabular/uniform-advance figures), **zero** (slashed zero), **sups**/**subs**
+  (super/subscript), **numr**/**dnom**, and **frac** (1/2 → numerator + fraction bar + denominator; chaining,
+  single-digit). Adds **52 glyphs (155→207)** + a `fraction` glyph (U+2044); all 7 features **shape-verified
+  with HarfBuzz** (`tnum`, `zero`, `sups`, `subs`, `frac`). GSUB + the kern GPOS are compiled in ONE
+  `add_kern(otf, extra_fea)` call (`kern_util.py` gained the `extra_fea` arg) — because
+  `addOpenTypeFeaturesFromString` rebuilds BOTH tables from the FEA it is given, so two separate calls wipe
+  each other (the bug that first made GSUB vanish). Bold gets the variant glyphs via the embolden loop and
+  re-compiles the same `FIGURE_FEA`. **NOT done** (deliberate): small caps (needs real redrawing for a cursive)
+  and contextual joining (the Open #3 / #7 roadmap item). Polish backlog: tighten numr/dnom spacing to the
+  fraction bar; multi-digit `frac`; the demo also surfaced that `=`/`+` and other ASCII math glyphs are still
+  missing (Open #7 "still-missing glyphs").
 
 *(Design / feature backlog — true joining v2, other-Cyrillic, `№`/`&`/symbols, Latin diacritics, drawn-Latin
 contrast — is in "Open / optional work" below.)*
@@ -254,6 +266,15 @@ contrast — is in "Open / optional work" below.)*
    added in v0.9.16.) **This is also the real/full fix for the FontBakery `overlapping_path_segments` WARN**
    (see "What should still be done → C"): the brush/embolden outlines self-touch at pinch points that no safe
    automated pass can remove — only redrawing with a non-self-intersecting stroker (or hand-drawn forms) clears it.
+   **PROTOTYPED 2026-11-01** (offset stroker: offset the centreline by ±r into left/right edges + round caps =
+   one clean contour per stroke, same shape as the brush). Result on the digits: near-identical shapes,
+   crisper, and **0 real overlap segments** (vs the brush, pre-speck-drop, at 52 by direct count). BUT separate
+   strokes leave **hairline junction gaps** where they meet; an endpoint join-disk closes most (4 clean) but
+   oval↔stroke junctions (6, 8) and tight-curvature inner offsets still notch, and it costs a few overlap seams
+   back. Verdict: **feasible and promising, but a real rollout** needs robust join handling across digits, the
+   Latin `ribbon_dir`/`ribbon_prof`, punctuation AND the embolden interaction, plus a full re-QA + version bump —
+   a deliberate v2 effort, not urgent (speck-drop already made the WARN benign). Prototype lives in the session
+   scratch, not committed.
    **Still-missing glyphs (deferred, lower necessity / higher design risk):** `№` numero + `&` ampersand
    (both high-value for Cyrillic/wordmarks but hard to draw cleanly in this hand — worth a careful pass);
    `© × ÷ ‰ ′ ″`, ASCII tech `# $ & * + < = > @ [ ] { } | \ ^ _ ~`; Latin diacritics `š č ž ć đ` for

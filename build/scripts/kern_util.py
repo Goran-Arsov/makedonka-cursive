@@ -136,13 +136,17 @@ def _cap_pairs(gs, cm, hm, caps):
     return out
 
 
-def add_kern(otf_path):
+def add_kern(otf_path, extra_fea=""):
+    # `extra_fea` (e.g. the figures GSUB from features.py) is compiled in the SAME call:
+    # addOpenTypeFeaturesFromString rebuilds GSUB+GPOS from the FEA it is given, so kern and
+    # any other features must share one FEA or the later call wipes the earlier tables.
     f = TTFont(otf_path); gs = f.getGlyphSet(); cm = f.getBestCmap(); hm = f["hmtx"]
     pairs = _pairs(gs, cm, hm, _CYR) + _pairs(gs, cm, hm, _LAT) \
           + _cap_pairs(gs, cm, hm, _CYR_CAPS) + _cap_pairs(gs, cm, hm, _LAT_CAPS)
     # register the feature under both scripts (+ default), so shapers that look up `cyrl`/`latn`
     # apply it — not just those that fall back to DFLT
     fea = ("languagesystem DFLT dflt;\nlanguagesystem latn dflt;\nlanguagesystem cyrl dflt;\n"
+           + extra_fea +
            "feature kern {\n" + "".join(f"  pos {a} {b} {k};\n" for a, b, k in pairs) + "} kern;\n")
     addOpenTypeFeaturesFromString(f, fea); f.save(otf_path)
     return len(pairs)

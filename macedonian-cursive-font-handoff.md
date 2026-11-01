@@ -313,6 +313,21 @@ vectorizing the Wikimedia chart (see *Source material* below).
   `bold_italic_unique_for_nameid1` is **spurious when OTF+TTF of a weight are checked together** (same name/bold
   bits collide) — check each format set separately (per-format = 0 FAIL). Only T/I changed; 243 glyphs; both
   weights; FontBakery 0 FAIL/0 ERROR per-format.
+- **(v0.9.34) symmetric Latin Z and z:** per request both are made point-symmetric by removing the upper element
+  and placing the LOWER bar, rotated 180°, on top. **Z** (`_U_Z`): the original `ribbon_prof` top bar is deleted;
+  the lower bar is drawn into its own `pathops.Path`, rotated 180° via a `TransformPen` matrix `(-1,0,0,-1,2cx,2cy)`
+  and drawn back into the glyph, so the top bar is an exact inversion of the bottom and seats on the stem top. The
+  rotation centre is the midpoint of the bar-start `(46,24)` and the stem top `(172,LCAP-14)` — **but its x must be
+  scaled by `_LSX`** (the Latin horizontal stretch, 1.52 for Z, that `ribbon_prof`/`ribbon_dir` apply to their
+  points *before* stamping): rotating about the un-stretched `109` left the top bar ~64u short of the stem (2
+  contours, visible gap); `109*_LSX` lands it on the stem top (1 contour). **z** (`_L_z`): same trick — the top
+  curved hair is dropped, the diagonal is raised to the x-height (top at `LXH*0.94`), and the bottom line, rotated
+  180° about `(77*_LSX, (18+LXH*0.94)/2)`, becomes the top bar — a miniature of the cap Z. The earlier descender
+  hair stays removed, and **z's legacy `LAT_SPACE` entry (40) is dropped**: that padding was for the old wide,
+  hooked z; the new symmetric z is a normal-width letter and over-spaced at 40 (sidebearings 48 vs 8), so it now
+  sits like o/n (8). Lesson: when rotating/placing a sub-stroke of a Latin glyph, remember the ribbon has already
+  applied the `_LSX` x-stretch — any geometric centre/offset you compute must be in that stretched space. Only Z/z
+  changed; 243 glyphs; both weights; FontBakery 0 FAIL/0 ERROR per-format.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

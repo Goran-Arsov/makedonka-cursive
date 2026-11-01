@@ -123,6 +123,38 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   **To update that site on a font change:** re-copy the `woff/woff2`, bump `?v=`, rebuild its CSS, commit —
   that site's own pipeline handles the rest. Whether/when it goes live is that site's concern, not this repo's.
 
+## What should still be done (prioritised)
+
+**A. Finish shipping v0.9.20 + publish (immediate).** v0.9.20 is committed **locally only** (`main` is 1 ahead
+of origin). To release it: **push** `main`; build the `MakedonkaCursive-v0.9.20.zip` and cut/refresh the GitHub
+**release v0.9.20**; **reinstall** both OTFs to `~/.local/share/fonts/` (+`fc-cache`) for LibreOffice; **make the
+repo public** — decided as-is, no history rewrite:
+`gh repo edit Goran-Arsov/makedonka-cursive --visibility public --accept-visibility-change-consequences`;
+update the font on the **separate website** (it still serves v0.9.17 — copy the new woff/woff2, bump `?v=`,
+rebuild its CSS; that site's CI deploy is blocked on missing Actions secrets, so it needs a manual deploy or
+the secrets set); and **refresh the live specimen preview page** (stale at v0.9.17 — re-embed the v0.9.20 woff2
+so it shows the contrast Bold + hinting + Ѐ/Ѝ). Force-push / release-delete / visibility are gated for the AI's
+tools — run them yourself (e.g. with a `!` prefix).
+
+**B. Render-test in real apps before a wide release.** This session validated via **FontBakery** (0 FAIL),
+HarfBuzz and PIL, but **not** in the actual target environments. Install the OTF/TTF and eyeball Regular + Bold
+at display sizes — plus the kerning, all-caps (`МАКЕДОНИЈА`), `Ѐ/Ѝ`, and the punctuation — in: a browser
+(Chrome/Firefox/Safari), LibreOffice + MS Word, and ideally Adobe (InDesign/Illustrator), on **both Windows and
+macOS**. Watch for filled counters, flourish clipping between lines, hinting distortion at small sizes, and
+whether the kern actually applies.
+
+**C. Optional polish (all FontBakery WARN-level from the v0.9.20 QA — none blocking).**
+- Remove the disk-brush **overlapping path segments** (a production nicety; they render fine via nonzero fill).
+  Try `fontTools removeOverlaps` on the final fonts; re-verify outlines + hinting don't regress.
+- Cross-check with a second validator (**Microsoft FontValidator**) for anything FontBakery's profile misses.
+- **Version scheme:** the font reports **"0.920"** while the project/release is **"0.9.20"** (nameID 5 must be
+  `X.YYY`, not `0.9.20`, to pass the version check). Decide whether to adopt `0.920` everywhere or keep both.
+- **`UPM=700`** is a FontBakery WARN (not a power of two / not 1000) but is a deliberate render-size choice —
+  leave it unless a specific renderer misbehaves (changing it rescales the whole font).
+
+*(Design / feature backlog — true joining v2, other-Cyrillic, `№`/`&`/symbols, Latin diacritics, drawn-Latin
+contrast — is in "Open / optional work" below.)*
+
 ## Changelog (one line each; details + knobs are in the handoff)
 - **v0.9.20** — **professional QA pass (FontBakery): 0 FAIL, 0 ERROR.** Harmonised vertical metrics +
   USE_TYPO_METRICS (OS/2 v4); GPOS kern registered under DFLT+latn+cyrl; italicAngle 0 + vertical caret;
@@ -200,8 +232,8 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
    relicensed): own VPS/blog download page (primary) + the GitHub repo & jsDelivr CDN (best ShareAlike fit);
    free-font aggregators (DaFont / FontSpace / 1001 Free Fonts / Font Squirrel) for reach. **Google Fonts
    is out** (requires OFL/Apache). Every posting needs a visible MacedonianBoy + CC BY-SA 3.0 credit. Ship
-   the current (v0.9.15) zip once it's built. The GitHub repo is still **private** — the install guide
-   artifact deliberately has NO download link until there's a public download URL.
+   the current release zip (now **v0.9.20**). The GitHub repo is still **private** (see "What should still be
+   done → A"); the install-guide page deliberately has NO download link until there's a public download URL.
 9. ~~**Finish shipping v0.9.15**~~ — **DONE 2026-10-31** (README/`?v=` bumped, zip, install, commit+push,
    GitHub release v0.9.15). See Ship status above.
 10. ~~**Update the handoff**~~ — **DONE 2026-10-31**: the handoff now has a v0.9.15 section covering the

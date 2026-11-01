@@ -7,10 +7,11 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.22** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.23** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 **Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
-(tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½), and
-**math + ASCII symbols** (`+ − = × ÷ < > ± № # * [ ] { } …`).
+(tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½),
+**South-Slavic Latin diacritics** (`š č ž ć đ` / `Š Č Ž Ć Đ`), and **math + symbols**
+(`+ − = × ÷ < > ± № @ $ © # …`).
 
 ![specimen](specimen.png)
 
@@ -74,7 +75,7 @@ h1.strong { font-weight: 700; }
 ```css
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.22/MakedonkaCursive-Regular.woff2") format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.23/MakedonkaCursive-Regular.woff2") format("woff2");
   font-weight: 400; font-display: swap;
 }
 ```
@@ -92,7 +93,8 @@ h1.strong { font-weight: 700; }
   consistent, moderately upright slant across all letters, figures and punctuation, in a
   **restrained** pen style. Every Latin glyph is either drawn or a re-angled copy of a
   Cyrillic letter (the Macedonian glyphs themselves are unchanged). Good for names,
-  wordmarks and short Latin text — not a full-flourish Latin script.
+  wordmarks and short Latin text — not a full-flourish Latin script. Includes the
+  **South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ` (Croatian/Bosnian/Serbian-Latin, Slovenian).
 - **Spacing & kerning:** letters join at the x-height, and built-in **GPOS kerning** evens the
   connections, tightens loose joins, and spaces consecutive capitals so **all-caps also reads**
   (the cap flourishes still cross, as a copperplate hand does). Applied to both weights.
@@ -101,10 +103,10 @@ h1.strong { font-weight: 700; }
   Turn them on in any OpenType-aware app (InDesign, Illustrator, Word's advanced typography) or on the
   web with CSS `font-feature-settings` / `font-variant`. Both weights carry a **STAT** table so the
   family groups correctly across apps.
-- **Math & symbols:** `+ − = × ÷ < > ±` operators, `№` numero, and the ASCII set `# * _ | ~ \ ^ [ ] { }` —
-  calligraphic pen forms matching the figures.
-- **Not included:** other-Cyrillic (Russian/Serbian-specific letters), and a few ornamental symbols
-  (`& @ $ ©`) not yet drawn.
+- **Math & symbols:** `+ − = × ÷ < > ±` operators; `№` numero, `@` at, `$` dollar, `©` copyright,
+  `‰` per-mille, `′ ″` primes; and the ASCII set `# * _ | ~ \ ^ [ ] { }` — calligraphic pen forms.
+- **Not included:** other-Cyrillic (Russian/Serbian-specific letters), and `&` (the ampersand wants a
+  careful drawn pass — a rushed one reads wrong, so it's deferred rather than shipped bad).
 
 ## Scope & roadmap
 - **A display face — use it large.** An ornate copperplate for headings, logos, titles and short text.

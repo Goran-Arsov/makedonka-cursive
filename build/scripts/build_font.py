@@ -362,6 +362,10 @@ charstrings["space"] = T2CharStringPen(300, None).getCharString(); metrics["spac
 # Macedonian accented letters: ѐ (е + grave) and ѝ (и + grave) — base trace + a calligraphic grave accent.
 def _grave(pen, cx, cy, s=1.0):   # short pen grave `, thick→thin, descending left→right, centred ~(cx, cy); s scales it
     ribbon_dir(pen, [('M',(cx-28*s,cy+26*s)),('C',(cx-10*s,cy+9*s),(cx+8*s,cy-9*s),(cx+26*s,cy-28*s))], 43.7*s, 13.3*s)
+def _caron(pen, cx, cy, s=1.0):   # ˇ — a calligraphic check (š č ž Š Č Ž)
+    ribbon_prof(pen, [('M', (cx-30*s, cy+20*s)), ('L', (cx-2*s, cy-16*s)), ('L', (cx+30*s, cy+20*s))], 36*s, 18*s, 1.2)
+def _acute(pen, cx, cy, s=1.0):   # ´ — a short rising pen stroke (ć Ć)
+    ribbon_prof(pen, [('M', (cx-16*s, cy-18*s)), ('L', (cx+20*s, cy+22*s))], 44*s, 14*s, 1.4)
 _accsrc = {cpx: pth for (gnx, cpx, pth) in NEUT}
 for _anm, _acp, _ascp, _agx, _agy in [("uni0450",0x0450,0x0435,8,330),("uni045D",0x045D,0x0438,16,330)]:
     _ab = _accsrc[_ascp]; _am = measure(_ab, _ascp); _acx = (_am[0]+_am[1])/2 + _agx
@@ -447,6 +451,19 @@ def _numero(pen):   # № : an upright N, a raised small ring (o), and its under
     ribbon_prof(pen, [('M', (44, 500)), ('L', (232, 24))], 42, 42)
     ribbon_prof(pen, [('M', (232, 24)), ('L', (232, 500))], 48, 48)
     _ring(pen, 338, 432, 72, 36); _rect(pen, 270, 352, 406, 392)
+def _dollar(pen):   # $ : an S stroke with a vertical bar through it
+    ribbon_dir(pen, [('M', (268, 486)), ('C', (210, 548), (74, 540), (86, 446)), ('C', (98, 384), (232, 372), (252, 300)),
+                     ('C', (274, 214), (150, 150), (78, 214))], 44, 15)
+    _rect(pen, 156, 86, 194, 600)
+def _copyright(pen):   # © : a small c inside a ring
+    _ring(pen, 185, 320, 182, 150)
+    ribbon_dir(pen, [('M', (252, 392)), ('C', (150, 432), (110, 360), (118, 320)), ('C', (126, 272), (168, 212), (252, 250))], 24, 12)
+def _at(pen):   # @ : a small 'a' inside a ring open at lower-right
+    ribbon_dir(pen, [('M', (300, 206)), ('C', (258, 116), (110, 112), (90, 252)), ('C', (72, 392), (152, 498), (272, 470)),
+                     ('C', (322, 458), (344, 414), (336, 352))], 32, 20)
+    _ring(pen, 196, 300, 76, 40); _rect(pen, 256, 236, 288, 360)
+# (& ampersand deferred: the et-ligature doesn't read cleanly from hand-tuned Béziers — a wrong
+#  glyph at U+0026 is worse than none; it wants a careful drawn pass in a font editor.)
 # Calligraphic set: dots are slanted ovals, comma/quotes are pen-commas, ! and ?
 # are tapered/direction-weighted ribbons; every mark is slanted 18° in _make. In
 # colon/semicolon the upper dot is pre-shifted by −SLANT·Δy so it stacks truly
@@ -497,6 +514,13 @@ PUNCT = [
     (0x007B, "braceleft", 280, lambda p: _brace(p, True)),
     (0x007D, "braceright", 280, lambda p: _brace(p, False)),
     (0x2116, "numero", 470, _numero),
+    # ---- v0.9.23: ornamental symbols + per-mille + primes ----
+    (0x0040, "at", 440, _at),
+    (0x0024, "dollar", 340, _dollar),
+    (0x00A9, "copyright", 440, _copyright),
+    (0x2030, "permille", 640, lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 300, 120, 58, 31), _ring(p, 480, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (420, 600))], 34, 34))),
+    (0x2032, "prime", 160, lambda p: ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20)),
+    (0x2033, "doubleprime", 270, lambda p: (ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), ribbon_prof(p, [('M', (176, 640)), ('L', (222, 456))], 44, 20))),
 ]
 for cp, name, width, fn in PUNCT:
     cs, xmin = _make(fn, width); glyph_order.append(name); cmap[cp] = name; charstrings[name] = cs; metrics[name] = (width, xmin)
@@ -574,6 +598,7 @@ def _latin_sb(path):          # side bearings from ink in the x-height join band
     band = [x for (x, y) in pts if CONN_LO <= y <= CONN_HI]
     seq = band if band else [x for (x, y) in pts]
     return min(seq), max(seq)
+latin_paths = {}          # positioned Latin outlines, kept to compose the diacritic letters below
 for nm, cp, fn in LATIN_DRAWN:
     _LATIN_MODE = True; _LSX = LAT_STRETCH.get(nm, 1.0); _LWT = LAT_LIGHTEN.get(nm, 1.0)
     pth = pathops.Path(); fn(pth.getPen()); pth.simplify()
@@ -585,6 +610,7 @@ for nm, cp, fn in LATIN_DRAWN:
     sp = LAT_SPACE.get(nm, 0); rsp = LAT_RSP.get(nm, 0); lsp = LAT_LSP.get(nm, 0); hshift = M_BODY + sp + lsp - bl; adv = int(round((br - bl) + 2 * (M_BODY + sp) + rsp + lsp))
     t2 = T2CharStringPen(adv, None); sl.draw(TransformPen(t2, (1, 0, 0, 1, hshift, 0)))
     glyph_order.append(nm); charstrings[nm] = t2.getCharString(); metrics[nm] = (adv, int(round(minx + hshift))); cmap[cp] = nm
+    _lp = pathops.Path(); sl.draw(TransformPen(_lp.getPen(), (1, 0, 0, 1, hshift, 0))); latin_paths[nm] = _lp
 # De-skewed Latin copies of Cyrillic sources, so these Latin letters stand more upright than the
 # Macedonian originals (which keep their steeper traced slant — only these copies are re-angled):
 #   p/j brought fully to the drawn slant; all caps + a/u have their tilt reduced by CAP/LC_DETILT.
@@ -620,6 +646,31 @@ for nm, cp, src, scp, iscap in REUSE_DESKEW:
     hshift = M_BODY - bl; adv = int(round((br - bl) + 2 * M_BODY))
     t2 = T2CharStringPen(adv, None); de.draw(TransformPen(t2, (1, 0, 0, 1, hshift, -basey)))
     glyph_order.append(nm); charstrings[nm] = t2.getCharString(); metrics[nm] = (adv, int(round(minx + hshift))); cmap[cp] = nm
+    _lp = pathops.Path(); de.draw(TransformPen(_lp.getPen(), (1, 0, 0, 1, hshift, -basey))); latin_paths[nm] = _lp
+
+# ---- South-Slavic Latin diacritics: base letter + a pen caron / acute / stroke ----
+def _acc_glyph(base, kind):
+    bp = latin_paths[base]; b = bp.bounds
+    out = pathops.Path(); bp.draw(out.getPen())
+    cx = (b[0]+b[2])/2.0; top = b[3]; cap = top > 400
+    axc = cx + SLANT*(top - (b[1]+b[3])/2.0)          # shift the accent right to follow the italic lean
+    if kind == "caron":
+        _caron(out.getPen(), axc, top + (54 if cap else 42), 1.3 if cap else 1.0)
+    elif kind == "acute":
+        _acute(out.getPen(), axc, top + (54 if cap else 42), 1.3 if cap else 1.0)
+    elif kind == "stroke" and cap:                     # Đ : bar through the left stem
+        my = (b[1]+b[3])/2.0; _rect(out.getPen(), b[0]-14, my-16, b[0]+108, my+16)
+    elif kind == "stroke":                             # đ : bar across the ascender
+        sy = top - 74; _rect(out.getPen(), b[2]-98, sy, b[2]+18, sy+32)
+    out.simplify(); return out
+ACCENTED = [("scaron", 0x0161, "s.lat", "caron"), ("ccaron", 0x010D, "c.lat", "caron"),
+            ("zcaron", 0x017E, "z", "caron"), ("cacute", 0x0107, "c.lat", "acute"), ("dcroat", 0x0111, "d", "stroke"),
+            ("Scaron", 0x0160, "S.lat", "caron"), ("Ccaron", 0x010C, "C.lat", "caron"),
+            ("Zcaron", 0x017D, "Z", "caron"), ("Cacute", 0x0106, "C.lat", "acute"), ("Dcroat", 0x0110, "D", "stroke")]
+for anm, acp, base, kind in ACCENTED:
+    g = _acc_glyph(base, kind); adv, lsb = metrics[base]
+    t2 = T2CharStringPen(adv, None); g.draw(t2)
+    glyph_order.append(anm); charstrings[anm] = t2.getCharString(); metrics[anm] = (adv, lsb); cmap[acp] = anm
 for cp, gn in LATIN_HOMO.items():
     cmap[cp] = gn
 cmap[0x00A0] = "space"   # no-break space: same advance as space, so it never shows tofu or breaks layout
@@ -644,13 +695,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.922", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.923", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.922",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.922", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.923",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.923", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -672,7 +723,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.922    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.923    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

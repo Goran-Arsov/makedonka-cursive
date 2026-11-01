@@ -7,8 +7,9 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.20** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
-Now **hinted** (PostScript + TrueType), with a contrast-preserving Bold.
+**Version 0.9.21** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Hinted** (PostScript + TrueType), with a contrast-preserving Bold and an **OpenType figures suite** —
+tabular figures, slashed zero, super/subscripts and automatic fractions (type `1/2` → ½).
 
 ![specimen](specimen.png)
 
@@ -84,7 +85,13 @@ h1.strong { font-weight: 700; }
 - **Spacing & kerning:** letters join at the x-height, and built-in **GPOS kerning** evens the
   connections, tightens loose joins, and spaces consecutive capitals so **all-caps also reads**
   (the cap flourishes still cross, as a copperplate hand does). Applied to both weights.
-- **Not included:** other-Cyrillic (Russian/Serbian-specific letters).
+- **OpenType features:** `tnum` tabular (uniform-width) figures · `zero` slashed zero · `sups`/`subs`
+  superscripts & subscripts (H₂O, x²) · `numr`/`dnom` · `frac` automatic fractions (type `1/2` → ½).
+  Turn them on in any OpenType-aware app (InDesign, Illustrator, Word's advanced typography) or on the
+  web with CSS `font-feature-settings` / `font-variant`. Both weights carry a **STAT** table so the
+  family groups correctly across apps.
+- **Not included:** other-Cyrillic (Russian/Serbian-specific letters), and ASCII math symbols
+  (`= + × ÷`).
 
 ## Scope & roadmap
 - **A display face — use it large.** An ornate copperplate for headings, logos, titles and short text.

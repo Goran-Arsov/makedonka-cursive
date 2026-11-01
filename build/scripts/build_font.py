@@ -802,7 +802,7 @@ for fl in ("woff2", "woff"):
 # ---- specimen with baseline guide lines ----
 from PIL import ImageFont
 face = ImageFont.truetype(otf, 100); dig = ImageFont.truetype(otf, 120); small = ImageFont.truetype(otf, 70)
-img = Image.new("RGB", (2460, 2900), "white"); dr = ImageDraw.Draw(img); y = 20   # cropped to actual content height before save
+img = Image.new("RGB", (2460, 4200), "white"); dr = ImageDraw.Draw(img); y = 20   # cropped to actual content height before save
 def line(txt, font, fill):
     global y
     asc, desc = font.getmetrics()
@@ -843,6 +843,13 @@ for L in ["АБВГДЃЕЖЗЅИЈ", "КЛЉМНЊОПРСТЌ", "УФХЦЧЏ�
 line_caps("МАКЕДОНИЈА", face, (90, 20, 20))   # all-caps word reads (uppercase kerning spaces the bodies; flourishes cross)
 for L in ["абвгдѓежзѕиј", "клљмнњопрстќ", "уфхцчџш"]:
     line(L, face, "black")
+# ---- Latin alphabet (same font) — kept in sync with each version ----
+for L in ["ABCDEFGHIJKLM", "NOPQRSTUVWXYZ"]:
+    line_caps(L, face, "black")
+line_caps("MAKEDONIJA", face, (90, 20, 20))
+for L in ["abcdefghijklm", "nopqrstuvwxyz"]:
+    line(L, face, "black")
+line("š č ž ć đ   Š Č Ž Ć Đ", face, "black")   # South-Slavic Latin diacritics
 line("0 1 2 3 4 5 6 7 8 9", dig, (120, 20, 20))
 line("«Охрид» · 3/4 · 50% · 20° … и така", small, (20, 20, 90))   # the v0.9.16 punctuation set
 for L in ["Скопје 2025 — Македонија", "Охрид, Битола, Прилеп!", "100 денари; (бр. 7)", "вода, леб и убавина?"]:

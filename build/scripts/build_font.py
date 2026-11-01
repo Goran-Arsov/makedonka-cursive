@@ -571,7 +571,7 @@ LAT_STRETCH = {"i":1.36,"t":1.25,"l":1.52,"k":1.63,"n":1.72,"h":1.73,"b":1.68,"d
                "q":1.67,"f":1.06,"v":1.80,"w":1.52,"z":1.22,
                "D":1.55,"F":1.48,"G":1.50,"I":1.35,"L":1.75,"N":1.62,"Q":1.65,"R":1.72,"U":1.78,"V":1.78,"W":1.75,"Z":1.52}
 # extra side-spacing (units each side) for drawn letters that read too tight — adds whitespace, not glyph width:
-LAT_SPACE = {"b":40,"h":40,"i":15,"l":40,"r":40,"t":40,"z":40}   # d: none — its round bowl sits like o/e (8 each side)
+LAT_SPACE = {"b":40,"h":40,"i":15,"l":40,"r":40,"t":40}   # d: none — its round bowl sits like o/e (8 each side); z: none since v0.9.34 (the symmetric z is a normal-width letter, not a narrow stem)
 LAT_RSP = {"r":-38, "v":45, "d":-7}    # extra RIGHT-side space only (negative = less): r tucks closer right, v gets room after;
                                        # d's right stem slants right, so its ink edge is measured high (above x-height) — pull it back in
 LAT_LSP = {"k": -6}                    # less LEFT-side space (space in front of the letter); k's ascender loop leaves optical room
@@ -608,7 +608,13 @@ def _L_q(p): _lbowl(p,66,LXH*0.5,38,LXH*0.5); ribbon_dir(p,[('M',(108,LXH-2)),('
 def _L_f(p): ribbon_dir(p,[('M',(66,LASC*0.55)),('C',(60,LASC*0.92),(84,LASC*1.12),(104,LASC*0.96)),('C',(120,LASC*0.82),(100,LASC*0.6),(72,LASC*0.58)),('C',(58,LASC*0.5),(54,LXH),(50,LXH*0.1)),('C',(46,-70),(34,LDESC),(14,LDESC*0.82))],44,11); ribbon_prof(p,[('M',(18,LXH+6)),('L',(96,LXH-2))],17,17)
 def _L_v(p): ribbon_dir(p,[('M',(34,LXH-2)),('C',(40,LXH*0.4),(58,12),(74,16)),('C',(92,20),(102,LXH*0.55),(100,LXH-2)),('C',(104,LXH*0.78),(116,LXH*0.7),(126,LXH*0.6))],44,11)
 def _L_w(p): ribbon_dir(p,[('M',(30,LXH-2)),('C',(36,LXH*0.4),(52,12),(66,16)),('C',(82,20),(88,LXH*0.5),(88,LXH-6))],44,11); ribbon_dir(p,[('M',(88,LXH-6)),('C',(90,LXH*0.4),(104,12),(118,16)),('C',(134,20),(144,LXH*0.55),(142,LXH-2)),('C',(146,LXH*0.78),(158,LXH*0.7),(168,LXH*0.6))],44,11)
-def _L_z(p): ribbon_dir(p,[('M',(32,LXH*0.78)),('C',(46,LXH*1.05),(96,LXH*1.0),(104,LXH*0.72)),('C',(90,LXH*0.5),(56,LXH*0.3),(44,18)),('C',(70,14),(96,20),(116,14)),('C',(96,-70),(60,LDESC),(36,LDESC*0.8))],44,11)
+def _L_z(p):   # per request: top curved hair replaced by the BOTTOM horizontal line inverted 180° on top (a small symmetric z, like the cap Z)
+    ribbon_dir(p,[('M',(110,LXH*0.94)),('C',(96,LXH*0.56),(58,LXH*0.28),(44,18)),('C',(70,14),(96,20),(116,14))],44,11)   # diagonal (raised to x-height) + bottom line
+    def _zbot(pen): ribbon_dir(pen,[('M',(44,18)),('C',(70,14),(96,20),(116,14))],44,11)                                   # the bottom line
+    _cx, _cy = 77.0 * _LSX, (18 + LXH*0.94) / 2.0     # centre (x scaled by _LSX): rotating the bottom-line start (44,18) by 180° lands on the diagonal top (110, LXH*0.94)
+    _bar = pathops.Path(); _zbot(_bar.getPen()); _bar.simplify()
+    _rot = pathops.Path(); _bar.draw(TransformPen(_rot.getPen(), (-1, 0, 0, -1, 2 * _cx, 2 * _cy))); _rot.simplify()
+    _rot.draw(p)                                                                                                            # top bar = bottom line rotated 180°
 def _L_k(p): _loopasc(p,52,LASC); ribbon_dir(p,[('M',(132,LXH*0.98)),('C',(102,LXH*0.78),(76,LXH*0.6),(62,LXH*0.5))],30,9); ribbon_dir(p,[('M',(62,LXH*0.5)),('C',(86,LXH*0.33),(110,LXH*0.17),(138,14))],46,12)
 def _U_I(p):
     ribbon_dir(p,[('M',(84,LCAP*0.96)),('C',(78,LCAP*0.5),(74,LCAP*0.2),(76,28))],56,15)                                                                              # stem
@@ -631,10 +637,14 @@ def _U_N(p):
 def _U_U(p): ribbon_dir(p,[('M',(52,LCAP)),('C',(44,LCAP*0.28),(50,14),(92,11)),('C',(134,8),(168,LCAP*0.3),(160,LCAP*0.72))],58,15); ribbon_dir(p,[('M',(158,LCAP)),('C',(156,LCAP*0.6),(158,LCAP*0.75),(160,LCAP*0.72))],44,16)
 def _U_V(p): ribbon_dir(p,[('M',(44,LCAP)),('C',(66,LCAP*0.5),(90,24),(100,18)),('C',(114,24),(136,LCAP*0.5),(162,LCAP))],58,13)
 def _U_W(p): ribbon_dir(p,[('M',(32,LCAP)),('C',(50,LCAP*0.5),(70,22),(80,18)),('C',(92,24),(106,LCAP*0.5),(112,LCAP*0.9))],56,13); ribbon_dir(p,[('M',(112,LCAP*0.9)),('C',(118,LCAP*0.5),(132,22),(144,18)),('C',(156,24),(178,LCAP*0.5),(198,LCAP))],56,13)
-def _U_Z(p):
-    ribbon_prof(p,[('M',(24,LCAP-22)),('C',(56,LCAP-2),(122,LCAP),(176,LCAP*0.9)),('C',(194,LCAP*0.83),(198,LCAP*0.70),(188,LCAP*0.60))],26,18)   # top bar + end flourish
+def _U_Z(p):   # per request: original upper bar removed; the top bar is the LOWER bar inverted 180° onto the stem top
     ribbon_dir(p,[('M',(172,LCAP-14)),('C',(130,LCAP*0.6),(86,LCAP*0.3),(46,24))],56,14)                                                          # diagonal
-    ribbon_prof(p,[('M',(46,24)),('C',(82,-2),(134,2),(182,24)),('C',(216,35),(226,64),(212,90))],32,19)                                          # bottom sweep + swash curl
+    def _zbar(pen): ribbon_prof(pen,[('M',(46,24)),('C',(82,-2),(134,2),(182,24)),('C',(216,35),(226,64),(212,90))],32,19)                        # bottom sweep + swash curl
+    _zbar(p)                                                                                                                                      # lower bar (stays)
+    _cx, _cy = 109.0 * _LSX, (24 + (LCAP - 14)) / 2.0   # symmetry centre (x scaled by the Latin stretch _LSX that ribbon_prof already applied): rotating the bar start (46,24) by 180° lands on the stem top (172, LCAP-14)
+    _bar = pathops.Path(); _zbar(_bar.getPen()); _bar.simplify()
+    _rot = pathops.Path(); _bar.draw(TransformPen(_rot.getPen(), (-1, 0, 0, -1, 2 * _cx, 2 * _cy))); _rot.simplify()
+    _rot.draw(p)                                                                                                                                  # top bar = lower bar rotated 180°
 def _U_R(p): ribbon_dir(p,[('M',(60,LCAP)),('C',(54,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(58,LCAP-6)),('C',(150,LCAP),(168,LCAP*0.72),(140,LCAP*0.58)),('C',(112,LCAP*0.46),(70,LCAP*0.52),(58,LCAP*0.52))],26,18); ribbon_dir(p,[('M',(96,LCAP*0.52)),('C',(120,LCAP*0.4),(150,LCAP*0.2),(170,16))],52,14)
 def _U_G(p): ribbon_prof(p,[('M',(176,LCAP*0.82)),('C',(150,LCAP*1.06),(40,LCAP*1.06),(40,LCAP*0.5)),('C',(40,LCAP*-0.06),(150,LCAP*-0.06),(176,LCAP*0.2)),('C',(182,LCAP*0.3),(182,LCAP*0.42),(176,LCAP*0.46))],30,16); ribbon_prof(p,[('M',(176,LCAP*0.46)),('C',(140,LCAP*0.44),(122,LCAP*0.46),(118,LCAP*0.46))],24,24)
 def _U_Q(p): ribbon_prof(p,[('M',(112,LCAP)),('C',(42,LCAP*0.98),(42,LCAP*0.02),(112,0)),('C',(182,LCAP*0.02),(182,LCAP*0.98),(112,LCAP))],30,20); ribbon_dir(p,[('M',(120,LCAP*0.36)),('C',(140,LCAP*0.25),(162,LCAP*0.12),(188,-40))],50,13)
@@ -821,13 +831,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.933", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.934", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.933",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.933", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.934",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.934", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -849,7 +859,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.933    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.934    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

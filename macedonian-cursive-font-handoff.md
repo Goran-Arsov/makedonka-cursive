@@ -274,6 +274,16 @@ vectorizing the Wikimedia chart (see *Source material* below).
   slant = the vertical STEM angle, and no single automatic measure reads it reliably on cursive forms — judge against
   a 17° guide overlay by eye.** Reduced the de-skew (`LAT_NAT`: и 32→28, р 30→26) so u/p stems match. Only T, u, p
   changed; 243 glyphs (T still one glyph, now named `T` not `T.lat`); FontBakery 0 FAIL/0 ERROR.
+- **(v0.9.31) lavish drawn caps F I L N T Z + Latin in specimen:** the drawn caps were stark/monoline next to the
+  ornate Cyrillic-copy caps (A/B/E/…). Added calligraphic flourishes to `_U_F/_U_I/_U_L/_U_N/_U_T/_U_Z` — an entry
+  **swash loop** at the top (sweeping up-left), graceful **terminal curls**, a **descender** on F, and flourished
+  bar-ends on T/Z — moderate, not as lavish as the copies. Two build lessons: disk-brush **flourishes break into
+  dots** when too thin through tight loops, so flourish `ribbon_prof` widths are kept ≥~18 (`minw`) — delicate-but-
+  solid, not hairline; and iterate **by eye at large size** (render each glyph big), there's no auto check for
+  flourish beauty. Separately, the **specimen** (`build_font.py`) now renders the full **Latin** alphabet (caps +
+  MAKEDONIJA + lowercase + diacritics) every build (canvas 4200px). Only the 6 cap outlines changed; 243 glyphs;
+  both weights; FontBakery 0 FAIL/0 ERROR. (D/G/Q/U/V/W are still the plain drawn caps — fair game for the same
+  treatment if wanted.)
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

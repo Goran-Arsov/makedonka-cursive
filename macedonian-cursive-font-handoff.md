@@ -234,6 +234,18 @@ vectorizing the Wikimedia chart (see *Source material* below).
   Result: every category lands **~0.85–1.15x** the Cyrillic on **both weights** (Regular: digits 1.08x, Latin 0.98x;
   Bold: 1.05x / 0.93x). Cyrillic untouched (never uses the brush). 243 glyphs, FontBakery 0 FAIL/0 ERROR. Known
   residuals (bypass the brush): brackets `[ ]` (`_poly`, still ~2x) and lowercase `p` — minor, rarely used.
+- **(v0.9.27) cap spacing — even BODY rhythm (superseded v0.9.25):** the v0.9.25 visual-ink-gap model equalised
+  the flourish-TIP gaps, but since the ornate flourishes reach by very different amounts, equal tip-gaps left the
+  letter BODIES at irregular intervals (МАКЕДОНИЈА body-gaps spanned 96..213px at a constant 46px tip-gap) — the eye
+  tracks bodies, so it read as chaotic. Switched `kern_util._cap_pairs` back to a **dense-BODY** gap, now equalised
+  **both directions** to **`CAP_BODY_GAP=620`** units, so *every* all-caps word has a uniform body gap (measured
+  spread **0u** on МАКЕДОНИЈА/ОХРИД/MAKEDONIJA, both weights). Key fix vs the old v0.9.17–24 `_cap_body`: it
+  rasterised the OUTLINE with polygon-fill, which **filled the counters** (О Д Б Р holes) and skewed the ink-mass →
+  wrong body edges. Now `_cap_body` measures the **rendered** glyph (`ImageFont.truetype(otf, UPM)`, 1px=1unit) so
+  counters are empty — identical to the specimen's `_cap_body_px`/`line_caps` (gap `89`px @ size100 ≡ 620u). At 620u
+  the body gap also exceeds most pairs' flourish reach (Cyrillic p85≈605u), so flourishes rarely collide; a few
+  ornate pairs (e.g. ШТИП ≈ −79u) cross only thinly (calligraphic, not a body overlap). Cap-before-cap only;
+  outlines unchanged; 243 glyphs; FontBakery 0 FAIL/0 ERROR.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

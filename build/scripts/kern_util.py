@@ -13,7 +13,7 @@ Called by both the Regular build and make_bold, so each weight is kerned on its 
 (the Bold's dilated glyphs are wider, so it needs different kerns)."""
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from fontTools.ttLib import TTFont
 from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 
@@ -21,14 +21,18 @@ W_LOW, W_HIGH, N_FLOOR, S_MAX, MIN_KERN = 115, 180, 14, 60, 5
 _CYR = "абвгдѓежзѕијклљмнњопрстќуфхцчџшѐѝ"
 _LAT = "abcdefghijklmnopqrstuvwxyz"
 
-# Uppercase spacing kern (v0.9.17; reworked v0.9.25): the ornate caps have wildly varying flourish
-# extents, so spacing by DENSE-BODY gap left the VISUAL gaps uneven and some flourishes still collided
-# (and were cramped next to over-spaced pairs). Instead equalise the VISUAL INK gap: place each cap so
-# its leftmost ink clears the previous cap's rightmost ink (flourishes included) by exactly CAP_VIS_GAP
-# font units. This both WIDENS and TIGHTENS pairs toward one gap, but the target is positive so every
-# cap->cap pair ends with real clearance — evenly distanced AND provably non-overlapping. Fires ONLY
-# capital-before-capital, so the approved capital->lowercase tuck-under is untouched.
-CAP_VIS_GAP, MIN_CAP_KERN = 160, 10
+# Uppercase spacing kern (v0.9.17; reworked v0.9.25, v0.9.27): equalising the VISUAL-INK gap (v0.9.25)
+# made the flourish TIPS evenly spaced but left the letter BODIES at irregular intervals — because the
+# ornate flourishes reach by very different amounts, equal tip-gaps give unequal body-to-body rhythm,
+# which the eye reads as chaotic spacing (e.g. МАКЕДОНИЈА body-gaps spanned 96..213px at equal tip-gaps).
+# The eye tracks the dense BODY of each cap, not the thin flourish tips, so instead equalise the DENSE-
+# BODY gap: place each cap so its dense-body left edge sits CAP_BODY_GAP units past the previous cap's
+# dense-body right edge (body edges = 15/85 % of column ink-mass, ignoring the thin flourishes). Both
+# WIDENS and TIGHTENS toward one body gap, so every all-caps word has an even body rhythm. At ~620 units
+# the body gap also exceeds most pairs' flourish reach (Cyrillic p85≈605u), so flourishes rarely collide;
+# the few ornate pairs whose flourishes exceed it cross only thinly (calligraphic, not a body overlap).
+# Fires ONLY capital-before-capital, so the approved capital->lowercase tuck-under is untouched.
+CAP_BODY_GAP, MIN_CAP_KERN = 620, 10
 _CYR_CAPS = "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШ"
 _LAT_CAPS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -107,24 +111,30 @@ class _CFP:   # flatten pen -> closed contours, for rasterising a cap's dense bo
     def addComponent(s,*a,**k): pass
 
 
-def _cap_ink(gs, gn):
-    # full ink left/right extremes of a cap (flourishes included), from the flattened outline
-    fp=_CFP(); gs[gn].draw(fp); cts=[c for c in fp.ct if len(c)>=2]
-    if not cts: return 0.0, 0.0
-    xs=[x for c in cts for x,_ in c]
-    return min(xs), max(xs)
+def _cap_body(pilfont, ch, lo=0.15, hi=0.85):
+    # dense-body left/right edge via column ink-MASS percentile — trims the thin flourish tails so
+    # spacing tracks the body the eye reads, not the flourish extremes. Measured from the RENDERED glyph
+    # (pilfont at size == UPM, so 1px == 1 unit) so counters/holes are empty, exactly like the specimen.
+    bb = pilfont.getbbox(ch)
+    if not bb: return 0.0, 0.0
+    l, t, r, b = bb
+    im = Image.new("L", (r-l+20, b-t+20), 0); ImageDraw.Draw(im).text((10-l, 10-t), ch, fill=255, font=pilfont)
+    col = (np.asarray(im) >= 128).sum(axis=0).astype(float); tot = col.sum()
+    if tot <= 0: return float(l), float(r)
+    cum = np.cumsum(col)
+    return float(np.searchsorted(cum, lo*tot)) + (l-10), float(np.searchsorted(cum, hi*tot)) + (l-10)
 
 
-def _cap_pairs(gs, cm, hm, caps):
+def _cap_pairs(pilfont, cm, hm, caps):
     present=[c for c in caps if ord(c) in cm]
-    IL={}; IR={}; A={}
+    BL={}; BR={}; A={}
     for c in present:
-        gn=cm[ord(c)]; IL[c],IR[c]=_cap_ink(gs,gn); A[c]=hm[gn][0]
+        BL[c],BR[c]=_cap_body(pilfont, c); A[c]=hm[cm[ord(c)]][0]
     out=[]
     for a in present:
         for b in present:
-            gap0 = A[a] + IL[b] - IR[a]           # natural VISUAL ink gap if b sits at a's advance
-            k = int(round(CAP_VIS_GAP - gap0))     # equalise to CAP_VIS_GAP (widen OR tighten; target>0 => always clears)
+            gap0 = A[a] + BL[b] - BR[a]            # natural dense-BODY gap if b sits at a's advance
+            k = int(round(CAP_BODY_GAP - gap0))     # equalise every pair to CAP_BODY_GAP (widen OR tighten)
             if abs(k) >= MIN_CAP_KERN:
                 out.append((cm[ord(a)], cm[ord(b)], k))
     return out
@@ -135,8 +145,9 @@ def add_kern(otf_path, extra_fea=""):
     # addOpenTypeFeaturesFromString rebuilds GSUB+GPOS from the FEA it is given, so kern and
     # any other features must share one FEA or the later call wipes the earlier tables.
     f = TTFont(otf_path); gs = f.getGlyphSet(); cm = f.getBestCmap(); hm = f["hmtx"]
+    pilfont = ImageFont.truetype(otf_path, f["head"].unitsPerEm)   # 1px == 1 unit, for the cap body measure
     pairs = _pairs(gs, cm, hm, _CYR) + _pairs(gs, cm, hm, _LAT) \
-          + _cap_pairs(gs, cm, hm, _CYR_CAPS) + _cap_pairs(gs, cm, hm, _LAT_CAPS)
+          + _cap_pairs(pilfont, cm, hm, _CYR_CAPS) + _cap_pairs(pilfont, cm, hm, _LAT_CAPS)
     # register the feature under both scripts (+ default), so shapers that look up `cyrl`/`latn`
     # apply it — not just those that fall back to DFLT
     fea = ("languagesystem DFLT dflt;\nlanguagesystem latn dflt;\nlanguagesystem cyrl dflt;\n"

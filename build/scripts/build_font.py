@@ -731,13 +731,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.926", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.927", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.926",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.926", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.927",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.927", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -759,7 +759,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.926    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.927    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the
@@ -808,11 +808,25 @@ def line(txt, font, fill):
 # shipped cap kern (kern_util.CAP_VIS_GAP): PIL applies no GPOS, so the specimen reproduces the kerned
 # spacing by hand. Each cap's leftmost ink clears the previous cap's rightmost ink by a constant gap,
 # so the bodies are evenly distanced and the flourishes don't collide.
-def line_caps(txt, font, fill, gap=23.0):   # 23 px @ size 100 == CAP_VIS_GAP 160 units (160*100/700)
+def _cap_body_px(font, ch):
+    # dense-body left/right (px, rel to pen origin) via 15/85 % of column ink-mass — matches the kern's
+    # `_cap_body`, so the specimen reproduces the shipped even-dense-body cap spacing.
+    bb = font.getbbox(ch)
+    if not bb:
+        return 0.0, 0.0
+    l, t, r, b = bb
+    tmp = Image.new("L", (r - l + 20, b - t + 20), 0)
+    ImageDraw.Draw(tmp).text((10 - l, 10 - t), ch, fill=255, font=font)
+    col = np.asarray(tmp).astype(float).sum(axis=0); tot = col.sum()
+    if tot <= 0:
+        return float(l), float(r)
+    cum = np.cumsum(col)
+    return float(np.searchsorted(cum, 0.15 * tot)) + (l - 10), float(np.searchsorted(cum, 0.85 * tot)) + (l - 10)
+def line_caps(txt, font, fill, gap=89.0):   # 89 px @ size 100 == CAP_BODY_GAP 620 units (620*100/700); matches the kern
     global y
     asc, desc = font.getmetrics(); prev_r = None
     for ch in txt.replace(" ", ""):
-        bl, _, br, _ = font.getbbox(ch)
+        bl, br = _cap_body_px(font, ch)
         penx = (30.0 - bl) if prev_r is None else (prev_r + gap - bl)
         dr.text((penx, y), ch, fill=fill, font=font)
         prev_r = penx + br

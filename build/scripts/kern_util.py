@@ -21,18 +21,17 @@ W_LOW, W_HIGH, N_FLOOR, S_MAX, MIN_KERN = 115, 180, 14, 60, 5
 _CYR = "абвгдѓежзѕијклљмнњопрстќуфхцчџшѐѝ"
 _LAT = "abcdefghijklmnopqrstuvwxyz"
 
-# Uppercase spacing kern (v0.9.17; reworked v0.9.25, v0.9.27): equalising the VISUAL-INK gap (v0.9.25)
-# made the flourish TIPS evenly spaced but left the letter BODIES at irregular intervals — because the
-# ornate flourishes reach by very different amounts, equal tip-gaps give unequal body-to-body rhythm,
-# which the eye reads as chaotic spacing (e.g. МАКЕДОНИЈА body-gaps spanned 96..213px at equal tip-gaps).
-# The eye tracks the dense BODY of each cap, not the thin flourish tips, so instead equalise the DENSE-
-# BODY gap: place each cap so its dense-body left edge sits CAP_BODY_GAP units past the previous cap's
-# dense-body right edge (body edges = 15/85 % of column ink-mass, ignoring the thin flourishes). Both
-# WIDENS and TIGHTENS toward one body gap, so every all-caps word has an even body rhythm. At ~620 units
-# the body gap also exceeds most pairs' flourish reach (Cyrillic p85≈605u), so flourishes rarely collide;
-# the few ornate pairs whose flourishes exceed it cross only thinly (calligraphic, not a body overlap).
-# Fires ONLY capital-before-capital, so the approved capital->lowercase tuck-under is untouched.
-CAP_BODY_GAP, MIN_CAP_KERN = 620, 10
+# Uppercase spacing kern (v0.9.17; reworked v0.9.25, v0.9.27, v0.9.28): equalise the gap the EYE reads
+# between cap bodies. v0.9.27 used a full-height 15/85 ink-MASS percentile for the body edges, but that
+# percentile is skewed by the ornate flourishes that loop ABOVE cap-height and BELOW the baseline — so
+# the measured edge did not match the visible body, and the perceived (body-band) whitespace still varied
+# wildly (−7..+89px across pairs; letters like Ѕ Ј С Е read with extra space in front). Instead measure
+# each cap's body edge as the LEFT/RIGHT-MOST INK within the CAP-BODY BAND (CAP_BAND_LO..CAP_BAND_HI units
+# above the baseline) — i.e. where the stroke is actually visible in the x-height/cap zone, ignoring the
+# vertical flourishes. Placing those band edges CAP_BAND_GAP apart (both widening AND tightening) evens the
+# perceived whitespace to ~10px spread. Fires ONLY capital-before-capital, so the capital->lowercase tuck is
+# untouched. (The band excludes descenders/top flourishes, so those still cross thinly between ornate pairs.)
+CAP_BAND_GAP, CAP_BAND_LO, CAP_BAND_HI, MIN_CAP_KERN = 290, 100, 590, 10
 _CYR_CAPS = "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШ"
 _LAT_CAPS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -111,18 +110,24 @@ class _CFP:   # flatten pen -> closed contours, for rasterising a cap's dense bo
     def addComponent(s,*a,**k): pass
 
 
-def _cap_body(pilfont, ch, lo=0.15, hi=0.85):
-    # dense-body left/right edge via column ink-MASS percentile — trims the thin flourish tails so
-    # spacing tracks the body the eye reads, not the flourish extremes. Measured from the RENDERED glyph
-    # (pilfont at size == UPM, so 1px == 1 unit) so counters/holes are empty, exactly like the specimen.
-    bb = pilfont.getbbox(ch)
+def _cap_body(pilfont, ch):
+    # body left/right edge = LEFT/RIGHT-most ink within the cap-body BAND (CAP_BAND_LO..CAP_BAND_HI units
+    # above the baseline), from the RENDERED glyph (pilfont at size == UPM, so 1px == 1 unit; counters empty).
+    # Drawn with anchor "ls" so the baseline is known; the band ignores top flourishes and descenders, so
+    # the edge matches the visible body the eye spaces by.
+    bb = pilfont.getbbox(ch, anchor="ls")           # (l,t,r,b) rel to left-baseline; t<0 above, b>0 below
     if not bb: return 0.0, 0.0
-    l, t, r, b = bb
-    im = Image.new("L", (r-l+20, b-t+20), 0); ImageDraw.Draw(im).text((10-l, 10-t), ch, fill=255, font=pilfont)
-    col = (np.asarray(im) >= 128).sum(axis=0).astype(float); tot = col.sum()
-    if tot <= 0: return float(l), float(r)
-    cum = np.cumsum(col)
-    return float(np.searchsorted(cum, lo*tot)) + (l-10), float(np.searchsorted(cum, hi*tot)) + (l-10)
+    l, t, r, b = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+    ox = 20 - min(0, l); base = 20 - t
+    im = Image.new("L", (r + ox + 20, base + max(0, b) + 20), 0)
+    ImageDraw.Draw(im).text((ox, base), ch, fill=255, font=pilfont, anchor="ls")
+    a = np.asarray(im) >= 128
+    band = a[max(0, base - CAP_BAND_HI): max(0, base - CAP_BAND_LO), :]
+    cols = np.where(band.max(axis=0))[0]
+    if len(cols) == 0:                              # no ink in band -> fall back to full ink extent
+        cols = np.where(a.max(axis=0))[0]
+        if len(cols) == 0: return 0.0, 0.0
+    return float(cols.min() - ox), float(cols.max() - ox)
 
 
 def _cap_pairs(pilfont, cm, hm, caps):
@@ -133,8 +138,8 @@ def _cap_pairs(pilfont, cm, hm, caps):
     out=[]
     for a in present:
         for b in present:
-            gap0 = A[a] + BL[b] - BR[a]            # natural dense-BODY gap if b sits at a's advance
-            k = int(round(CAP_BODY_GAP - gap0))     # equalise every pair to CAP_BODY_GAP (widen OR tighten)
+            gap0 = A[a] + BL[b] - BR[a]            # natural band-ink gap if b sits at a's advance
+            k = int(round(CAP_BAND_GAP - gap0))     # equalise every pair's body-band gap (widen OR tighten)
             if abs(k) >= MIN_CAP_KERN:
                 out.append((cm[ord(a)], cm[ord(b)], k))
     return out

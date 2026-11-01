@@ -246,6 +246,16 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the body gap also exceeds most pairs' flourish reach (Cyrillic p85≈605u), so flourishes rarely collide; a few
   ornate pairs (e.g. ШТИП ≈ −79u) cross only thinly (calligraphic, not a body overlap). Cap-before-cap only;
   outlines unchanged; 243 glyphs; FontBakery 0 FAIL/0 ERROR.
+- **(v0.9.28) cap spacing — even PERCEIVED (body-band) whitespace (refined v0.9.27):** v0.9.27 equalised a
+  full-height 15/85 ink-MASS percentile, but that percentile is skewed by the flourishes that loop ABOVE
+  cap-height and BELOW the baseline, so the measured edge missed the visible body — the perceived (body-band)
+  whitespace still varied **−7..+89px**, and Ѕ Ј С Е read with extra space in front. Now `_cap_body` measures the
+  **left/right-most INK within the cap-body BAND** (`CAP_BAND_LO=100 .. CAP_BAND_HI=590` units above the baseline),
+  i.e. where the stroke is visible in the x-height/cap zone, ignoring the vertical flourishes; pairs are equalised to
+  **`CAP_BAND_GAP=290`** units (both widen/tighten). Tested across the alphabet: band-whitespace spread **96px→10px**;
+  per-word (МАКЕДОНИЈА/ОХРИД/cap-rows/MAKEDONIJA) spread **~1px** (Bold ≤8px). Measured render-based (`ImageFont` at
+  size=UPM, `anchor="ls"` so the baseline is known), identical to the specimen's `_cap_body_px`/`line_caps`
+  (band 14..84px, gap `41`px @ size100 ≡ 290u). Cap-before-cap only; outlines unchanged; 243 glyphs; 0 FAIL/0 ERROR.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

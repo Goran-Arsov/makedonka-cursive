@@ -731,13 +731,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.927", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.928", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.927",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.927", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.928",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.928", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -759,7 +759,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.927    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.928    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the
@@ -804,25 +804,29 @@ def line(txt, font, fill):
     global y
     asc, desc = font.getmetrics()
     dr.text((30, y), txt, fill=fill, font=font); y += asc + desc + 24
-# Caps shown as an evenly-spaced glyph chart, drawn with the SAME even-visual-ink-gap model as the
-# shipped cap kern (kern_util.CAP_VIS_GAP): PIL applies no GPOS, so the specimen reproduces the kerned
-# spacing by hand. Each cap's leftmost ink clears the previous cap's rightmost ink by a constant gap,
-# so the bodies are evenly distanced and the flourishes don't collide.
-def _cap_body_px(font, ch):
-    # dense-body left/right (px, rel to pen origin) via 15/85 % of column ink-mass — matches the kern's
-    # `_cap_body`, so the specimen reproduces the shipped even-dense-body cap spacing.
-    bb = font.getbbox(ch)
+# Caps shown as an evenly-spaced glyph chart, drawn with the SAME cap-body-band model as the shipped cap
+# kern (kern_util._cap_body): PIL applies no GPOS, so the specimen reproduces the kerned spacing by hand.
+# Each cap is placed so the left/right-most ink in the cap-body band sits a constant gap from the previous
+# cap's — so the bodies read evenly spaced regardless of where the flourishes reach.
+def _cap_body_px(font, ch, band_lo=14, band_hi=84):
+    # body left/right (px, rel to pen origin) = left/right-most ink within the cap-body band (band_lo..
+    # band_hi px above the baseline) — matches the kern's `_cap_body` (14/84 px @ size100 == 100/590 units).
+    bb = font.getbbox(ch, anchor="ls")           # rel to left-baseline; t<0 above baseline, b>0 below
     if not bb:
         return 0.0, 0.0
-    l, t, r, b = bb
-    tmp = Image.new("L", (r - l + 20, b - t + 20), 0)
-    ImageDraw.Draw(tmp).text((10 - l, 10 - t), ch, fill=255, font=font)
-    col = np.asarray(tmp).astype(float).sum(axis=0); tot = col.sum()
-    if tot <= 0:
-        return float(l), float(r)
-    cum = np.cumsum(col)
-    return float(np.searchsorted(cum, 0.15 * tot)) + (l - 10), float(np.searchsorted(cum, 0.85 * tot)) + (l - 10)
-def line_caps(txt, font, fill, gap=89.0):   # 89 px @ size 100 == CAP_BODY_GAP 620 units (620*100/700); matches the kern
+    l, t, r, b = int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])
+    ox = 20 - min(0, l); base = 20 - t
+    tmp = Image.new("L", (r + ox + 20, base + max(0, b) + 20), 0)
+    ImageDraw.Draw(tmp).text((ox, base), ch, fill=255, font=font, anchor="ls")
+    a = np.asarray(tmp) >= 128
+    band = a[max(0, base - band_hi): max(0, base - band_lo), :]
+    cols = np.where(band.max(axis=0))[0]
+    if len(cols) == 0:
+        cols = np.where(a.max(axis=0))[0]
+        if len(cols) == 0:
+            return 0.0, 0.0
+    return float(cols.min() - ox), float(cols.max() - ox)
+def line_caps(txt, font, fill, gap=41.0):   # 41 px @ size 100 == CAP_BAND_GAP 290 units (290*100/700); matches the kern
     global y
     asc, desc = font.getmetrics(); prev_r = None
     for ch in txt.replace(" ", ""):

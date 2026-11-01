@@ -35,10 +35,10 @@ automatically at the end of each build.
   base64 `@font-face`, so the kern renders natively) and a non-technical install/use guide exist as private
   shareable pages; the owner holds the links. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.28 — SHIPPED + repo PUBLIC; updated 2026-11-01)
-- **Shipped + public.** `origin/main` is at **v0.9.28**; GitHub releases v0.9.15–v0.9.28 are live (each with its
+## Current state (v0.9.29 — SHIPPED + repo PUBLIC; updated 2026-11-01)
+- **Shipped + public.** `origin/main` is at **v0.9.29**; GitHub releases v0.9.15–v0.9.29 are live (each with its
   zip). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
-  Font-internal version **"0.928"**, demo/CSS `?v=39`.
+  Font-internal version **"0.929"**, demo/CSS `?v=40`.
 - **Coverage — 243 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
   uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
   South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ / … · ° %);
@@ -73,9 +73,9 @@ automatically at the end of each build.
 ## What should still be done
 
 **A. Propagate the latest release to the two places OUTSIDE this repo (owner's).**
-- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.28, pushed** (amici commit `642a9b9`:
+- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.29, pushed** (amici commit `9e31330`:
   new Regular+Bold `woff`/`woff2`, cache-buster `?v=17→18`, Tailwind CSS rebuilt). amici's own cache-buster
-  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.27=`?v=19`, v0.9.28=`?v=20`). **Only
+  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.28=`?v=20`, v0.9.29=`?v=21`). **Only
   the live DEPLOY remains** — its GitHub Actions deploy is blocked on missing secrets, so it needs a manual deploy
   or the secrets set; the live site state can't be verified from this checkout. (`app/assets/builds/tailwind.css`
   is gitignored there — regenerated on deploy, so the commit carries only the source CSS + the font binaries.)
@@ -95,6 +95,12 @@ speck-drop in `otf2ttf.py` reduced it (Regular 24→15, Bold 185→62), render-i
 non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a manual Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.29** — **uniform Latin tilt:** Latin text read with mixed slant — the drawn Latin is sheared to one slant
+  (15°) and uniform, but the Cyrillic-derived **copies** (a c e o m u s g y p j + ornate caps) were brought to 15°
+  via a hand-measured `LAT_NAT` table whose values were too low, so they under-corrected and stayed too slanted
+  (a:24°, u:28°, B/E/X:26°). Re-derived `LAT_NAT` from each copy's measured slant (`new = old + (copy_slant−16)`);
+  spread 11–28°→14–18°. Only `LAT_NAT` changed (Latin copies); drawn Latin/Cyrillic/digits/symbols/kern untouched.
+  Both weights; 243 glyphs; FontBakery 0 FAIL.
 - **v0.9.28** — **even PERCEIVED cap spacing:** v0.9.27's full-height ink-mass body measure was skewed by the
   flourishes looping above/below the letter, so Ѕ/Ј/С/Е read with extra space in front (perceived whitespace varied
   −7..+89px). Now `_cap_body` measures the left/right-most ink in the **cap-body band** (`CAP_BAND_LO/HI`, ignoring
@@ -182,6 +188,8 @@ non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a m
   "chaotic" МАКЕДОНИЈА spacing); re-propagated to amici (pushed, `?v=19`; live deploy owner-side).
 - **Even PERCEIVED cap spacing (v0.9.28)** — body edges measured in the cap-body band (flourish-independent), so the
   visible space in front of every cap (Ѕ/Ј/С included) is uniform; re-propagated to amici (`?v=20`; deploy owner-side).
+- **Uniform Latin tilt (v0.9.29)** — re-measured the `LAT_NAT` de-skew table so the Cyrillic-derived Latin copies no
+  longer stand more slanted than the drawn letters (all ~15°); re-propagated to amici (`?v=21`; deploy owner-side).
 - **OpenType figures features + STAT/meta** (v0.9.21), **math/ASCII symbols + multi-digit frac** (v0.9.22),
   **South-Slavic Latin diacritics + more symbols** (v0.9.23).
 - **Full Latin alphabet** (v0.9.2, refined through v0.9.14). **GPOS pair kerning** (v0.9.15). **Even consecutive

@@ -256,6 +256,16 @@ vectorizing the Wikimedia chart (see *Source material* below).
   per-word (МАКЕДОНИЈА/ОХРИД/cap-rows/MAKEDONIJA) spread **~1px** (Bold ≤8px). Measured render-based (`ImageFont` at
   size=UPM, `anchor="ls"` so the baseline is known), identical to the specimen's `_cap_body_px`/`line_caps`
   (band 14..84px, gap `41`px @ size100 ≡ 290u). Cap-before-cap only; outlines unchanged; 243 glyphs; 0 FAIL/0 ERROR.
+- **(v0.9.29) uniform Latin tilt — re-measured `LAT_NAT`:** Latin text (LibreOffice) read with mixed tilt. Cause:
+  the drawn Latin letters are sheared to one slant (`SLANT`=15°) and are uniform (measured ~15–18°), but the
+  **de-skewed copies** of Cyrillic (a c e o m u s g y p j + the ornate caps) are brought to `SLANT` via a *measured*
+  natural-slant table `LAT_NAT` — and those hand values were too low, so the de-skew **under-corrected** and the
+  copies stayed too slanted (a:24°, u:28°, B/E/X:26°…). Re-derived `LAT_NAT` self-consistently: each copy's measured
+  projection-profile slant backs out its source's true slant (`new = old + (copy_slant − 16)`), so every copy now
+  lands on ~15°. Measured spread **11–28° → 14–18°** across all letters that have a readable stem; the 4 unmeasurable
+  diagonal/curvy copies (s x O S) were already fine and kept. Slant is measured by the **projection-profile** method
+  (shear the glyph until its column profile is sharpest = strokes vertical); centroid-slope is useless here (dominated
+  by letter shape). Only `LAT_NAT` changed — drawn letters, Cyrillic and everything else untouched. 0 FAIL/0 ERROR.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

@@ -579,11 +579,11 @@ CAP_SCALE = 0.89              # reused ornate caps: uniform scale (round caps li
 LAT_XCOMP = {"o.lat": 0.88}   # horizontal squeeze for specific reused copies (the Latin o read too wide/open)
 # One Latin tilt: every reused Cyrillic letter becomes a copy de-skewed to the single slant SLANT.
 # LAT_NAT = measured natural slant (deg) of each Cyrillic SOURCE; de-skew = tan(nat) - SLANT lands it on SLANT.
-LAT_NAT = {
-    0x0430:21,0x0438:20,0x0440:30,0x0458:30, 0x0435:24,0x043E:19,0x0441:22,0x0434:23,  # а и р ј · е о с д
-    0x043C:25,0x0455:25,0x0445:27,0x0443:23,                                            # м ѕ х у
-    0x0410:28,0x0412:24,0x0421:22,0x0415:23,0x041D:28,0x0408:30,0x041A:30,0x041C:30,     # А В С Е Н Ј К М
-    0x041E:22,0x0420:28,0x0405:30,0x0422:28,0x0425:28,0x0423:26}                         # О Р Ѕ Т Х У
+LAT_NAT = {   # v0.9.29: re-measured (projection-profile slant of each copy backed out its source's true slant)
+    0x0430:29,0x0438:32,0x0440:30,0x0458:27, 0x0435:26,0x043E:21,0x0441:20,0x0434:29,  # а и р ј · е о с д
+    0x043C:30,0x0455:25,0x0445:27,0x0443:29,                                            # м ѕ х у
+    0x0410:30,0x0412:34,0x0421:26,0x0415:33,0x041D:26,0x0408:29,0x041A:33,0x041C:31,     # А В С Е Н Ј К М
+    0x041E:22,0x0420:33,0x0405:30,0x0422:32,0x0425:38,0x0423:30}                         # О Р Ѕ Т Х У
 def _dsk(scp): return math.tan(math.radians(LAT_NAT[scp])) - SLANT
 LAT_LIGHTEN = {"h":0.84, "w":0.82, "b":0.90,            # per-glyph weight scale for the dense ones
                # drawn letters still heavier than the Cyrillic body after LAT_WT — thin to match:
@@ -731,13 +731,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.928", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.929", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.928",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.928", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.929",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.929", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -759,7 +759,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.928    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.929    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

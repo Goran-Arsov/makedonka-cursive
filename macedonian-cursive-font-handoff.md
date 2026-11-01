@@ -266,6 +266,14 @@ vectorizing the Wikimedia chart (see *Source material* below).
   diagonal/curvy copies (s x O S) were already fine and kept. Slant is measured by the **projection-profile** method
   (shear the glyph until its column profile is sharpest = strokes vertical); centroid-slope is useless here (dominated
   by letter shape). Only `LAT_NAT` changed — drawn letters, Cyrillic and everything else untouched. 0 FAIL/0 ERROR.
+- **(v0.9.30) plain Latin T + u/p stem slant:** (1) **T** was a de-skewed copy of the ornate Cyrillic Т; replaced
+  with a drawn plain T — `_U_T` = a horizontal cap bar (`ribbon_prof`) + a central vertical stem (`ribbon_dir`),
+  added to `LATIN_DRAWN`, removed from `REUSE_DESKEW`. (2) v0.9.29 targeted a uniform *projection-profile* slant, but
+  that over-uprighted the **stemmed copies** — u and p read noticeably more upright than the drawn letters' ~17°
+  stems (the projection average is pulled by u's curved connector / p's bowl, not its stem). **Lesson: perceived
+  slant = the vertical STEM angle, and no single automatic measure reads it reliably on cursive forms — judge against
+  a 17° guide overlay by eye.** Reduced the de-skew (`LAT_NAT`: и 32→28, р 30→26) so u/p stems match. Only T, u, p
+  changed; 243 glyphs (T still one glyph, now named `T` not `T.lat`); FontBakery 0 FAIL/0 ERROR.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

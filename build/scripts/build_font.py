@@ -580,7 +580,7 @@ LAT_XCOMP = {"o.lat": 0.88}   # horizontal squeeze for specific reused copies (t
 # One Latin tilt: every reused Cyrillic letter becomes a copy de-skewed to the single slant SLANT.
 # LAT_NAT = measured natural slant (deg) of each Cyrillic SOURCE; de-skew = tan(nat) - SLANT lands it on SLANT.
 LAT_NAT = {   # v0.9.29: re-measured (projection-profile slant of each copy backed out its source's true slant)
-    0x0430:29,0x0438:32,0x0440:30,0x0458:27, 0x0435:26,0x043E:21,0x0441:20,0x0434:29,  # а и р ј · е о с д
+    0x0430:29,0x0438:28,0x0440:26,0x0458:27, 0x0435:26,0x043E:21,0x0441:20,0x0434:29,  # а и р ј · е о с д  (v0.9.30: и/р less de-skew -> u/p stems match)
     0x043C:30,0x0455:25,0x0445:27,0x0443:29,                                            # м ѕ х у
     0x0410:30,0x0412:34,0x0421:26,0x0415:33,0x041D:26,0x0408:29,0x041A:33,0x041C:31,     # А В С Е Н Ј К М
     0x041E:22,0x0420:33,0x0405:30,0x0422:32,0x0425:38,0x0423:30}                         # О Р Ѕ Т Х У
@@ -621,12 +621,15 @@ def _U_Z(p): ribbon_prof(p,[('M',(42,LCAP-12)),('C',(90,LCAP*0.98),(130,LCAP),(1
 def _U_R(p): ribbon_dir(p,[('M',(60,LCAP)),('C',(54,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(58,LCAP-6)),('C',(150,LCAP),(168,LCAP*0.72),(140,LCAP*0.58)),('C',(112,LCAP*0.46),(70,LCAP*0.52),(58,LCAP*0.52))],26,18); ribbon_dir(p,[('M',(96,LCAP*0.52)),('C',(120,LCAP*0.4),(150,LCAP*0.2),(170,16))],52,14)
 def _U_G(p): ribbon_prof(p,[('M',(176,LCAP*0.82)),('C',(150,LCAP*1.06),(40,LCAP*1.06),(40,LCAP*0.5)),('C',(40,LCAP*-0.06),(150,LCAP*-0.06),(176,LCAP*0.2)),('C',(182,LCAP*0.3),(182,LCAP*0.42),(176,LCAP*0.46))],30,16); ribbon_prof(p,[('M',(176,LCAP*0.46)),('C',(140,LCAP*0.44),(122,LCAP*0.46),(118,LCAP*0.46))],24,24)
 def _U_Q(p): ribbon_prof(p,[('M',(112,LCAP)),('C',(42,LCAP*0.98),(42,LCAP*0.02),(112,0)),('C',(182,LCAP*0.02),(182,LCAP*0.98),(112,LCAP))],30,20); ribbon_dir(p,[('M',(120,LCAP*0.36)),('C',(140,LCAP*0.25),(162,LCAP*0.12),(188,-40))],50,13)
+def _U_T(p):   # plain Latin T: a horizontal cap bar + a central vertical stem (drawn upright, slanted in the loop)
+    ribbon_prof(p, [('M', (22, LCAP-4)), ('L', (210, LCAP-4))], 30, 26)   # horizontal cap bar
+    ribbon_dir(p, [('M', (116, LCAP-6)), ('L', (116, 16))], 54, 14)       # central vertical stem
 LATIN_HOMO = {}   # none: every Latin letter is now drawn or a de-skewed copy (built below),
 # so the Macedonian Cyrillic glyphs are never reused directly and keep their steeper slant.
 LATIN_DRAWN = [("i",0x69,_L_i),("t",0x74,_L_t),("l",0x6C,_L_l),("k",0x6B,_L_k),("n",0x6E,_L_n),("h",0x68,_L_h),("b",0x62,_L_b),
     ("d",0x64,_L_d),("r",0x72,_L_r),("q",0x71,_L_q),("f",0x66,_L_f),("v",0x76,_L_v),("w",0x77,_L_w),("z",0x7A,_L_z),
     ("D",0x44,_U_D),("F",0x46,_U_F),("G",0x47,_U_G),("I",0x49,_U_I),("L",0x4C,_U_L),("N",0x4E,_U_N),
-    ("Q",0x51,_U_Q),("R",0x52,_U_R),("U",0x55,_U_U),("V",0x56,_U_V),("W",0x57,_U_W),("Z",0x5A,_U_Z)]
+    ("Q",0x51,_U_Q),("R",0x52,_U_R),("T",0x54,_U_T),("U",0x55,_U_U),("V",0x56,_U_V),("W",0x57,_U_W),("Z",0x5A,_U_Z)]
 def _latin_sb(path):          # side bearings from ink in the x-height join band (baseline 0)
     fpn = FlattenPen(); path.draw(fpn)
     pts = [q for c in fpn.contours for q in c]
@@ -663,7 +666,7 @@ REUSE_DESKEW = [  # (newname, latin_cp, src_glyph, src_cp, is_cap) — de-skew =
     ("H.lat",0x48,"uni041D",0x041D,True), ("J.lat",0x4A,"uni0408",0x0408,True),
     ("K.lat",0x4B,"uni041A",0x041A,True), ("M.lat",0x4D,"uni041C",0x041C,True),
     ("O.lat",0x4F,"uni041E",0x041E,True), ("P.lat",0x50,"uni0420",0x0420,True),
-    ("S.lat",0x53,"uni0405",0x0405,True), ("T.lat",0x54,"uni0422",0x0422,True),
+    ("S.lat",0x53,"uni0405",0x0405,True),   # T is now a drawn plain T (_U_T), not a Cyrillic-Т copy
     ("X.lat",0x58,"uni0425",0x0425,True), ("Y.lat",0x59,"uni0423",0x0423,True)]
 for nm, cp, src, scp, iscap in REUSE_DESKEW:
     dsk = _dsk(scp)
@@ -731,13 +734,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.929", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.930", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.929",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.929", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.930",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.930", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -759,7 +762,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.929    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.930    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

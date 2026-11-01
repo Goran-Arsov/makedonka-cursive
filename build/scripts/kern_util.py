@@ -140,6 +140,9 @@ def add_kern(otf_path):
     f = TTFont(otf_path); gs = f.getGlyphSet(); cm = f.getBestCmap(); hm = f["hmtx"]
     pairs = _pairs(gs, cm, hm, _CYR) + _pairs(gs, cm, hm, _LAT) \
           + _cap_pairs(gs, cm, hm, _CYR_CAPS) + _cap_pairs(gs, cm, hm, _LAT_CAPS)
-    fea = "feature kern {\n" + "".join(f"  pos {a} {b} {k};\n" for a, b, k in pairs) + "} kern;\n"
+    # register the feature under both scripts (+ default), so shapers that look up `cyrl`/`latn`
+    # apply it — not just those that fall back to DFLT
+    fea = ("languagesystem DFLT dflt;\nlanguagesystem latn dflt;\nlanguagesystem cyrl dflt;\n"
+           "feature kern {\n" + "".join(f"  pos {a} {b} {k};\n" for a, b, k in pairs) + "} kern;\n")
     addOpenTypeFeaturesFromString(f, fea); f.save(otf_path)
     return len(pairs)

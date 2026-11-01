@@ -39,6 +39,7 @@ try:
     _hinted = ttfautohint(in_file=DST)
     with open(DST, "wb") as _fh:
         _fh.write(_hinted)
+    _t = TTFont(DST); _t["head"].flags |= (1 << 3); _t.save(DST)   # hinted: force ppem to integer values
     print("ttfautohinted", DST)
 except Exception as _e:
     print(f"WARN: ttfautohint skipped ({_e}) — shipping unhinted TTF")

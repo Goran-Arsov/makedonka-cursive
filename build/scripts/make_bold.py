@@ -22,7 +22,7 @@ TAN = math.tan(math.radians(18))                         # the font's italic ang
 DY = max(4.0, round(D * 0.44))                           # vertical growth < horizontal, so weight lands on the thick
                                                          # near-vertical stems, not the thin horizontals (т/г/п overbars,
                                                          # ш underline, connectors) — this keeps the Regular's contrast
-VER = "0.9.19"
+VER = "0.920"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
@@ -62,7 +62,7 @@ for g in order:
     charstrings[g] = t2.getCharString(); metrics[g] = (newadv, int(round(b[0])) if b else lsb)
 
 AUTHOR = "Goran Arsov"
-ATTRIB = (f'Makedonka Cursive. © 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
+ATTRIB = (f'Makedonka Cursive. (c) 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
           '"Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), CC BY-SA 3.0; changes were made. '
           'Distributed under CC BY-SA 3.0.')
 LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursive script" by MacedonianBoy '
@@ -76,7 +76,7 @@ fb.setupGlyphOrder(order); fb.setupCharacterMap(cmap)
 PRIVATE = {"BlueValues": [-12, 0, 258, 278, 546, 568, 678, 700], "OtherBlues": [-252, -232],
            "StdHW": 30, "StdVW": 72, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
 fb.setupCFF(PS, {"version": VER, "FullName": "Makedonka Cursive Bold", "FamilyName": "Makedonka Cursive",
-                 "Weight": "Bold", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, PRIVATE)
+                 "Weight": "Bold", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 asc = f["hhea"].ascent; desc = f["hhea"].descent
 fb.setupHorizontalHeader(ascent=asc, descent=desc, lineGap=0)
@@ -91,15 +91,21 @@ o2 = f["OS/2"]
 fb.setupOS2(sTypoAscender=o2.sTypoAscender, sTypoDescender=o2.sTypoDescender, sTypoLineGap=o2.sTypoLineGap,
             usWinAscent=asc, usWinDescent=abs(desc), usWeightClass=700,
             sxHeight=o2.sxHeight, sCapHeight=o2.sCapHeight)   # carry the Regular's measured x/cap heights
-fb.font["OS/2"].fsSelection = (fb.font["OS/2"].fsSelection & ~0x40) | 0x20   # clear REGULAR, set BOLD
+fb.font["OS/2"].fsSelection = (fb.font["OS/2"].fsSelection & ~0x40) | 0x20 | 0x80   # clear REGULAR; set BOLD + USE_TYPO_METRICS
 fb.font["head"].macStyle |= 0x01
-# ---- v0.9.16 font-table correctness, matching the Regular ----
+# ---- font-table correctness + QA, matching the Regular ----
 _b = fb.font["OS/2"]
+_b.version = 4                          # USE_TYPO_METRICS bit needs OS/2 v4+
 _b.fsType = 0x0000; _b.achVendID = "GARS"
 _b.ulCodePageRange1 = 0x00000005; _b.ulCodePageRange2 = 0x00000000
+for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=8, bProportion=3, bContrast=6, bStrokeVariation=6,
+                   bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
+    setattr(_b.panose, _k, _v)          # PANOSE: Latin hand-written / script, bold
+fb.font["head"].fontRevision = 0.920
+fb.font["name"].removeNames(platformID=1)   # drop legacy Macintosh name records
 _bh = fb.font["hhea"]
-_bh.caretSlopeRise = 1000; _bh.caretSlopeRun = int(round(1000 * math.tan(math.radians(18))))
-fb.setupPost(italicAngle=-18.0)
+_bh.caretSlopeRise = 1; _bh.caretSlopeRun = 0   # vertical caret (upright-classified; italicAngle 0)
+fb.setupPost(italicAngle=0.0)
 otf = os.path.join(OUTDIR, "MakedonkaCursive-Bold.otf")
 fb.save(otf); print("saved", otf, "D=", D)
 from kern_util import add_kern                       # kern the Bold on its own (dilated) metrics

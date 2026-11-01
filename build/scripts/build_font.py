@@ -359,12 +359,17 @@ charstrings[".notdef"] = nd.getCharString(); metrics[".notdef"] = (600, 60)
 charstrings["space"] = T2CharStringPen(300, None).getCharString(); metrics["space"] = (300, 0)
 
 # Macedonian accented letters: ѐ (е + grave) and ѝ (и + grave) — base trace + a calligraphic grave accent.
-def _grave(pen, cx, cy):     # short pen grave `, thick→thin, descending left→right, centred ~(cx, cy)
-    ribbon_dir(pen, [('M',(cx-28,cy+26)),('C',(cx-10,cy+9),(cx+8,cy-9),(cx+26,cy-28))], 43.7, 13.3)
+def _grave(pen, cx, cy, s=1.0):   # short pen grave `, thick→thin, descending left→right, centred ~(cx, cy); s scales it
+    ribbon_dir(pen, [('M',(cx-28*s,cy+26*s)),('C',(cx-10*s,cy+9*s),(cx+8*s,cy-9*s),(cx+26*s,cy-28*s))], 43.7*s, 13.3*s)
 _accsrc = {cpx: pth for (gnx, cpx, pth) in NEUT}
 for _anm, _acp, _ascp, _agx, _agy in [("uni0450",0x0450,0x0435,8,330),("uni045D",0x045D,0x0438,16,330)]:
     _ab = _accsrc[_ascp]; _am = measure(_ab, _ascp); _acx = (_am[0]+_am[1])/2 + _agx
     _ap = pathops.Path(); _ab.draw(_ap.getPen()); _grave(_ap.getPen(), _acx, _am[4]+_agy); _ap.simplify()
+    NEUT.append((_anm, _acp, _ap))
+# Uppercase Ѐ/Ѝ (U+0400/U+040D): cap Е/И + a larger grave above the cap body (~680), for all-caps case pairs
+for _anm, _acp, _ascp, _agx, _agy in [("uni0400",0x0400,0x0415,6,748),("uni040D",0x040D,0x0418,14,748)]:
+    _ab = _accsrc[_ascp]; _am = measure(_ab, _ascp); _acx = (_am[0]+_am[1])/2 + _agx
+    _ap = pathops.Path(); _ab.draw(_ap.getPen()); _grave(_ap.getPen(), _acx, _am[4]+_agy, 1.3); _ap.simplify()
     NEUT.append((_anm, _acp, _ap))
 
 for g, cp, path in NEUT:
@@ -583,7 +588,7 @@ cmap[0x00A0] = "space"   # no-break space: same advance as space, so it never sh
 
 # ========================= compile =========================
 AUTHOR = "Goran Arsov"
-ATTRIB = (f'Makedonka Cursive. © 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
+ATTRIB = (f'Makedonka Cursive. (c) 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
           '"Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), CC BY-SA 3.0; changes were made. '
           'Distributed under CC BY-SA 3.0.')
 LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursive script" by MacedonianBoy '
@@ -597,30 +602,38 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.9.19", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
-                 "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": -18}, charstrings, PRIVATE)
+fb.setupCFF(PS, {"version": "0.920", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+                 "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.9.19",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.9.19", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.920",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.920", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
 })
-fb.setupOS2(sTypoAscender=780, sTypoDescender=-220, sTypoLineGap=90, usWinAscent=ascent, usWinDescent=abs(descent),
-            sxHeight=264, sCapHeight=685)   # measured: round x-height ~264, cap body ~685 (were 0)
-fb.setupPost(italicAngle=-18.0)
-fb.font["OS/2"].fsSelection = 0x40     # REGULAR bit, so it pairs with the Bold member
+# Vertical metrics harmonised: typo = hhea = win (ascent/-descent, lineGap 0) so every app computes the SAME
+# line height, and USE_TYPO_METRICS is set below. Kept at the glyph-bbox extent so the tall flourishes never clip.
+fb.setupOS2(sTypoAscender=ascent, sTypoDescender=descent, sTypoLineGap=0, usWinAscent=ascent, usWinDescent=abs(descent),
+            sxHeight=264, sCapHeight=685)   # measured: round x-height ~264, cap body ~685
+fb.setupPost(italicAngle=0.0)          # upright-classified standalone script (the 18° slant is intrinsic to the design)
+fb.font["OS/2"].fsSelection = 0x40 | 0x80     # REGULAR + USE_TYPO_METRICS (consistent line height across apps)
 fb.font["head"].macStyle = 0x0000
-# ---- v0.9.16 font-table correctness (see handoff) ----
+# ---- font-table correctness + QA ----
 _os2 = fb.font["OS/2"]
-_os2.fsType = 0x0000                    # installable embedding — the CC BY-SA license permits redistribution (was 0x0004 "restricted")
-_os2.achVendID = "GARS"                 # 4-char vendor tag (was the unset placeholder "????")
-_os2.ulCodePageRange1 = 0x00000005      # advertise Latin-1 (1252, bit0) + Cyrillic (1251, bit2) so pickers offer it for MK text (was 0)
+_os2.version = 4                        # fsSelection bit 7 (USE_TYPO_METRICS) is only valid in OS/2 v4+
+_os2.fsType = 0x0000                    # installable embedding — the CC BY-SA license permits redistribution
+_os2.achVendID = "GARS"                 # 4-char vendor tag
+_os2.ulCodePageRange1 = 0x00000005      # advertise Latin-1 (1252) + Cyrillic (1251)
 _os2.ulCodePageRange2 = 0x00000000
-_hhea = fb.font["hhea"]                 # slant the text caret to match the 18° italic angle (was vertical 1/0)
-_hhea.caretSlopeRise = 1000; _hhea.caretSlopeRun = int(round(1000 * math.tan(math.radians(18))))
+for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
+                   bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
+    setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
+fb.font["head"].fontRevision = 0.920    # match the name-table version (was the default 1.0)
+fb.font["name"].removeNames(platformID=1)   # drop legacy Macintosh name records (keep Windows platform 3)
+_hhea = fb.font["hhea"]
+_hhea.caretSlopeRise = 1; _hhea.caretSlopeRun = 0   # vertical caret (upright-classified; italicAngle 0)
 otf = os.path.join(OUTDIR, "MakedonkaCursive-Regular.otf")
 fb.save(otf); print("saved", otf)
 

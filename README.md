@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.19** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.20** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 Now **hinted** (PostScript + TrueType), with a contrast-preserving Bold.
 
 ![specimen](specimen.png)

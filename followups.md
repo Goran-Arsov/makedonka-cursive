@@ -33,7 +33,29 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   shareable pages; the owner holds the links. Regenerate the specimen from the current `.woff2` when the font
   changes. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.19 — SHIPPED; 2026-10-31)
+## Current state (v0.9.20 — professional QA pass; repo still PRIVATE; updated 2026-11-01)
+- **v0.9.20 — professional pre-release QA (FontBakery): 24 FAIL + 2 ERROR → 0 FAIL, 0 ERROR.** Committed
+  locally (NOT pushed — see the publish-pending note below). Fixes: **vertical metrics harmonised** (typo =
+  hhea = win = 901/-410, lineGap 0) + **USE_TYPO_METRICS** set on BOTH weights (OS/2 bumped to **v4**, needed
+  for that bit) → identical line height in every app; **GPOS `kern` now registered under DFLT + latn + cyrl**
+  (was DFLT only — strict shapers now kern Cyrillic/Latin); **italicAngle 0 + vertical caret** (upright-classified
+  standalone script, the 18° slant is intrinsic — the convention that passes QA); **head.fontRevision = 0.920**
+  to match the name version (font-internal version is now **"0.920"** = release v0.9.20); **CFF Notice ASCII**
+  (© → (c)); **Mac platform name records dropped**; **PANOSE** set (script/hand-written); hinted-TTF **integer-ppem
+  head flag**; added uppercase **Ѐ/Ѝ** (U+0400/U+040D — the case pair of ѐ/ѝ, render-verified clean). Remaining
+  are WARNs only, all intentional/benign: UPM=700 (deliberate render-size choice), contour-count (custom design),
+  post v3 (valid), disk-brush overlapping segments (render correctly via nonzero fill). New QA-only tool (not a
+  build dep): `fontbakery`. 155 glyphs. Rebuilt all; README `0.9.20`, `?v=31`.
+- **PENDING — make the GitHub repo public (owner's call, not done yet).** v0.9.19/0.9.20 are shipped locally,
+  but the repo is **still PRIVATE** (v0.9.20 not pushed/released yet either). The CURRENT files are
+  sanitized (no local paths / private URLs / secrets), so it's ready to publish. **Decision reached 2026-11-01:**
+  publish it **as-is — NO history rewrite.** Rationale: the owner doesn't care about old versions, and the
+  pre-sanitization commits only hold home-dir paths, private (un-openable) preview URLs, and another project's
+  deploy *variable names* — **no real secrets were ever committed** (verified across all history). The single
+  command to go public (gated for the AI's tools — run it as the owner, e.g. with a `!` prefix):
+  `gh repo edit Goran-Arsov/makedonka-cursive --visibility public --accept-visibility-change-consequences`.
+  (Note: a clean-history squash was prototyped then **abandoned** — the owner judged it not worth it; local
+  `main` was reset back in sync with `origin/main`, so there is no leftover orphan state.)
 - **Ship status: v0.9.19 SHIPPED (2026-10-31).** **Tackled the three remaining "Known limitations":**
   (1) **true joining** — attempted auto-generated connecting strokes, which **degraded** the design (tested by
   render: doubled strokes / collisions), so NOT shipped; it genuinely needs hand-drawn connected forms →
@@ -102,6 +124,10 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   that site's own pipeline handles the rest. Whether/when it goes live is that site's concern, not this repo's.
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.20** — **professional QA pass (FontBakery): 0 FAIL, 0 ERROR.** Harmonised vertical metrics +
+  USE_TYPO_METRICS (OS/2 v4); GPOS kern registered under DFLT+latn+cyrl; italicAngle 0 + vertical caret;
+  head.fontRevision matches name (font version "0.920"); CFF ASCII; dropped Mac name records; PANOSE; TTF
+  integer-ppem flag; added uppercase Ѐ/Ѝ. Remaining items are intentional WARNs (UPM 700, etc.).
 - **v0.9.19** — **two of three remaining limitations fixed; one reframed.** **Bold** re-emboldened in
   un-slanted space (anisotropic, contrast-preserving — overbars/hairlines stay thin). **Hinting** added: CFF
   alignment zones + `psautohint` (OTF) + `ttfautohint` (TTF). **True joining** tested (auto-connectors) and

@@ -9,9 +9,10 @@
 
 ## ✅ Build status: v0.9.17 shipped (updated 2026-10-31)
 
-**Current: v0.9.19** — Regular + Bold, 153 glyphs: all 31 Macedonian letters (+ grave-accented ѐ/ѝ),
-a full Latin alphabet, digits, and calligraphic punctuation, with GPOS **connection kerning + uppercase
-spacing kerning** (all-caps reads), a **contrast-preserving Bold**, and **hinting** (PostScript + TrueType).
+**Current: v0.9.20** — Regular + Bold, 155 glyphs: all 31 Macedonian letters (+ grave-accented ѐ/ѝ **and
+Ѐ/Ѝ**), a full Latin alphabet, digits, and calligraphic punctuation, with GPOS **connection + uppercase
+kerning** (under DFLT/latn/cyrl), a **contrast-preserving Bold**, **hinting** (PostScript + TrueType), and a
+**FontBakery-clean** pre-release QA (0 FAIL, 0 ERROR; harmonised vertical metrics + USE_TYPO_METRICS).
 Authored by **Goran Arsov** — a derivative of MacedonianBoy's CC BY-SA 3.0 cursive chart (attribution kept).
 Pushed to GitHub + released; installed for LibreOffice; also wired into a separate website. The per-version history and every tuning knob are in the dated changelog further down; the
 snapshot below is the **original v1 milestone (2026-10-30)**, kept for context.
@@ -231,6 +232,24 @@ vectorizing the Wikimedia chart (see *Source material* below).
   connecting strokes was **tested and rejected**: it doubled strokes and collided with the existing traced
   entry/exit tails (render in scratch), confirming true `calt` joining needs hand-drawn connected forms. NOT
   shipped. The kerning already reads connected, so joining was reframed as a **v2 roadmap** item, not a defect.
+- **(v0.9.20) professional QA (FontBakery universal profile): 24 FAIL + 2 ERROR → 0 FAIL, 0 ERROR.** All in the
+  compile sections of both build scripts (+ `kern_util.py`, `otf2ttf.py`). **Vertical metrics harmonised**:
+  `setupOS2` sTypo = ascent/descent (901/-410), lineGap 0, = hhea = win, and `fsSelection |= 0x80`
+  (USE_TYPO_METRICS) with **OS/2 `version = 4`** (the bit is only valid in v4+; Bold must set the bit
+  explicitly — it does NOT carry through `&~0x40|0x20`). **GPOS kern** now emitted with
+  `languagesystem DFLT/latn/cyrl` in `kern_util.py` so it registers under all three scripts (was DFLT-only).
+  **italicAngle → 0** (CFF + post) with a **vertical caret** (`caretSlope 1/0`): the face is an upright-classified
+  standalone script (the slant is intrinsic; this is the convention that passes QA — reverts the v0.9.16 slanted
+  caret). **head.fontRevision = 0.920** to match name ID 5 (so the font version is **"0.920"** = release v0.9.20;
+  nameID 5 must be `X.YYY`, not `0.9.20`, or FontBakery's parser reads only `0.9`). **CFF Notice ASCII** (© →
+  "(c)" — CFF strings must be ASCII; the name-table copyright can keep Unicode). **`name.removeNames(platformID=1)`**
+  drops the legacy Mac name records. **PANOSE** set (family 3 hand-written/script). **`otf2ttf.py`** sets head
+  flags bit 3 (integer ppem) on the hinted TTF. **Added Ѐ/Ѝ** (U+0400/U+040D) via `_grave(..., s=1.3)` on cap
+  Е/И at y≈748 (above the ~680 cap top; render-verified, no flourish collision) — fixes the `case_mapping` pair.
+  **Leftover WARNs are intentional/benign and NOT chased:** UPM 700 (deliberate render-size choice — changing it
+  rescales everything), contour-count (custom design), post v3 (valid), disk-brush overlapping segments (fill via
+  nonzero winding). `bold_italic_unique` only "fails" if you lint the OTF+TTF of one weight together (same family
+  name) — per-format it passes. QA tool `fontbakery` is dev-only (not in `requirements.txt`).
 - **Known limits (open for v2+):** **true contextual joining** (v2 — entry/exit strokes + `calt` with hand-drawn
   connected forms) is not done (auto-generating it degrades the design — tried in v0.9.19); lowercase connection
   kerning is algorithmic (not hand-tuned per pair). Bold is still a **faux-bold** (now a contrast-preserving

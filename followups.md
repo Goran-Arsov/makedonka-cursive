@@ -33,7 +33,14 @@ never the glyphs by hand. **Connection kerning** is added automatically at the e
   shareable pages; the owner holds the links. Regenerate the specimen from the current `.woff2` when the font
   changes. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.21 — SHIPPED + repo PUBLIC; updated 2026-11-01)
+## Current state (v0.9.22 — SHIPPED + repo PUBLIC; updated 2026-11-01)
+- **v0.9.22 — SHIPPED + PUBLISHED (2026-11-01).** Roadmap coverage pass: **20 new symbol glyphs** — math
+  operators `+ − = × ÷ < > ±`, `№` numero, and ASCII tech `# * _ | ~ \ ^ [ ] { }` (drawn with the existing
+  calligraphic pen primitives in `build_font.py`; fills the `=`/`+` gap the v0.9.21 demo surfaced). **Multi-digit
+  fractions** — `frac` now handles 2–3-digit numerators/denominators (22/7, 15/16, 355/113 — HarfBuzz-verified),
+  and numr/dnom tuck closer to the bar (`features.py`). README gained a **jsDelivr CDN** snippet + the demo a
+  math line. **207 → 227 glyphs.** FontBakery 0 FAIL / 0 ERROR (OTF + TTF). Pushed (release `f0a8abd`), **GitHub
+  release v0.9.22** with the zip, both OTFs reinstalled. Font version **"0.922"**, `?v=33`.
 - **v0.9.21 — SHIPPED + PUBLISHED (2026-11-01).** The session's staged build improvements are now baked into the
   shipped fonts and released: **OpenType figures suite** (tnum/zero/sups/subs/numr/dnom/frac — 155→**207 glyphs**,
   shape-verified with HarfBuzz), **STAT** + **meta** tables, and **TTF speck-contour cleanup**. The 155 base
@@ -188,9 +195,9 @@ Per-format FontBakery stays **0 FAIL / 0 ERROR** (OTF family: only the UPM WARN;
   `addOpenTypeFeaturesFromString` rebuilds BOTH tables from the FEA it is given, so two separate calls wipe
   each other (the bug that first made GSUB vanish). Bold gets the variant glyphs via the embolden loop and
   re-compiles the same `FIGURE_FEA`. **NOT done** (deliberate): small caps (needs real redrawing for a cursive)
-  and contextual joining (the Open #3 / #7 roadmap item). Polish backlog: tighten numr/dnom spacing to the
-  fraction bar; multi-digit `frac`; the demo also surfaced that `=`/`+` and other ASCII math glyphs are still
-  missing (Open #7 "still-missing glyphs").
+  and contextual joining (the Open #3 / #7 roadmap item). Polish backlog — **DONE in v0.9.22**: numr/dnom
+  tightened to the fraction bar; multi-digit `frac` (2–3 digits); the `=`/`+` and ASCII math glyphs the demo
+  surfaced were added (see v0.9.22 above + Open #7).
 
 *(Design / feature backlog — true joining v2, other-Cyrillic, `№`/`&`/symbols, Latin diacritics, drawn-Latin
 contrast — is in "Open / optional work" below.)*
@@ -276,10 +283,9 @@ contrast — is in "Open / optional work" below.)*
    Latin `ribbon_dir`/`ribbon_prof`, punctuation AND the embolden interaction, plus a full re-QA + version bump —
    a deliberate v2 effort, not urgent (speck-drop already made the WARN benign). Prototype lives in the session
    scratch, not committed.
-   **Still-missing glyphs (deferred, lower necessity / higher design risk):** `№` numero + `&` ampersand
-   (both high-value for Cyrillic/wordmarks but hard to draw cleanly in this hand — worth a careful pass);
-   `© × ÷ ‰ ′ ″`, ASCII tech `# $ & * + < = > @ [ ] { } | \ ^ _ ~`; Latin diacritics `š č ž ć đ` for
-   South-Slavic transliteration. Add on demand, each verified by render.
+   **Still-missing glyphs:** ADDED in v0.9.22 — `№ × ÷ + = < > ± # * [ ] { } | \ ^ _ ~` (math + ASCII tech).
+   **Remaining (ornamental, need careful calligraphy, each a bad-if-rushed glyph):** `& @ $ ©`, and the rarer
+   `‰ ′ ″`; plus Latin diacritics `š č ž ć đ` for South-Slavic transliteration. Add on demand, each verified by render.
 8. **Public release / distribution** — offer the font free. CC BY-SA 3.0 drives the channels (it can't be
    relicensed): own VPS/blog download page (primary) + the GitHub repo & jsDelivr CDN (best ShareAlike fit);
    free-font aggregators (DaFont / FontSpace / 1001 Free Fonts / Font Squirrel) for reach. **Google Fonts

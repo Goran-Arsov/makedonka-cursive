@@ -35,10 +35,10 @@ automatically at the end of each build.
   base64 `@font-face`, so the kern renders natively) and a non-technical install/use guide exist as private
   shareable pages; the owner holds the links. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.24 — SHIPPED + repo PUBLIC; updated 2026-11-01)
-- **Shipped + public.** `origin/main` is at **v0.9.24**; GitHub releases v0.9.15–v0.9.24 are live (each with its
+## Current state (v0.9.25 — SHIPPED + repo PUBLIC; updated 2026-11-01)
+- **Shipped + public.** `origin/main` is at **v0.9.25**; GitHub releases v0.9.15–v0.9.25 are live (each with its
   zip). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
-  Font-internal version **"0.924"**, demo/CSS `?v=35`.
+  Font-internal version **"0.925"**, demo/CSS `?v=36`.
 - **Coverage — 243 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
   uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
   South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ / … · ° %);
@@ -47,9 +47,11 @@ automatically at the end of each build.
 - **Weights:** Regular + Bold — the Bold is a **contrast-preserving faux-bold** (`make_bold.py`, anisotropic
   dilation in un-slanted space, D=16, so weight lands on the thick stems while hairlines/overbars stay thin).
 - **Kerning:** GPOS `kern` on both weights, algorithmic (`kern_util.py`, params at its top), registered under
-  DFLT+latn+cyrl. Bidirectional connection kerning + a cap→cap all-caps gap (**`CAP_GAP=440`** since v0.9.24, up from
-300 — all-caps Cyrillic no longer collides; only cap-before-cap, so Title-case/lowercase unchanged).
-Regular **2146** / Bold **2162** pairs.
+  DFLT+latn+cyrl. Bidirectional connection kerning + an **even-visual-ink-gap cap→cap kern** (**`CAP_VIS_GAP=160`**
+  since v0.9.25; replaced the v0.9.17–24 body-gap model): each cap's leftmost ink clears the previous cap's rightmost
+  ink by 160 units, widening *or* tightening to one gap — so all-caps Cyrillic is lined up, evenly distanced, and
+  provably non-overlapping (МАКЕДОНИЈА gap spread 65px→3px). Only cap-before-cap, so Title-case/lowercase unchanged.
+  Regular **2246** / Bold **2224** pairs.
 - **OpenType features (GSUB):** `tnum` tabular figures · `zero` slashed zero · `sups`/`subs` · `numr`/`dnom` ·
   `frac` fractions (multi-digit, 2–3). Built from the digit outlines by `features.py`; HarfBuzz-verified. Both
   weights also carry a **STAT** table (Weight axis) + a **`meta`** table (dlng/slng = Latn, Cyrl). GSUB + the kern
@@ -65,12 +67,12 @@ Regular **2146** / Bold **2162** pairs.
 ## What should still be done
 
 **A. Propagate the latest release to the two places OUTSIDE this repo (owner's).**
-- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.24, pushed** (amici commit `23c5271`:
-  new Regular+Bold `woff`/`woff2`, cache-buster `?v=15→16`, Tailwind CSS rebuilt). amici's own cache-buster
-  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15`, v0.9.24=`?v=16`). **Only the live DEPLOY
-  remains** — its GitHub Actions deploy is blocked on missing secrets, so it needs a manual deploy or the secrets
-  set; the live site state can't be verified from this checkout. (`app/assets/builds/tailwind.css` is gitignored
-  there — regenerated on deploy, so the commit carries only the source CSS + the font binaries.)
+- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.25, pushed** (amici commit `815387e`:
+  new Regular+Bold `woff`/`woff2`, cache-buster `?v=16→17`, Tailwind CSS rebuilt). amici's own cache-buster
+  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15`, v0.9.24=`?v=16`, v0.9.25=`?v=17`). **Only
+  the live DEPLOY remains** — its GitHub Actions deploy is blocked on missing secrets, so it needs a manual deploy
+  or the secrets set; the live site state can't be verified from this checkout. (`app/assets/builds/tailwind.css`
+  is gitignored there — regenerated on deploy, so the commit carries only the source CSS + the font binaries.)
 - **Live specimen preview page** — stale; re-embed the current `woff2` so it shows the new features + diacritics
   + symbols. Owner holds the private link.
 
@@ -87,6 +89,11 @@ speck-drop in `otf2ttf.py` reduced it (Regular 24→15, Bold 185→62), render-i
 non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a manual Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.25** — **caps lined up, evenly spaced, non-overlapping:** replaced the body-gap cap kern with an
+  **even-visual-ink-gap** model (`_cap_ink` + `CAP_VIS_GAP=160`) — each cap's leftmost ink clears the previous cap's
+  rightmost ink by a constant amount, widening *or* tightening to one gap (target>0 ⇒ provably no overlap).
+  МАКЕДОНИЈА gap spread 65px→3px, all gaps positive. Specimen uses the same model + canvas widened 2100→2460.
+  Both weights (pairs Reg 2246 / Bold 2224). 243 glyphs, FontBakery 0 FAIL. Cap-before-cap only.
 - **v0.9.24** — **cap-spacing fix:** widened the capital→capital kern target `CAP_GAP` 300→440 (`kern_util.py`),
   so consecutive Cyrillic capitals (e.g. МАКЕДОНИЈА) no longer collide — bodies open, flourish tips still touch.
   Kern-only, no outline change; fires only cap-before-cap (Title-case/lowercase byte-identical). Specimen `line_caps`
@@ -140,8 +147,10 @@ non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a m
     specimen-source page so it can be regenerated from the current `.woff2` without the private page.
 
 ## Done (resolved)
-- **Shipped + public release pipeline** — v0.9.21/0.9.22/0.9.23/0.9.24 pushed, GitHub-released, repo made public.
-- **Cap-spacing fix (v0.9.24)** — all-caps Cyrillic no longer collides; re-propagated to amici (pushed, deploy owner-side).
+- **Shipped + public release pipeline** — v0.9.21/0.9.22/0.9.23/0.9.24/0.9.25 pushed, GitHub-released, repo made public.
+- **Cap spacing (v0.9.24 → v0.9.25)** — all-caps Cyrillic now lined up, evenly distanced, non-overlapping (visual-ink-gap
+  kern); re-propagated to amici each time (pushed, `?v=17`; live deploy owner-side). Residual: cap-body *heights* still
+  vary (inherent to the hand-drawn caps) — a glyph-level normalization is a separate pass if wanted.
 - **OpenType figures features + STAT/meta** (v0.9.21), **math/ASCII symbols + multi-digit frac** (v0.9.22),
   **South-Slavic Latin diacritics + more symbols** (v0.9.23).
 - **Full Latin alphabet** (v0.9.2, refined through v0.9.14). **GPOS pair kerning** (v0.9.15). **Even consecutive

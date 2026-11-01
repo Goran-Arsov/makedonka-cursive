@@ -204,7 +204,7 @@ vectorizing the Wikimedia chart (see *Source material* below).
   **capital→capital** GPOS kern. For each cap it measures the dense-body left/right edge by ink-mass
   percentile (the same method `build_font.py`'s specimen uses to space the cap chart — new helpers `_CFP`,
   `_cap_body`), then for each cap pair pushes the body gap up to **`CAP_GAP=300`** (raised to **440** in
-  v0.9.24 to further open all-caps; the specimen's `line_caps` gap moved 44→63 px to match) (positive-only, floor
+  v0.9.24; **superseded in v0.9.25** by an even-VISUAL-ink-gap model — see the v0.9.25 note below) (positive-only, floor
   `MIN_CAP_KERN=10`), so all-caps reads while the flourishes still cross. It fires **only capital-before-capital**
   (both scripts), so the approved **capital→lowercase tuck is untouched** — this is the insight that resolves
   the old tension (open-work #5 feared a RIGHT_CAP sidebearing fix would hurt the tuck; kerning is context-specific,
@@ -212,6 +212,15 @@ vectorizing the Wikimedia chart (see *Source material* below).
   (unchanged). Pure kerning: a glyph diff vs v0.9.16 shows **no advance or outline changed**; pairs 609→1865 (Reg) /
   439→1735 (Bold), woff2 +~2 KB/weight (feaLib compacts them into the one kern lookup). The anisotropic
   contrast-preserving Bold was **evaluated and rejected** (only a marginal change — not worth re-tuning the shipped weight).
+- **(v0.9.25) cap spacing reworked — even & provably non-overlapping:** the dense-body-gap model above still
+  left the **visual** gaps uneven (cap flourishes vary a lot in reach) and some pairs collided while others were
+  over-spaced. Replaced `_cap_body`/`CAP_GAP` with `_cap_ink` + **`CAP_VIS_GAP=160`**: equalise the gap between each
+  cap's leftmost ink and the previous cap's rightmost ink (**flourishes included**), now **widening OR tightening**
+  toward one target. Because the target is positive, every cap→cap pair ends with real clearance — evenly distanced
+  *and* non-overlapping. Measured on МАКЕДОНИЈА: gap spread 65px→**3px**, every gap positive (no overlap). The
+  specimen's `line_caps` uses the same model (`gap=23` px @ size 100 ≡ 160 units) and the specimen canvas widened
+  **2100→2460** for the now-wider 12-cap rows. Pairs Reg **2246** / Bold **2224**. Still **cap-before-cap only**,
+  so Title-case/lowercase is byte-identical; FontBakery still 0 FAIL/0 ERROR; 243 glyphs unchanged.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

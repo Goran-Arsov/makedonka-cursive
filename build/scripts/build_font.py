@@ -695,13 +695,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.924", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.925", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.924",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.924", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.925",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.925", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -723,7 +723,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.924    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.925    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the
@@ -763,33 +763,23 @@ for fl in ("woff2", "woff"):
 # ---- specimen with baseline guide lines ----
 from PIL import ImageFont
 face = ImageFont.truetype(otf, 100); dig = ImageFont.truetype(otf, 120); small = ImageFont.truetype(otf, 70)
-img = Image.new("RGB", (2100, 2900), "white"); dr = ImageDraw.Draw(img); y = 20   # cropped to actual content height before save
+img = Image.new("RGB", (2460, 2900), "white"); dr = ImageDraw.Draw(img); y = 20   # cropped to actual content height before save
 def line(txt, font, fill):
     global y
     asc, desc = font.getmetrics()
     dr.text((30, y), txt, fill=fill, font=font); y += asc + desc + 24
-# Caps shown spaced as a glyph chart; a few caps are preceded by a low-flourish
-# cap (Д/З/И), so the inserted space glyph shows as a big gap — pull them in for
-# the display (the font itself is unchanged; in words these overlap the previous).
-def _body_edges(font, ch):
-    # dense-body left/right of a glyph (px, relative to pen origin), via ink-mass
-    # percentile — ignores the thin flourishes so bodies can be evenly spaced.
-    tmp = Image.new("L", (1500, 520), 0); d = ImageDraw.Draw(tmp)
-    d.text((450, 130), ch, fill=255, font=font)
-    col = np.asarray(tmp).astype(float).sum(axis=0); total = col.sum()
-    if total <= 0:
-        return 0.0, 0.0
-    cum = np.cumsum(col)
-    return float(np.searchsorted(cum, 0.14 * total)) - 450, float(np.searchsorted(cum, 0.86 * total)) - 450
-def line_caps(txt, font, fill, gap=63.0):
-    # even body-to-body spacing; ornate flourishes cross as they naturally do
+# Caps shown as an evenly-spaced glyph chart, drawn with the SAME even-visual-ink-gap model as the
+# shipped cap kern (kern_util.CAP_VIS_GAP): PIL applies no GPOS, so the specimen reproduces the kerned
+# spacing by hand. Each cap's leftmost ink clears the previous cap's rightmost ink by a constant gap,
+# so the bodies are evenly distanced and the flourishes don't collide.
+def line_caps(txt, font, fill, gap=23.0):   # 23 px @ size 100 == CAP_VIS_GAP 160 units (160*100/700)
     global y
-    asc, desc = font.getmetrics(); cur = 30.0; first = True
+    asc, desc = font.getmetrics(); prev_r = None
     for ch in txt.replace(" ", ""):
-        bl, br = _body_edges(font, ch)
-        penx = (30.0 - bl) if first else (cur + gap - bl); first = False
+        bl, _, br, _ = font.getbbox(ch)
+        penx = (30.0 - bl) if prev_r is None else (prev_r + gap - bl)
         dr.text((penx, y), ch, fill=fill, font=font)
-        cur = penx + br
+        prev_r = penx + br
     y += asc + desc + 24
 for L in ["АБВГДЃЕЖЗЅИЈ", "КЛЉМНЊОПРСТЌ", "УФХЦЧЏШ"]:
     line_caps(L, face, "black")
@@ -801,5 +791,5 @@ line("«Охрид» · 3/4 · 50% · 20° … и така", small, (20, 20, 90)
 for L in ["Скопје 2025 — Македонија", "Охрид, Битола, Прилеп!", "100 денари; (бр. 7)", "вода, леб и убавина?"]:
     line(L, small, (20, 20, 90))
 line("Latin: Makedonija, Ohrid — Amici (abvgd...)", small, (90, 20, 20))
-img = img.crop((0, 0, 2100, min(img.height, int(y) + 20)))   # trim trailing whitespace to the real content height
+img = img.crop((0, 0, 2460, min(img.height, int(y) + 20)))   # trim trailing whitespace to the real content height
 img.save(os.path.join(OUTDIR, "specimen.png")); print(f"saved specimen.png ({img.height}px)")

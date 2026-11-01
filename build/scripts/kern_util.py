@@ -21,12 +21,14 @@ W_LOW, W_HIGH, N_FLOOR, S_MAX, MIN_KERN = 115, 180, 14, 60, 5
 _CYR = "абвгдѓежзѕијклљмнњопрстќуфхцчџшѐѝ"
 _LAT = "abcdefghijklmnopqrstuvwxyz"
 
-# Uppercase spacing kern (v0.9.17): the ornate caps have x-height-band sidebearings, so a
-# following capital tucks fully under the previous cap's flourish and all-caps is unreadable.
-# Push each cap->cap DENSE-BODY gap up to CAP_GAP (the specimen's even-body-spacing target);
-# flourishes still cross. It fires ONLY capital-before-capital, so the approved capital->lowercase
-# tuck-under is untouched. Positive-only — it never tightens, so it can only fix overlap.
-CAP_GAP, MIN_CAP_KERN = 440, 10
+# Uppercase spacing kern (v0.9.17; reworked v0.9.25): the ornate caps have wildly varying flourish
+# extents, so spacing by DENSE-BODY gap left the VISUAL gaps uneven and some flourishes still collided
+# (and were cramped next to over-spaced pairs). Instead equalise the VISUAL INK gap: place each cap so
+# its leftmost ink clears the previous cap's rightmost ink (flourishes included) by exactly CAP_VIS_GAP
+# font units. This both WIDENS and TIGHTENS pairs toward one gap, but the target is positive so every
+# cap->cap pair ends with real clearance — evenly distanced AND provably non-overlapping. Fires ONLY
+# capital-before-capital, so the approved capital->lowercase tuck-under is untouched.
+CAP_VIS_GAP, MIN_CAP_KERN = 160, 10
 _CYR_CAPS = "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШ"
 _LAT_CAPS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -105,33 +107,25 @@ class _CFP:   # flatten pen -> closed contours, for rasterising a cap's dense bo
     def addComponent(s,*a,**k): pass
 
 
-def _cap_body(gs, gn, lo=0.14, hi=0.86, sc=0.3):
-    # dense-body left/right edge via ink-mass percentile (same method the specimen uses to space caps)
-    fp=_CFP(); gs[gn].draw(fp); cts=[c for c in fp.ct if len(c)>=3]
+def _cap_ink(gs, gn):
+    # full ink left/right extremes of a cap (flourishes included), from the flattened outline
+    fp=_CFP(); gs[gn].draw(fp); cts=[c for c in fp.ct if len(c)>=2]
     if not cts: return 0.0, 0.0
-    xs=[x for c in cts for x,_ in c]; ys=[y for c in cts for _,y in c]
-    minx,maxx,miny,maxy=min(xs),max(xs),min(ys),max(ys)
-    W=max(2,int((maxx-minx)*sc)+4); H=max(2,int((maxy-miny)*sc)+4)
-    im=Image.new("L",(W,H),0); d=ImageDraw.Draw(im)
-    for c in cts: d.polygon([((x-minx)*sc+2,(maxy-y)*sc+2) for x,y in c], fill=255)
-    col=(np.asarray(im)>0).sum(axis=0).astype(float); tot=col.sum()
-    if tot<=0: return minx, maxx
-    cum=np.cumsum(col)
-    li=int(np.searchsorted(cum, lo*tot)); ri=int(np.searchsorted(cum, hi*tot))
-    return minx+(li-2)/sc, minx+(ri-2)/sc
+    xs=[x for c in cts for x,_ in c]
+    return min(xs), max(xs)
 
 
 def _cap_pairs(gs, cm, hm, caps):
     present=[c for c in caps if ord(c) in cm]
-    BL={}; BR={}; A={}
+    IL={}; IR={}; A={}
     for c in present:
-        gn=cm[ord(c)]; BL[c],BR[c]=_cap_body(gs,gn); A[c]=hm[gn][0]
+        gn=cm[ord(c)]; IL[c],IR[c]=_cap_ink(gs,gn); A[c]=hm[gn][0]
     out=[]
     for a in present:
         for b in present:
-            gap0 = A[a] + BL[b] - BR[a]          # natural body gap if b sits at a's advance
-            k = int(round(CAP_GAP - gap0))        # positive-only: only loosen overlapping caps
-            if k >= MIN_CAP_KERN:
+            gap0 = A[a] + IL[b] - IR[a]           # natural VISUAL ink gap if b sits at a's advance
+            k = int(round(CAP_VIS_GAP - gap0))     # equalise to CAP_VIS_GAP (widen OR tighten; target>0 => always clears)
+            if abs(k) >= MIN_CAP_KERN:
                 out.append((cm[ord(a)], cm[ord(b)], k))
     return out
 

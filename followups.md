@@ -40,21 +40,16 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
   so the old private specimen page can be retired or replaced by it.
 
-## Current state (v0.9.37 BUILT in the tree, uncommitted; v0.9.36 is the last SHIPPED; updated 2026-11-02)
-- **v0.9.37 (built, not shipped):** figures lowered to 450u (the 570u hybrids still read as tall as the
-  ascenders in LibreOffice), operators/dashes in three heights (`.fig` for hybrid figures, `.case` for
-  capitals/cap-height figures, lowercase default) chosen by `calt`, apostrophes/quotes lowered to the ascender
-  line with a visible tail and air on the left (+ capitals in the quote clearance kern). Whole suite rebuilt
-  (font-internal **"0.937"**, demo/CSS `?v=49`, README jsDelivr tag `@v0.9.37`), verified (0 FAIL; 0 overlapping
-  pairs; 294 glyphs), **uncommitted** — ship steps 5–8 to do. Standing specimen phrases **"rock'n'roll"** and
-  **"Let's use commin', 'cause I'mma go to Leno's"** are in `specimen.png`, `specimen.html` and `demo.html`
-  (keep them in every future specimen/demo); the apostrophe rules were extended for them (see handoff, fourth pass).
-- **Shipped + public.** `origin/main` is at **v0.9.36** (commit `20d8985`: hybrid figures + cap-height `.case` set,
-  lowercase-axis operators, bigger quotes, drawn-Latin contrast match, TTF clean-up, `specimen.html`,
-  `DISTRIBUTION.md`). GitHub releases v0.9.15–v0.9.36 are live (each with its zip; v0.9.36's has 15 entries).
-  Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
-  Font-internal version **"0.936"**, demo/CSS `?v=47`; both OTFs installed in `~/.local/share/fonts/`; amici at
-  `?v=28` (commit `3b53d31`, pushed).
+## Current state (v0.9.37 SHIPPED 2026-11-02)
+- **Shipped + public.** `origin/main` is at **v0.9.37** (commit `196c61e`: figures 450u, three-height
+  operators/dashes, apostrophe contexts + the tuck kern, standing specimen phrases). GitHub releases
+  v0.9.15–v0.9.37 are live (each with its zip; v0.9.37's has 15 entries). Repo is **PUBLIC** (published as-is,
+  no history rewrite — verified no real secrets across history). Font-internal version **"0.937"**, demo/CSS
+  `?v=49`, README jsDelivr tag `@v0.9.37`; both OTFs installed in `~/.local/share/fonts/`; amici at `?v=29`
+  (commit `a5d4f06`, pushed). Verified before shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0
+  overlapping pairs in all 9 scan sections of both weights, 294 glyphs.
+- **Standing specimen phrases** — **"rock'n'roll"** and **"Let's use commin', 'cause I'mma go to Leno's"** are
+  in `specimen.png`, `specimen.html` and `demo.html`; keep them in every future specimen/demo (owner's rule).
 - **Coverage — 281 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
   uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
   South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ ‚ ‹ › / … · • ° %
@@ -121,7 +116,7 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
-- **v0.9.37** — **(built 2026-11-02, unshipped)** figures 570→450u (clearly below the ascenders; the 660u `.case`
+- **v0.9.37** — **(2026-11-02)** figures 570→450u (clearly below the ascenders; the 660u `.case`
   set for all-caps runs unchanged); ° % ‰ $ ′ ″, fraction bar and sups/numr raises follow; operators + dashes in
   THREE heights (lowercase / `.fig` on the hybrid-figure middle / `.case` on the cap middle), `calt` picks the
   lower neighbour's height for mixed pairs; apostrophes/quotes 60u lower (head at the ascender line), thicker

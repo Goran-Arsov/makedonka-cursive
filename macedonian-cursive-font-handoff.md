@@ -454,8 +454,8 @@ vectorizing the Wikimedia chart (see *Source material* below).
   Verified by HarfBuzz: "МАКЕДОНИЈА 2025" / "2025 ДЕНАРИ" / "1999 OHRID" → `.case`, "Скопје 2025" → default,
   "A 1/2" with `frac` → numr/fraction/dnom, "A 0" with `zero` → `zero.slash.case`; renders at 140px in both
   weights; overlap scan 0 pairs; FontBakery 0 FAIL. 270→281 glyphs; woff2 Regular 86 KB, Bold 119 KB.
-- **(v0.9.37) figures lower, three-height operators/dashes, apostrophes repositioned — built 2026-11-02, NOT yet
-  committed/shipped** (owner's LibreOffice screenshot of v0.9.36: "31" still as tall as b/d/l; "I'd", "it's",
+- **(v0.9.37) figures lower, three-height operators/dashes, apostrophes repositioned — shipped 2026-11-02
+  (commit `196c61e`, release v0.9.37, amici `?v=29`)** (owner's LibreOffice screenshot of v0.9.36: "31" still as tall as b/d/l; "I'd", "it's",
   "element's" apostrophes high, faint, crowding the letter). **Figures:** `DIGIT_H` 570→**450** (1.7× the 264u
   x-height, 81% of the ascender); the 660u `.case` set is unchanged, so all-caps runs are unaffected. Everything
   keyed to `DIGIT_H` followed: `° % ‰ $ ′ ″` (primes now `_yscaled(…, FIG_K)`), the fraction bar, and in

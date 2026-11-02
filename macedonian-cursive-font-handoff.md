@@ -395,7 +395,8 @@ vectorizing the Wikimedia chart (see *Source material* below).
   24→15) on U V W; R gets a leg-end curl, Q a tail twist + a small oval-top curl. All via `ribbon_prof`, so `_LSX`
   applies. The swashes sit above the join band so sidebearings are unchanged (U/V/W lsb go negative like N/L; the
   right curls overhang the advance like T's arm — the cap kern's 100–590 band and the scans keep every pair clear).
-- **(v0.9.36) the remaining open items — built 2026-11-02, NOT yet committed/shipped.** (1) **Contrast match for the
+- **(v0.9.36) the remaining open items — shipped 2026-11-02 (commit `20d8985`, GitHub release v0.9.36 with the
+  15-entry zip, installed locally, amici `?v=28` pushed as `3b53d31`).** (1) **Contrast match for the
   drawn Latin (Open #1):** measured with horizontal ink-run percentiles at 1u=1px (p10 = hairline, p90 = thick) and
   the mean width 2A/P: traced Cyrillic lowercase p10/p90 = 9/58, mean 37.6; the Latin copies 9/57, 40.1; the drawn
   Latin 5/40, 35.9 — i.e. the drawn letters were NOT "more even" (the old note) but lighter at BOTH ends with more
@@ -421,7 +422,7 @@ vectorizing the Wikimedia chart (see *Source material* below).
   HTML import ignores `font-feature-settings`, so `frac`/`tnum` can't be exercised that way (not a font issue).
   Word/Adobe/Windows/macOS remain owner-side. (5) **`DISTRIBUTION.md` (Open #8):** ready-to-paste blurbs (EN/MK),
   the mandatory attribution text, licence line, tags and channel notes for the aggregator postings. Version
-  strings 0.936, demo/CSS `?v=47`, README jsDelivr tag `@v0.9.36` (no release yet).
+  strings 0.936, demo/CSS `?v=47`, README jsDelivr tag `@v0.9.36` (release created).
   **(6) Apostrophes/quotes and math operators (owner screenshot of the README text, 2026-11-02).** "capital's":
   the apostrophe (155u tall, 98u wide) was parked 7u from the l's ascender loop by the quote floor-kern and read
   as part of the l, and its 190u advance + kern left a 159u hole at the baseline before the s. Now: every quote

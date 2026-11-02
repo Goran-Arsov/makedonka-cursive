@@ -571,7 +571,7 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
-- **(v0.9.40) drawn Latin m — built 2026-11-02, NOT yet committed/shipped** (owner: "the Latin small m looks too
+- **(v0.9.40) drawn Latin m — shipped 2026-11-02 (commit `df9eac3`, release v0.9.40, amici `?v=32`)** (owner: "the Latin small m looks too
   much like the Cyrillic one, which is not good for a serious font"). It WAS the Cyrillic м: `m.lat`, a
   de-skewed copy of uni043C (536u wide, with м's long rising entry and soft double arch). Now a drawn letter in
   the n/h/u family: **`_L_m(p) = _archright(p,42,108); _archright(p,108,174)`** — the n's stem + arch repeated

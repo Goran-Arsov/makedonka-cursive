@@ -40,22 +40,15 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
   so the old private specimen page can be retired or replaced by it.
 
-## Current state (v0.9.38 BUILT in the tree, uncommitted; v0.9.37 is the last SHIPPED; updated 2026-11-02)
-- **v0.9.38 (built, not shipped):** every raised quote/apostrophe 175u lower (`QUO_DY`; tail at the x-height,
-  head ~105u under the ascenders — the cap-height position floated above the lowercase in "‘quote’"; singles
-  and doubles level), so the `.lc` after-short-letter form now equals the default (`QUO_LC_DY = 0`; machinery
-  kept as a knob); capitals get 80u of air before an apostrophe (`CAP_QUO_GAP`: "I'd" was glued to the I); the
-  № ring sits 44u further from its N (advance 470 → 514). Whole suite rebuilt (font-internal **"0.938"**, demo/CSS
-  `?v=50`, README jsDelivr tag `@v0.9.38`), verified (FontBakery 0 FAIL; 0 overlapping pairs; triple scan
-  clean bar ј's pre-existing sweep; 294 glyphs), **uncommitted** — ship steps 5–8 to do. The installed OTFs in
-  `~/.local/share/fonts/` and amici (`?v=29`) are still v0.9.37.
-- **Shipped + public.** `origin/main` is at **v0.9.37** (commit `196c61e`: figures 450u, three-height
-  operators/dashes, apostrophe contexts + the tuck kern, standing specimen phrases). GitHub releases
-  v0.9.15–v0.9.37 are live (each with its zip; v0.9.37's has 15 entries). Repo is **PUBLIC** (published as-is,
-  no history rewrite — verified no real secrets across history). Font-internal version **"0.937"**, demo/CSS
-  `?v=49`, README jsDelivr tag `@v0.9.37`; both OTFs installed in `~/.local/share/fonts/`; amici at `?v=29`
-  (commit `a5d4f06`, pushed). Verified before shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0
-  overlapping pairs in all 9 scan sections of both weights, 294 glyphs.
+## Current state (v0.9.38 SHIPPED 2026-11-02)
+- **Shipped + public.** `origin/main` is at **v0.9.38** (commit `54ba98f`: every raised quote/apostrophe 175u
+  lower — tail at the x-height, one height in every context, `.lc` machinery kept at offset 0; capitals get 80u
+  before an apostrophe; № ring 44u further from the N). GitHub releases v0.9.15–v0.9.38 are live (each with its
+  zip; v0.9.38's has 15 entries). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real
+  secrets across history). Font-internal version **"0.938"**, demo/CSS `?v=50`, README jsDelivr tag `@v0.9.38`;
+  both OTFs installed in `~/.local/share/fonts/`; amici at `?v=30` (commit `df9272f`, pushed). Verified before
+  shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0 overlapping pairs in all 9 scan sections of both
+  weights, triple apostrophe scan clean bar ј's pre-existing sweep, 294 glyphs.
 - **Standing specimen phrases** — **"rock'n'roll"** and **"Let's use commin', 'cause I'mma go to Leno's"** are
   in `specimen.png`, `specimen.html` and `demo.html`; keep them in every future specimen/demo (owner's rule).
 - **Coverage — 281 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
@@ -124,7 +117,7 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
-- **v0.9.38** — **(built 2026-11-02, unshipped)** every raised quote/apostrophe 175u lower (`QUO_DY`; tail at the
+- **v0.9.38** — **(2026-11-02)** every raised quote/apostrophe 175u lower (`QUO_DY`; tail at the
   x-height — one height for all contexts, `QUO_LC_DY` 0; quote kern bands from 250, tuck ownership by
   `TUCK_XH_MAX`); capitals get 80u of air before an apostrophe (`CAP_QUO_GAP`); № ring 44u further from the N;
   README apostrophe sentence rewritten.
@@ -261,7 +254,7 @@ Windows/.NET step, optional.)
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
-**2026-11-02, v0.9.38 (built):**
+**2026-11-02, v0.9.38 (shipped):**
 - ~~**"‘quote’" apostrophes too high; "I'd" apostrophe too close to the I** (owner's examples-sheet screenshot
   of v0.9.37)~~ — the whole raised quote family lowered 130u (`QUO_DY`; head at the ascender line, the height
   the after-short-letter `.lc` form had been approved at), and a separate 80u floor for capital→apostrophe

@@ -536,7 +536,8 @@ vectorizing the Wikimedia chart (see *Source material* below).
   + ' or ’ + every lowercase, HarfBuzz-kerned): the only crossings are ј's left-sweeping descender under the
   previous letter, and the no-mark control (the same pairs without the apostrophe) crosses MORE, so that is
   the pre-existing flourish, not the tuck. 3394/3357 kern pairs; TTFs shape identically to the OTFs.
-- **(v0.9.38) one quote height, capitals clear of the apostrophe — built 2026-11-02, NOT yet committed/shipped**
+- **(v0.9.38) one quote height, capitals clear of the apostrophe, № spacing — shipped 2026-11-02 (commit
+  `54ba98f`, release v0.9.38, amici `?v=30`)**
   (owner's examples-sheet screenshot of v0.9.37: "‘quote’" marks "too too high"; "I'd" apostrophe "too close
   to I"). **Height:** the raised quote family (' " ‘ ’ “ ”) had its head at ~640u — the cap height — which in
   this face is far above the lowercase ascenders (~500–575), so the marks floated whenever no capital stood

@@ -536,6 +536,40 @@ vectorizing the Wikimedia chart (see *Source material* below).
   + ' or ’ + every lowercase, HarfBuzz-kerned): the only crossings are ј's left-sweeping descender under the
   previous letter, and the no-mark control (the same pairs without the apostrophe) crosses MORE, so that is
   the pre-existing flourish, not the tuck. 3394/3357 kern pairs; TTFs shape identically to the OTFs.
+- **(v0.9.38) one quote height, capitals clear of the apostrophe — built 2026-11-02, NOT yet committed/shipped**
+  (owner's examples-sheet screenshot of v0.9.37: "‘quote’" marks "too too high"; "I'd" apostrophe "too close
+  to I"). **Height:** the raised quote family (' " ‘ ’ “ ”) had its head at ~640u — the cap height — which in
+  this face is far above the lowercase ascenders (~500–575), so the marks floated whenever no capital stood
+  beside them. New knob **`QUO_DY = −130`** (`QUO_CY9 = 602 + QUO_DY`, `QUO_CY6 = 478 + QUO_DY`): every raised
+  mark now spans ~305–510 (9-form) / 310–515 (6-form), head at the ascender line — exactly the height the
+  `.lc` after-short-letter apostrophe had been approved at ("rock'n'roll"). So **`QUO_LC_DY = 0`**: one height
+  for all; the `.lc` glyphs, the `calt` apostrophe rules and the `.lc` kern passes are KEPT (identical outlines
+  now) as the knob to re-split the heights if ever wanted — drop them in a later clean-up if not. „ ‚ (baseline)
+  and « » ‹ › (x-height-centred) unchanged. **Capitals:** the forward quote floor pass is split —
+  `_QUO_L_LOW` (b d f h k l đ t в ѓ ќ б) keeps `QUO_GAP` 36, `_QUO_L_CAPS` gets **`CAP_QUO_GAP = 80`**: "I'd"
+  I→' kern +16/+17 (Regular/Bold; the nearest approach was 64 before), "O'Neil" O→' +15/+16, "D'Angelo" +13/+14.
+  All floor/tuck passes re-measure the lowered outlines automatically (the quote band 300–700 still covers
+  them; quoteleft's lowest ink 310 ≥ `QUO_LO` 300). README's apostrophe sentence rewritten (one height, tuck).
+  Version strings 0.938 (build_font ×4 incl. uniqueFontIdentifier, make_bold ×2), demo/CSS `?v=50`, README
+  `@v0.9.38`. Verified: 3314/3326 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all
+  9 sections of both weights; the 16 384-triple apostrophe scan is clean apart from ј's descender sweep (same as
+  before) and one new 70 px² Regular nit, Ѕ'f (the Ѕ flourish vs a Latin f after an apostrophe — not a real
+  sequence); FontBakery 0 FAIL / 0 ERROR on all four files (OTF 1 WARN = UPM, TTF 2 WARNs = post v3 + UPM).
+  **Second pass (same day).** Owner on the v0.9.38 sheet: "lower the single quotes a bit more ('quote')" and
+  "the degree sign after N in №7 is too close". (a) **`QUO_DY` −130 → −175** for the whole raised family (singles
+  AND doubles kept level — one knob to split them if ever wanted): span now ~260–465 Regular / 253–472 Bold —
+  the tail sits AT the x-height (264) and the head ~105u under the ascenders (569–575). Knock-ons: `QUO_LO` and
+  `QUO_LC_LO` 300/280 → **250** so the quote floor bands reach the exit strokes at the x-height where the tail
+  now is; the tuck pass's ownership test changed from "letter reaches the mark's lowest ink" (which would now
+  disown every x-height letter) to a fixed **`TUCK_XH_MAX = 300`** (tallest x-height letter: Bold s 282; i-dots
+  ~397, overbars ~356, ascenders 569+ stay floor-owned); `add_kern` now dedupes (first pass wins = floor over
+  tuck) in case both ever speak for one pair (0 duplicates measured). Tucks re-measured against the lower tail:
+  's −53/−85, 'r −22/−54, 'm −110 (Regular/Bold); "I'd" needs no kern any more (nearest ink 74u at the new
+  height, the stem leans away below the top loop) — `CAP_QUO_GAP` 80 stays as the floor. (b) **№:** in
+  `_numero` the ring and its underline move **44u right** (ring centre 338 → 382, underline 270–406 → 314–450;
+  the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
+  3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
+  weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

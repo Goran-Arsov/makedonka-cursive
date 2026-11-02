@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.37** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.38** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 **Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
 (tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½),
 **South-Slavic Latin diacritics** (`š č ž ć đ` / `Š Č Ž Ć Đ`), and **math + symbols**
@@ -76,7 +76,7 @@ h1.strong { font-weight: 700; }
 ```css
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.37/MakedonkaCursive-Regular.woff2") format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.38/MakedonkaCursive-Regular.woff2") format("woff2");
   font-weight: 400; font-display: swap;
 }
 ```
@@ -94,9 +94,9 @@ h1.strong { font-weight: 700; }
   pen marks, including the Macedonian `„ "` and `« »` quotes (designed to match; not in the source chart).
   A no-break space (U+00A0) is mapped too. Dashes and the math operators sit at a lowercase height between
   lowercase words (`воз-воз`, `upper + lowercase`) and rise automatically next to a figure or a capital
-  (`2025-11-02`, `А–Б`, `1 + 2`); the `case` feature raises them all. The apostrophe sits at the ascender line
-  after a capital or a tall letter (`I'd`, `capital's`) and drops closer to the word after a short letter (`it's`,
-  `Let's`, `commin'`, `'cause`, `rock'n'roll`).
+  (`2025-11-02`, `А–Б`, `1 + 2`); the `case` feature raises them all. Apostrophes and quotes sit just above the
+  x-height, below the ascenders, and the letter after an apostrophe tucks under it (`it's`, `Let's`, `I'mma`,
+  `rock'n'roll`, `‘quote’`).
 - **Latin:** full A–Z / a–z, a calmer companion to the ornate Macedonian hand — one
   consistent, moderately upright slant across all letters, figures and punctuation, in a
   **restrained** pen style. Every Latin glyph is either drawn or a re-angled copy of a

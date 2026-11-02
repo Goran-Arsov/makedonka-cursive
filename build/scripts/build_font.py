@@ -526,7 +526,9 @@ def _numero(pen):   # № : an upright N, a raised small ring (o), and its under
     ribbon_prof(pen, [('M', (44, 24)), ('L', (44, 500))], 48, 48)
     ribbon_prof(pen, [('M', (44, 500)), ('L', (232, 24))], 42, 42)
     ribbon_prof(pen, [('M', (232, 24)), ('L', (232, 500))], 48, 48)
-    _ring(pen, 338, 432, 72, 36); _rect(pen, 270, 352, 406, 392)
+    # ring + underline 44u further right of the N (v0.9.38: the ring sat 10u off the right stem and read as glued
+    # to it — owner's examples sheet); the advance grew by the same 44 (470 → 514) so the right bearing is unchanged
+    _ring(pen, 382, 432, 72, 36); _rect(pen, 314, 352, 450, 392)
 def _dollar(pen):   # $ : an S stroke with a vertical bar through it
     ribbon_dir(pen, [('M', (268, 486)), ('C', (210, 548), (74, 540), (86, 446)), ('C', (98, 384), (232, 372), (252, 300)),
                      ('C', (274, 214), (150, 150), (78, 214))], 44, 15)
@@ -613,7 +615,14 @@ _DASHES = [   # drawn at the lowercase height (centre ~150, mid x-height)
 DASH_FIG_DY = DIGIT_H / 2.0 - 185.0       # `.fig` dashes: centre = hybrid figure middle (225)
 DASH_CASE_DY = 115.0                      # `.case` dashes: centre 300 (a touch below the cap-figure middle, as hyphens sit)
 PUNCT_XOFF = {n: 35 for n in ("quotesingle", "quotedbl", "quoteleft", "quoteright", "quotedblleft", "quotedblright", "quotesingle.lc", "quoteright.lc")}   # raised quotes: air on the LEFT (ink shifted +35u in the advance)
-QUO_LC_DY = -130.0   # `.lc` apostrophes (after an x-height letter, via calt): 130u lower — the high one floated far above "it's"
+QUO_DY = -175.0      # every raised quote/apostrophe 175u lower than v0.9.36: first −130 (head at ~510 — "‘quote’" and
+                     # "I'd" floated far above the lowercase, owner's v0.9.37 screenshot), then −45 more ("lower the
+                     # single quotes a bit more", v0.9.38 sheet). Span now ~260–465: the tail sits AT the x-height
+                     # (264) and the head tops out ~105u under the ascenders (569–575) — the band an apostrophe
+                     # occupies in a copperplate hand.
+QUO_CY9, QUO_CY6 = 602 + QUO_DY, 478 + QUO_DY   # 9-form marks hang down from cy; 6-form marks rise up to the same top
+QUO_LC_DY = 0.0      # `.lc` apostrophes (after an x-height letter, via calt): extra drop below QUO_DY — now 0, one height for
+                     # all; the `.lc` glyphs + calt rules are kept as the knob to re-split the heights if ever wanted
 PUNCT = [
     (0x002E, "period", 150, lambda p: _oval(p, 75, 50, 50, 56)),   # dots 35×41→50×56 (×0.55 tier = ~55×62u; the 40u dots read as specks)
     (0x002C, "comma", 150, lambda p: _pencomma(p, 85, 92)),
@@ -630,17 +639,18 @@ PUNCT = [
     (0x0028, "parenleft", 300, lambda p: _paren(p, 300, True)),
     # quotes/apostrophes (v0.9.36): 1.25× bigger with a visible tail (QS, `tail`), on tight advances (single 160,
     # double 270; were 180–330) with more air on the left (PUNCT_XOFF), and with the HEAD at the ascender line —
-    # the 9-form marks hang DOWN from cy (span ~437–640), the 6-form marks rise UP to the same top. They used to
-    # top out at ~700u, above the capitals, and read as a tick ("I'd", "it's" — owner, 2026-11-02).
-    (0x0029, "parenright", 300, lambda p: _paren(p, 300, False)), (0x0027, "quotesingle", 180, lambda p: _pencomma(p, 70, 602, QS)),
-    (None, "quotesingle.lc", 180, _shifted(lambda p: _pencomma(p, 70, 602, QS), QUO_LC_DY)),
-    (None, "quoteright.lc", 180, _shifted(lambda p: _pencomma(p, 70, 602, QS), QUO_LC_DY)),
-    (0x0022, "quotedbl", 290, lambda p: (_pencomma(p, 70, 602, QS), _pencomma(p, 182, 602, QS))),
+    # the 9-form marks hang DOWN from QUO_CY9 (span ~305–510 since QUO_DY), the 6-form marks rise UP from QUO_CY6 to
+    # the same top. They used to top out at ~700u, above the capitals, and read as a tick ("I'd", "it's" — owner,
+    # 2026-11-02); at ~640 (v0.9.37 as shipped) they still floated above the lowercase ("‘quote’").
+    (0x0029, "parenright", 300, lambda p: _paren(p, 300, False)), (0x0027, "quotesingle", 180, lambda p: _pencomma(p, 70, QUO_CY9, QS)),
+    (None, "quotesingle.lc", 180, _shifted(lambda p: _pencomma(p, 70, QUO_CY9, QS), QUO_LC_DY)),
+    (None, "quoteright.lc", 180, _shifted(lambda p: _pencomma(p, 70, QUO_CY9, QS), QUO_LC_DY)),
+    (0x0022, "quotedbl", 290, lambda p: (_pencomma(p, 70, QUO_CY9, QS), _pencomma(p, 182, QUO_CY9, QS))),
     (0x201E, "quotedblbase", 250, lambda p: (_pencomma(p, 70, 108, QS), _pencomma(p, 182, 108, QS))),              # „ low opening (9-form)
-    (0x201C, "quotedblleft", 290, lambda p: (_pencomma(p, 70, 478, QS, True), _pencomma(p, 182, 478, QS, True))),  # “ raised 6-form (opening)
-    (0x201D, "quotedblright", 290, lambda p: (_pencomma(p, 70, 602, QS), _pencomma(p, 182, 602, QS))),             # ” raised 9-form (Latin closing — both marks UP)
-    (0x2018, "quoteleft", 180, lambda p: _pencomma(p, 70, 478, QS, True)),                                           # ‘ single raised 6-form
-    (0x2019, "quoteright", 180, lambda p: _pencomma(p, 70, 602, QS)),                                                # ’ single raised 9-form (= apostrophe, up)
+    (0x201C, "quotedblleft", 290, lambda p: (_pencomma(p, 70, QUO_CY6, QS, True), _pencomma(p, 182, QUO_CY6, QS, True))),  # “ raised 6-form (opening)
+    (0x201D, "quotedblright", 290, lambda p: (_pencomma(p, 70, QUO_CY9, QS), _pencomma(p, 182, QUO_CY9, QS))),             # ” raised 9-form (Latin closing — both marks UP)
+    (0x2018, "quoteleft", 180, lambda p: _pencomma(p, 70, QUO_CY6, QS, True)),                                           # ‘ single raised 6-form
+    (0x2019, "quoteright", 180, lambda p: _pencomma(p, 70, QUO_CY9, QS)),                                                # ’ single raised 9-form (= apostrophe, up)
     (0x201A, "quotesinglbase", 140, lambda p: _pencomma(p, 70, 108, QS)),                                            # ‚ single low 9-form (one mark of „)
     # ---- v0.9.16: fill real coverage gaps, reusing the calligraphic pen primitives above ----
     (0x002F, "slash", 300, lambda p: ribbon_prof(p, [('M', (74, -46)), ('L', (150, 586))], 40, 40)),                   # / solidus (dates, fractions, URLs)
@@ -670,7 +680,7 @@ PUNCT = [
     (0x005D, "bracketright", 230, lambda p: _bracket(p, False)),
     (0x007B, "braceleft", 280, lambda p: _brace(p, True)),
     (0x007D, "braceright", 280, lambda p: _brace(p, False)),
-    (0x2116, "numero", 470, _numero),
+    (0x2116, "numero", 514, _numero),
     # ---- v0.9.23: ornamental symbols + per-mille + primes ----
     (0x0040, "at", 440, _at),
     (0x0024, "dollar", 340, _yscaled(_dollar, DIGIT_H / 600.0)),   # $ spans the figure height
@@ -987,13 +997,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.937", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.938", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.937",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.937", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.938",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.938", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -1015,7 +1025,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.937    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.938    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

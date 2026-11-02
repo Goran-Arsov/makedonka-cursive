@@ -210,7 +210,8 @@ def ribbon_oval(pen, cx, cy, rx, ry, maxw=92, minw=30, n=140):
 # ---- calligraphic strokes for punctuation (reuse the digit disk-brush) ----
 # drawn-Latin weight bump — active ONLY while building the drawn Latin glyphs
 # (digits/punctuation share these strokers, so they stay byte-identical):
-LW_DMAX, LW_DMIN, LW_P0, LW_P1 = 1.25, 0.82, 0.95, 0.70
+LW_DMAX, LW_DMIN, LW_P0, LW_P1 = 1.45, 0.95, 0.95, 0.70
+LW_EXP = 2.0   # pressure curve of ribbon_dir in Latin mode: weight = down**LW_EXP (higher = thinner mid-strokes, copperplate-like contrast)
 _LATIN_MODE = False
 _LSX = 1.0          # per-glyph horizontal stretch of the drawn-Latin centreline (widens without re-fattening stems)
 _LWT = 1.0          # per-glyph weight scale for drawn-Latin strokes (lightens dense letters)
@@ -225,7 +226,7 @@ def ribbon_dir(pen, segs, maxw, minw):
         a = pts[max(0, i-1)]; b = pts[min(m-1, i+1)]
         dx, dy = b[0]-a[0], b[1]-a[1]; L = math.hypot(dx, dy) or 1.0
         ty = dy/L; down = max(0.0, -ty)
-        wgt = down**1.45 if _LATIN_MODE else 0.30*abs(ty)+0.70*down   # Latin: pointed-pen contrast (thin upstrokes/horizontals)
+        wgt = down**LW_EXP if _LATIN_MODE else 0.30*abs(ty)+0.70*down   # Latin: pointed-pen contrast (thin upstrokes/horizontals)
         items.append((p[0], p[1], (minw+(maxw-minw)*wgt)/2))
     _disks(pen, items)
 def ribbon_prof(pen, segs, w0, w1, gamma=1.4):
@@ -251,13 +252,22 @@ def _pencomma(pen, cx, cy, s=1.0, up=False):
     ribbon_prof(pen, segs, 64*s, 6.0, 1.6)
 T_DEG = 15.0                          # single tilt for drawn Latin, digits and punctuation (the "Make" slant)
 SLANT = math.tan(math.radians(T_DEG))
-DIGIT_H = 660.0          # all figures normalised to one height (lining), then slanted uniformly
-def digit_path(draw_fn):
+# v0.9.36 figure heights: the DEFAULT figures are "hybrid" — ascender height (570u, between the 264u x-height and
+# the 685u caps), so they sit with lowercase text ("31 letters", "digits 0–9"); a second CAP-HEIGHT set (660u,
+# `zero.case`…`nine.case`) is chosen by `calt` next to a capital and by `case` always, so all-caps lines
+# (МАКЕДОНИЈА 2025) keep lining figures. Both sets are scaled UNIFORMLY from the drawn figures (the old y-only
+# normalisation stretched them ~1.1× vertically).
+DIGIT_H = 570.0          # default figure height (ascender ~553 + overshoot)
+DIGIT_CASE_H = 660.0     # `.case` (cap-height) figure height — the pre-v0.9.36 lining height
+DIGIT_UNIFORM = True
+FIG_K = DIGIT_H / 660.0  # vertical scale for the figure-relative symbols (% ‰ and the fraction bar follow the figures)
+def digit_path(draw_fn, h=None):
+    h = h or DIGIT_H
     up = pathops.Path(); draw_fn(up.getPen()); up.simplify()          # upright digit
     b = up.bounds
     if b and (b[3] - b[1]) > 1:
-        s = DIGIT_H / (b[3] - b[1])
-        sc = pathops.Path(); up.draw(TransformPen(sc.getPen(), (1, 0, 0, s, 0, b[1] * (1 - s)))); sc.simplify()
+        s = h / (b[3] - b[1])
+        sc = pathops.Path(); up.draw(TransformPen(sc.getPen(), (s if DIGIT_UNIFORM else 1, 0, 0, s, 0, b[1] * (1 - s)))); sc.simplify()
     else:
         sc = up
     p = pathops.Path(); sc.draw(TransformPen(p.getPen(), (1, 0, SLANT, 1, 0, 0))); p.simplify()
@@ -322,6 +332,8 @@ def gname(cp):
 NEUT = [(gname(cp), cp, letter_path(idxs, cp)) for nm, cp, idxs in MAP]
 _WT = DIGIT_WT                      # digits are disk-brush drawn — thin them to the Cyrillic colour
 NEUT += [(gname(cp), cp, digit_path(fn)) for ch, cp, fn in DIGITS]
+NEUT += [(gname(cp) + ".case", cp, digit_path(fn, DIGIT_CASE_H)) for ch, cp, fn in DIGITS]   # cap-height set (no cmap)
+_NOMAP = {gname(cp) + ".case" for ch, cp, fn in DIGITS}   # NEUT entries that share a digit's cp for the digit spacing/baseline logic but must not take its cmap slot
 _WT = 1.0
 
 # ========================= measurement (flatten + raster) =========================
@@ -431,7 +443,8 @@ for _anm, _acp, _ascp, _agx, _agy in [("uni0400",0x0400,0x0415,6,748),("uni040D"
     NEUT.append((_anm, _acp, _ap))
 
 for g, cp, path in NEUT:
-    glyph_order.append(g); cmap[cp] = g
+    glyph_order.append(g)
+    if g not in _NOMAP: cmap[cp] = g
     minx, maxx, bl, br, basey = measure(path, cp)
     if cp in (0x0448, 0x0428):               # Macedonian cursive ш/Ш: underline beneath the letter — its ends
         _fL, _fR = {0x0448: (0.00, 0.60), 0x0428: (0.205, 0.659)}[cp]   # track the first/last stroke, not the flourishes
@@ -567,6 +580,27 @@ def _bracket(pen, left=True):   # [ ] as three bars of one thinned width (honour
 # are tapered/direction-weighted ribbons; every mark is slanted 18° in _make. In
 # colon/semicolon the upper dot is pre-shifted by −SLANT·Δy so it stacks truly
 # vertical once slanted (an italic colon shouldn't lean apart).
+QS = 1.25            # pen-comma scale of every quote mark / apostrophe (v0.9.36; was 0.95–1.0)
+def _shifted(fn, dy):   # the same operator outline at another height (lowercase vs figure axis)
+    def _f(pen):
+        t = pathops.Path(); fn(t.getPen()); t.draw(TransformPen(pen, (1, 0, 0, 1, 0, dy)))
+    return _f
+def _yscaled(fn, k):    # the same outline scaled vertically about the baseline (figure-relative symbols follow DIGIT_H)
+    def _f(pen):
+        t = pathops.Path(); fn(t.getPen()); t.draw(TransformPen(pen, (1, 0, 0, k, 0, 0)))
+    return _f
+_OPS = [   # drawn on the FIGURE axis (centre 300 = mid lining figure) — these become the `.case` forms
+    (0x002B, "plus", lambda p: (_rect(p, 52, 272, 308, 328), _rect(p, 152, 180, 208, 420))),
+    (0x2212, "minus", lambda p: _rect(p, 52, 272, 308, 328)),
+    (0x003D, "equal", lambda p: (_rect(p, 52, 236, 308, 288), _rect(p, 52, 318, 308, 370))),
+    (0x00D7, "multiply", lambda p: (ribbon_prof(p, [('M', (84, 196)), ('L', (256, 404))], 42, 42), ribbon_prof(p, [('M', (256, 196)), ('L', (84, 404))], 42, 42))),
+    (0x00F7, "divide", lambda p: (_rect(p, 52, 272, 308, 328), _oval(p, 180, 398, 31, 34), _oval(p, 180, 202, 31, 34))),
+    (0x003C, "less", lambda p: ribbon_prof(p, [('M', (266, 172)), ('L', (72, 300)), ('L', (266, 428))], 40, 40)),
+    (0x003E, "greater", lambda p: ribbon_prof(p, [('M', (64, 172)), ('L', (258, 300)), ('L', (64, 428))], 40, 40)),
+    (0x00B1, "plusminus", lambda p: (_rect(p, 152, 250, 208, 470), _rect(p, 52, 332, 308, 388), _rect(p, 52, 150, 308, 206))),
+]
+OPS_LC_DY = -135.0   # lowercase-text default = the figure-axis form lowered to centre 165
+OPS_CASE_DY = DIGIT_H / 2.0 - 300.0   # `.case` forms centred on the figure centre (285 for 570u figures)
 PUNCT = [
     (0x002E, "period", 150, lambda p: _oval(p, 75, 48, 35, 41)),
     (0x002C, "comma", 150, lambda p: _pencomma(p, 85, 92)),
@@ -581,35 +615,33 @@ PUNCT = [
     (0x2014, "emdash", 720, lambda p: _rect(p, 40, 130, 680, 172)), (0x0028, "parenleft", 300, lambda p: _paren(p, 300, True)),
     (None, "hyphen.case", 260, lambda p: _rect(p, 40, 250, 230, 305)), (None, "endash.case", 460, lambda p: _rect(p, 40, 258, 420, 300)),
     (None, "emdash.case", 720, lambda p: _rect(p, 40, 258, 680, 300)),
-    (0x0029, "parenright", 300, lambda p: _paren(p, 300, False)), (0x0027, "quotesingle", 190, lambda p: _pencomma(p, 90, 648, 0.95)),
-    (0x0022, "quotedbl", 320, lambda p: (_pencomma(p, 95, 648, 0.95), _pencomma(p, 205, 648, 0.95))),
-    (0x201E, "quotedblbase", 330, lambda p: (_pencomma(p, 100, 120), _pencomma(p, 212, 120))),   # „ low opening (9-form)
-    (0x201C, "quotedblleft", 330, lambda p: (_pencomma(p, 100, 560, 1.0, True), _pencomma(p, 212, 560, 1.0, True))),  # “ raised 6-form (opening)
-    # 9-form closing marks hang DOWN from cy, the 6-form opening marks rise UP from it — so the closing pair
-    # takes cy 660 (not 560) to share the opening marks' top (~692u); they sat 101u lower (audit #21).
-    (0x201D, "quotedblright", 330, lambda p: (_pencomma(p, 100, 660, 1.0), _pencomma(p, 212, 660, 1.0))),             # ” raised 9-form (Latin closing — both marks UP)
-    (0x2018, "quoteleft", 180, lambda p: _pencomma(p, 100, 560, 1.0, True)),                                           # ‘ single raised 6-form
-    (0x2019, "quoteright", 180, lambda p: _pencomma(p, 100, 660, 1.0)),                                                # ’ single raised 9-form (= apostrophe, up)
-    (0x201A, "quotesinglbase", 180, lambda p: _pencomma(p, 100, 120)),                                                 # ‚ single low 9-form (one mark of „)
+    # quotes/apostrophes (v0.9.36): 1.25× bigger (a 155u apostrophe read as a tick at text sizes) and on TIGHT
+    # advances (single 140, double 250; were 180–330) — an apostrophe used to add a letter's worth of space
+    # ("capital's"). QS = the pen-comma scale; the 9-form marks hang DOWN from cy, the 6-form marks rise UP.
+    (0x0029, "parenright", 300, lambda p: _paren(p, 300, False)), (0x0027, "quotesingle", 140, lambda p: _pencomma(p, 70, 662, QS)),
+    (0x0022, "quotedbl", 250, lambda p: (_pencomma(p, 70, 662, QS), _pencomma(p, 182, 662, QS))),
+    (0x201E, "quotedblbase", 250, lambda p: (_pencomma(p, 70, 108, QS), _pencomma(p, 182, 108, QS))),              # „ low opening (9-form)
+    (0x201C, "quotedblleft", 250, lambda p: (_pencomma(p, 70, 530, QS, True), _pencomma(p, 182, 530, QS, True))),  # “ raised 6-form (opening)
+    (0x201D, "quotedblright", 250, lambda p: (_pencomma(p, 70, 662, QS), _pencomma(p, 182, 662, QS))),             # ” raised 9-form (Latin closing — both marks UP)
+    (0x2018, "quoteleft", 140, lambda p: _pencomma(p, 70, 530, QS, True)),                                           # ‘ single raised 6-form
+    (0x2019, "quoteright", 140, lambda p: _pencomma(p, 70, 662, QS)),                                                # ’ single raised 9-form (= apostrophe, up)
+    (0x201A, "quotesinglbase", 140, lambda p: _pencomma(p, 70, 108, QS)),                                            # ‚ single low 9-form (one mark of „)
     # ---- v0.9.16: fill real coverage gaps, reusing the calligraphic pen primitives above ----
     (0x002F, "slash", 300, lambda p: ribbon_prof(p, [('M', (74, -46)), ('L', (150, 586))], 40, 40)),                   # / solidus (dates, fractions, URLs)
     (0x2026, "ellipsis", 470, lambda p: (_oval(p, 75, 48, 35, 41), _oval(p, 225, 48, 35, 41), _oval(p, 375, 48, 35, 41))),  # … three baseline dots = period×3
     (0x00B7, "periodcentered", 150, lambda p: _oval(p, 75, 132, 35, 41)),                                              # · middle dot = period raised to mid x-height
     (0x00AB, "guillemotleft", 310, lambda p: (ribbon_prof(p, [('M', (124, 232)), ('L', (48, 130)), ('L', (124, 28))], 26, 26), ribbon_prof(p, [('M', (236, 232)), ('L', (160, 130)), ('L', (236, 28))], 26, 26))),  # « Macedonian 2ndary quote
     (0x00BB, "guillemotright", 310, lambda p: (ribbon_prof(p, [('M', (48, 232)), ('L', (124, 130)), ('L', (48, 28))], 26, 26), ribbon_prof(p, [('M', (160, 232)), ('L', (236, 130)), ('L', (160, 28))], 26, 26))),  # »
-    (0x00B0, "degree", 210, lambda p: _ring(p, 98, 556, 62, 34)),                                                      # ° small ring near figure top (raised from 470: it sat at 71% of the figure height — audit #26)
+    (0x00B0, "degree", 210, lambda p: _ring(p, 98, DIGIT_H - 59, 62, 34)),                                             # ° small ring, top at the figure top (v0.9.36: follows DIGIT_H)
     (0x2039, "guilsinglleft", 190, lambda p: ribbon_prof(p, [('M', (124, 232)), ('L', (48, 130)), ('L', (124, 28))], 26, 26)),   # ‹ single guillemet (one chevron of «)
     (0x203A, "guilsinglright", 190, lambda p: ribbon_prof(p, [('M', (48, 232)), ('L', (124, 130)), ('L', (48, 28))], 26, 26)),   # ›
-    (0x0025, "percent", 480, lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 338, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (368, 600))], 34, 34))),  # % two rings + stroke
+    (0x0025, "percent", 480, _yscaled(lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 338, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (368, 600))], 34, 34)), FIG_K)),  # % two rings + stroke (figure-height, follows DIGIT_H)
     # ---- v0.9.22: math operators + ASCII tech symbols + № numero ----
-    (0x002B, "plus", 360, lambda p: (_rect(p, 52, 272, 308, 328), _rect(p, 152, 180, 208, 420))),
-    (0x2212, "minus", 360, lambda p: _rect(p, 52, 272, 308, 328)),
-    (0x003D, "equal", 360, lambda p: (_rect(p, 52, 236, 308, 288), _rect(p, 52, 318, 308, 370))),
-    (0x00D7, "multiply", 360, lambda p: (ribbon_prof(p, [('M', (84, 196)), ('L', (256, 404))], 42, 42), ribbon_prof(p, [('M', (256, 196)), ('L', (84, 404))], 42, 42))),
-    (0x00F7, "divide", 360, lambda p: (_rect(p, 52, 272, 308, 328), _oval(p, 180, 398, 31, 34), _oval(p, 180, 202, 31, 34))),
-    (0x003C, "less", 360, lambda p: ribbon_prof(p, [('M', (266, 172)), ('L', (72, 300)), ('L', (266, 428))], 40, 40)),
-    (0x003E, "greater", 360, lambda p: ribbon_prof(p, [('M', (64, 172)), ('L', (258, 300)), ('L', (64, 428))], 40, 40)),
-    (0x00B1, "plusminus", 360, lambda p: (_rect(p, 152, 250, 208, 470), _rect(p, 52, 332, 308, 388), _rect(p, 52, 150, 308, 206))),
+    # math operators (v0.9.36): the DEFAULT forms sit on a lowercase axis (centre 165, just above the hyphen's 150)
+    # and the `.case` forms on the figure axis (centre 300); `calt` picks `.case` next to a figure or a capital,
+    # `case` always — same scheme as the dashes ("upper + lowercase" floated 36u above the x-height)
+    *[(cp, nm, 360, _shifted(fn, OPS_LC_DY)) for cp, nm, fn in _OPS],
+    *[(None, nm + ".case", 360, _shifted(fn, OPS_CASE_DY)) for cp, nm, fn in _OPS],
     (0x002A, "asterisk", 300, lambda p: _asterisk(p, 150, 486, 92)),
     (0x0023, "numbersign", 420, lambda p: (_rect(p, 128, 120, 172, 540), _rect(p, 258, 120, 302, 540), _rect(p, 58, 238, 372, 286), _rect(p, 58, 372, 372, 420))),
     (0x005F, "underscore", 360, lambda p: _rect(p, 20, -66, 340, -12)),
@@ -624,11 +656,11 @@ PUNCT = [
     (0x2116, "numero", 470, _numero),
     # ---- v0.9.23: ornamental symbols + per-mille + primes ----
     (0x0040, "at", 440, _at),
-    (0x0024, "dollar", 340, _dollar),
+    (0x0024, "dollar", 340, _yscaled(_dollar, DIGIT_H / 600.0)),   # $ spans the figure height
     (0x00A9, "copyright", 440, _copyright),
-    (0x2030, "permille", 640, lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 300, 120, 58, 31), _ring(p, 480, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (420, 600))], 34, 34))),
-    (0x2032, "prime", 160, lambda p: ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20)),
-    (0x2033, "doubleprime", 270, lambda p: (ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), ribbon_prof(p, [('M', (176, 640)), ('L', (222, 456))], 44, 20))),
+    (0x2030, "permille", 640, _yscaled(lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 300, 120, 58, 31), _ring(p, 480, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (420, 600))], 34, 34)), FIG_K)),
+    (0x2032, "prime", 160, _yscaled(lambda p: ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), 0.9)),   # ′ ″ top near the figure top
+    (0x2033, "doubleprime", 270, _yscaled(lambda p: (ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), ribbon_prof(p, [('M', (176, 640)), ('L', (222, 456))], 44, 20)), 0.9)),
     # ---- v0.9.35: coverage gaps (audit #27) ----
     (0x0060, "grave", 190, lambda p: _grave(p, 95, 612, 1.3)),                                                         # ` ASCII grave (the pen grave of ѐ, larger, at apostrophe height)
     (0x2022, "bullet", 250, lambda p: _oval(p, 125, 150, 56, 60)),                                                     # • at mid x-height
@@ -938,13 +970,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.935", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.936", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.935",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.935", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.936",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.936", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -966,7 +998,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.935    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.936    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

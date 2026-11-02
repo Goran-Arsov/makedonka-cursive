@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.35** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.36** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 **Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
 (tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½),
 **South-Slavic Latin diacritics** (`š č ž ć đ` / `Š Č Ž Ć Đ`), and **math + symbols**
@@ -27,7 +27,8 @@ Each weight (**Regular**, **Bold**) ships in four formats:
 | `.woff` | Web fallback (older browsers) |
 
 Plus `makedonka-cursive.css` (ready `@font-face` rules for both weights), `demo.html`
-(open in a browser), and `specimen.png`.
+(open in a browser), `specimen.png`, and `specimen.html` — a single self-contained specimen page with
+both weights embedded, so it shows the real kerning and every OpenType feature without installing anything.
 
 ## Install on your computer (Word, LibreOffice, any app)
 
@@ -75,7 +76,7 @@ h1.strong { font-weight: 700; }
 ```css
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.35/MakedonkaCursive-Regular.woff2") format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.36/MakedonkaCursive-Regular.woff2") format("woff2");
   font-weight: 400; font-display: swap;
 }
 ```
@@ -85,11 +86,15 @@ h1.strong { font-weight: 700; }
   Macedonian/Serbian-style cursive forms (overbarred г/п/т, g-shaped д, dotted ј, …).
 - **Weights:** Regular + Bold (a faux-bold derived from the Regular by a **contrast-preserving** dilation —
   it weights the stems while keeping the hairlines, overbars and connectors delicate).
-- **Digits:** 0–9, designed to match (calligraphic pen numerals; not in the source chart).
+- **Digits:** 0–9, designed to match (calligraphic pen numerals; not in the source chart). They are
+  **hybrid figures** — ascender height, so they sit with lowercase text ("31 letters") — and switch
+  automatically to **cap-height lining figures** inside all-caps runs (`МАКЕДОНИЈА 2025`, `OHRID 1999`);
+  the `case` feature forces the cap-height set.
 - **Punctuation:** space `. , : ; ! ? ¡ ¿ - – — ( ) ' " „ " ‚ ‘ ’ « » ‹ › / … · • ° % `` ` `` — calligraphic
   pen marks, including the Macedonian `„ "` and `« »` quotes (designed to match; not in the source chart).
-  A no-break space (U+00A0) is mapped too. Dashes sit at mid x-height for lowercase text and rise
-  automatically after a figure or a capital (`2025-11-02`, `А–Б`); the `case` feature raises them all.
+  A no-break space (U+00A0) is mapped too. Dashes and the math operators sit at a lowercase height between
+  lowercase words (`воз-воз`, `upper + lowercase`) and rise automatically next to a figure or a capital
+  (`2025-11-02`, `А–Б`, `1 + 2`); the `case` feature raises them all.
 - **Latin:** full A–Z / a–z, a calmer companion to the ornate Macedonian hand — one
   consistent, moderately upright slant across all letters, figures and punctuation, in a
   **restrained** pen style. Every Latin glyph is either drawn or a re-angled copy of a
@@ -100,7 +105,9 @@ h1.strong { font-weight: 700; }
   connections, tightens loose joins, and spaces consecutive capitals so **all-caps also reads**
   (the cap flourishes still cross, as a copperplate hand does). Applied to both weights.
 - **OpenType features:** `tnum` tabular (uniform-width) figures · `zero` slashed zero · `sups`/`subs`
-  superscripts & subscripts (H₂O, x²) · `numr`/`dnom` · `frac` automatic fractions (type `1/2` → ½).
+  superscripts & subscripts (H₂O, x²) · `numr`/`dnom` · `frac` automatic fractions (type `1/2` → ½) ·
+  `calt` (on by default: cap-height figures and raised dashes/operators next to capitals and figures) ·
+  `case` (all of those forced on, for all-caps settings).
   Turn them on in any OpenType-aware app (InDesign, Illustrator, Word's advanced typography) or on the
   web with CSS `font-feature-settings` / `font-variant`. Both weights carry a **STAT** table so the
   family groups correctly across apps.

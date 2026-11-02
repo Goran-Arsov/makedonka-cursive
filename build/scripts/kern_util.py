@@ -24,6 +24,7 @@ _LAT = "abcdefghijklmnopqrstuvwxyzšžčćđ"   # + the South-Slavic diacritics 
 # 60 09 68 66 89 99 04 54 … interlocked. Push every figure pair apart to a minimum full-height ink gap.
 DIG_GAP, DIG_MAX = 24, 120
 _DIG = "0123456789"
+_DIG_CASE = [n + ".case" for n in ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")]   # cap-height set (v0.9.36)
 # v0.9.35 (audit #19): the ornate S/Š top curl lands on a following ascender loop (Sk Sl Sf Sb Sh); push
 # those pairs apart until the ascender band (above the x-height) clears by ASC_GAP, capped at ASC_MAX.
 ASC_GAP, ASC_MAX, ASC_LO, ASC_HI = 10, 160, 270, 640
@@ -33,7 +34,11 @@ _ASC_CAPS, _ASC_LOW = "SŠFT", "bfhklđ"      # + F/T (their bars over a followi
 _CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX = "ФЅ", "бвѓќрјтпгд", 300, 600, 10, 160
 # the raised closing quotes now share the opening quotes' height, so in the Bold a tall ascender (f d đ в)
 # can touch a following ’ ” — same floor model in the quote band (v0.9.35)
-_QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX = "bdfhklđtвѓќб", "’”‘“'\"", 420, 700, 8, 150   # б's flag needs ~120 in the Bold
+_QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX = "bdfhklđtвѓќб", "’”‘“'\"", 420, 700, 36, 170   # б's flag needs ~120 in the Bold;
+# gap 36 (not the usual 8): the b/h/k/l ascender loops lean right, and an apostrophe parked 8u from the loop
+# read as part of it ("capital's") — it needs visible white before it. The reverse pass (quote → ascender)
+# keeps the small gap.
+QUO_GAP_REV = 8
 
 # Uppercase spacing kern (v0.9.17; reworked v0.9.25, v0.9.27, v0.9.28): equalise the gap the EYE reads
 # between cap bodies. v0.9.27 used a full-height 15/85 ink-MASS percentile for the body edges, but that
@@ -74,23 +79,29 @@ def _profiles(gs, gn, lo=0, hi=270):
     return R, L
 
 
+def _gn(cm, gs, item):
+    # a kern-list item is either a character (mapped through the cmap) or a glyph name (e.g. "zero.case")
+    if len(item) == 1 and ord(item) in cm: return cm[ord(item)]
+    return item if item in gs else None
+
+
 def _floor_pairs(gs, cm, hm, lefts, rights, lo, hi, gap, cap):
     # positive-only kern: push each (a, b) pair apart until the nearest ink approach within the
     # y-band [lo, hi) is at least `gap` units (never tightens; capped at `cap`)
-    present_l = [c for c in lefts if ord(c) in cm]; present_r = [c for c in rights if ord(c) in cm]
-    R = {c: _profiles(gs, cm[ord(c)], lo, hi)[0] for c in present_l}
-    L = {c: _profiles(gs, cm[ord(c)], lo, hi)[1] for c in present_r}
+    present_l = [g for g in (_gn(cm, gs, c) for c in lefts) if g]; present_r = [g for g in (_gn(cm, gs, c) for c in rights) if g]
+    R = {g: _profiles(gs, g, lo, hi)[0] for g in present_l}
+    L = {g: _profiles(gs, g, lo, hi)[1] for g in present_r}
     out = []
     for a in present_l:
         for b in present_r:
             bins = set(R[a]) & set(L[b])
             if not bins:
                 continue
-            near = min(L[b][k] + hm[cm[ord(a)]][0] - R[a][k] for k in bins)
+            near = min(L[b][k] + hm[a][0] - R[a][k] for k in bins)
             if near < gap:
                 k = min(int(round(gap - near)), cap)
                 if k >= MIN_KERN:
-                    out.append((cm[ord(a)], cm[ord(b)], k))
+                    out.append((a, b, k))
     return out
 
 
@@ -188,8 +199,10 @@ def add_kern(otf_path, extra_fea=""):
     pairs = _pairs(gs, cm, hm, _CYR) + _pairs(gs, cm, hm, _LAT) \
           + _cap_pairs(pilfont, cm, hm, _CYR_CAPS) + _cap_pairs(pilfont, cm, hm, _LAT_CAPS) \
           + _floor_pairs(gs, cm, hm, _DIG, _DIG, -10, 670, DIG_GAP, DIG_MAX) \
+          + _floor_pairs(gs, cm, hm, _DIG_CASE, _DIG_CASE, -10, 670, DIG_GAP, DIG_MAX) \
           + _floor_pairs(gs, cm, hm, _ASC_CAPS, _ASC_LOW, ASC_LO, ASC_HI, ASC_GAP, ASC_MAX) \
           + _floor_pairs(gs, cm, hm, _QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX) \
+          + _floor_pairs(gs, cm, hm, _QUO_R, _QUO_L, QUO_LO, QUO_HI, QUO_GAP_REV, QUO_MAX) \
           + _floor_pairs(gs, cm, hm, _CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX)
     # register the feature under both scripts (+ default), so shapers that look up `cyrl`/`latn`
     # apply it — not just those that fall back to DFLT

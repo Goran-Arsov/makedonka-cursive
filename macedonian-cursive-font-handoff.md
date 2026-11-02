@@ -395,6 +395,64 @@ vectorizing the Wikimedia chart (see *Source material* below).
   24→15) on U V W; R gets a leg-end curl, Q a tail twist + a small oval-top curl. All via `ribbon_prof`, so `_LSX`
   applies. The swashes sit above the join band so sidebearings are unchanged (U/V/W lsb go negative like N/L; the
   right curls overhang the advance like T's arm — the cap kern's 100–590 band and the scans keep every pair clear).
+- **(v0.9.36) the remaining open items — built 2026-11-02, NOT yet committed/shipped.** (1) **Contrast match for the
+  drawn Latin (Open #1):** measured with horizontal ink-run percentiles at 1u=1px (p10 = hairline, p90 = thick) and
+  the mean width 2A/P: traced Cyrillic lowercase p10/p90 = 9/58, mean 37.6; the Latin copies 9/57, 40.1; the drawn
+  Latin 5/40, 35.9 — i.e. the drawn letters were NOT "more even" (the old note) but lighter at BOTH ends with more
+  mid-weight strokes. Knobs: `LW_DMAX` 1.25→**1.45**, `LW_DMIN` 0.82→**0.95**, and the pressure curve of
+  `ribbon_dir` in Latin mode is now `down**LW_EXP` with **`LW_EXP=2.0`** (was a literal 1.45) → drawn 6/46, mean 41.1
+  (1.09× the traced, inside the 0.85–1.15 colour band; Bold drawn 63.4 vs traced 59.5). Only `ribbon_dir` strokes
+  change (stems/arches/diagonals); `ribbon_prof` swashes/bowls, digits and punctuation are untouched. Judged on
+  "nhbdk vwrq aoce · pjesma hobit" and the cap rows: the drawn letters now sit with the copies. (2) **TTF
+  overlapping-segments WARN cleared (C / Open #7):** `otf2ttf.py` applies a morphological CLOSING to every outline
+  before cu2qu — `close_outline(gs, name, r=CLOSE_R=0.8)`: dilate (fill ∪ round `pathops` stroke 2r) then erode
+  (minus the stroke of that) then `purge_slivers`; GUARDED — the original is kept if pathops fails, the bbox moves
+  > 2u or the area changes > 3% (that happens on the traced Ж н Ц: 258/262 Regular and 261/262 Bold outlines are
+  closed). Then `dedupe_points` drops the coincident points integer rounding leaves (an off-curve on an on-curve,
+  equal consecutive on-curves). Result: `overlapping_path_segments` PASS on both TTFs (was 17 / 5 segments), TTFs
+  smaller (Regular 420→391 KB, Bold 495→451 KB; points 150k→137k / 191k→159k), shapes tracked vs the OTF at
+  1400px/em as closely as before (the residual XOR is hinting). The OTFs are byte-identical to a build without it.
+  The non-self-intersecting stroker (Open #7) is therefore no longer needed for the WARN — it stays optional.
+  (3) **`specimen.html` (Open #11):** `build/scripts/specimen_html.py [dir]` writes a single self-contained page
+  with both woff2 files embedded as base64 `@font-face` (alphabets, words, all-caps, symbols, Bold, and every
+  OpenType feature via `font-feature-settings`); ship step 1b; ~260 KB; verified in headless Chrome. (4) **Render
+  test (B):** LibreOffice 24.2 (headless HTML→PDF→PNG) and Chrome headless both render the installed/embedded
+  v0.9.35 fonts correctly — kerning, `calt` dashes (on by default in both), precomposed fractions, Bold; LibreOffice's
+  HTML import ignores `font-feature-settings`, so `frac`/`tnum` can't be exercised that way (not a font issue).
+  Word/Adobe/Windows/macOS remain owner-side. (5) **`DISTRIBUTION.md` (Open #8):** ready-to-paste blurbs (EN/MK),
+  the mandatory attribution text, licence line, tags and channel notes for the aggregator postings. Version
+  strings 0.936, demo/CSS `?v=47`, README jsDelivr tag `@v0.9.36` (no release yet).
+  **(6) Apostrophes/quotes and math operators (owner screenshot of the README text, 2026-11-02).** "capital's":
+  the apostrophe (155u tall, 98u wide) was parked 7u from the l's ascender loop by the quote floor-kern and read
+  as part of the l, and its 190u advance + kern left a 159u hole at the baseline before the s. Now: every quote
+  mark/apostrophe is drawn at **`QS=1.25`** (9-form marks `_pencomma(…, 662, QS)` → y ≈ 497–700; 6-form marks at
+  cy 530; low „ ‚ at cy 108) on **tight advances** (single 140, double 250; were 180–330), the ascender→quote
+  floor-kern asks for **`QUO_GAP=36`** of clearance (the loops of b h k l lean right — 8u read as touching) with
+  `QUO_MAX=170`, and a new reverse pass (quote → ascender letter, `QUO_GAP_REV=8`) protects 'tis / 'n'. "l's" now
+  shapes l(+85 kern) ' s with the mark standing in the middle of the gap. **Operators:** "upper + lowercase" had
+  the + on the figure axis (centre 300, 36u above the x-height). `_OPS` holds the 8 operators drawn on the figure
+  axis; the DEFAULT glyphs are `_shifted(fn, OPS_LC_DY=-135)` copies (centre 165, just above the hyphen's 150)
+  and the `.case` glyphs are the originals — same scheme as the dashes. `features.FIGURE_FEA`: `@dash`/`@dashc`
+  now include the operators, `lookup DASH_CASE { sub @dash by @dashc; }`, and `calt` fires in BOTH directions with
+  an optional space (`[@figs @tf @CAPS] (space) @dash'` and `@dash' (space) [@figs @tf @CAPS]`), so "1 + 2",
+  "a + 1", "A = B", "2025 – 2026" take the raised forms and "a + b", "x × y" the low ones. 262→270 glyphs.
+  **(7) Figure system (owner chose option A, 2026-11-02).** `DIGIT_H=570` (default, "hybrid": ascender height),
+  `DIGIT_CASE_H=660` (cap-height set), `DIGIT_UNIFORM=True` (both axes scaled — the old y-only normalisation
+  stretched the drawn figures ~1.1× vertically, so the 660u `.case` set is ~10% wider than the pre-v0.9.36
+  figures), `FIG_K = DIGIT_H/660` for the figure-relative symbols. `digit_path(fn, h=None)` takes the height;
+  the NEUT digit loop builds `zero.case`…`nine.case` with the digit's cp for the digit spacing/baseline logic but
+  `_NOMAP` keeps them out of the cmap. `_OPS` `.case` forms are `_shifted(fn, OPS_CASE_DY = DIGIT_H/2 − 300)`
+  (centre 285); `°` ring centre `DIGIT_H − 59`; `% ‰` are `_yscaled(…, FIG_K)`, `$` `_yscaled(…, DIGIT_H/600)`,
+  `′ ″` `_yscaled(…, 0.9)`; the `fraction` bar height is read from `base_paths["zero"]` (y −60..DIGIT_H+20, same
+  slope). `features.py`: `@figsc`/`@figsall`; `lookup FIG_CASE { sub @figs by @figsc; }`; `case` = DASH_CASE +
+  FIG_CASE; `calt` = `@CAPS (space) @figs'` + `@figsc @figs'` (propagation along a run) + runs of 1–4 figures
+  before `(space) @CAPS` matched whole (8 rules) + the dash/operator rules with `@figsall` as figure context;
+  `zero`/`sups`/`subs`/`numr`/`dnom`/`frac` accept both sets (`zero.slash.case` is built from
+  `base_paths["zero.case"]`). Because `tnum` precedes `calt` in lookup order, tabular figures stay tabular.
+  `kern_util._floor_pairs` now takes glyph names as well as characters (`_gn`), so `_DIG_CASE` pairs are kerned.
+  Verified by HarfBuzz: "МАКЕДОНИЈА 2025" / "2025 ДЕНАРИ" / "1999 OHRID" → `.case`, "Скопје 2025" → default,
+  "A 1/2" with `frac` → numr/fraction/dnom, "A 0" with `zero` → `zero.slash.case`; renders at 140px in both
+  weights; overlap scan 0 pairs; FontBakery 0 FAIL. 270→281 glyphs; woff2 Regular 86 KB, Bold 119 KB.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

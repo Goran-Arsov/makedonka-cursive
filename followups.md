@@ -37,15 +37,20 @@ automatically at the end of each build.
   base64 `@font-face`, so the kern renders natively) and a non-technical install/use guide exist as private
   shareable pages; the owner holds the links. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.34 — SHIPPED + repo PUBLIC; updated 2026-11-02)
+## Current state (v0.9.35 — BUILT in the working tree, NOT yet committed or released; updated 2026-11-02)
+- **v0.9.35 is built but unshipped.** The whole suite in the tree (both OTF/TTF/woff2/woff, `specimen.png`,
+  README/demo/CSS `?v=46`, font-internal **"0.935"**) is the glyph-audit fix release (see the changelog line and
+  Open #13–#27 below, all resolved). It is **uncommitted** — ship steps 5–7 (zip, commit, push, release, install,
+  amici) are still to do. The last SHIPPED version is **v0.9.34** (`origin/main`, GitHub release, amici `?v=26`).
 - **Shipped + public.** `origin/main` is at **v0.9.34**; GitHub releases v0.9.15–v0.9.34 are live (each with its
   zip). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
-  Font-internal version **"0.934"**, demo/CSS `?v=45`.
-- **Coverage — 243 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
+- **Coverage — 262 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
   uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
-  South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ / … · ° %);
-  **math + symbols** `+ − = × ÷ < > ± № @ $ © ‰ ′ ″ # * _ | ~ \ ^ [ ] { }`; NBSP. **Not** covered: other-Cyrillic,
-  and `&` (deferred — see Open #7).
+  South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ ‚ ‹ › / … · • ° %
+  ¡ ¿ and the ASCII `` ` ``); **math + symbols** `+ − = × ÷ < > ± & № @ $ € © ® ™ § ¶ ‰ ′ ″ # * _ | ~ \ ^ [ ] { }`;
+  precomposed `½ ¼ ¾`, superscript `¹ ² ³ ⁰–⁹`, subscript `₀–₉`; raised `.case` dashes; NBSP; U+2010/2011/2015
+  aliased to the dashes. **Not** covered: other-Cyrillic, Latin-1 accented letters (scope), U+00AD (deliberately —
+  FontBakery flags it).
 - **Weights:** Regular + Bold — the Bold is a **contrast-preserving faux-bold** (`make_bold.py`, anisotropic
   dilation in un-slanted space, D=16, so weight lands on the thick stems while hairlines/overbars stay thin).
 - **Typographic colour (v0.9.26):** the disk-brush digits/symbols/drawn-Latin were much heavier than the traced
@@ -59,9 +64,13 @@ automatically at the end of each build.
   CAP_BAND_HI=590`u above baseline, rendered glyph), ignoring the flourishes that loop above cap-height/below
   baseline — equalised both directions so the **perceived** whitespace is uniform (body-band spread ~**1px**/word,
   both weights; was ~96px). Supersedes the v0.9.27 full-height ink-mass measure, which the flourishes skewed so
-  Ѕ/Ј/С/Е read with extra space in front. Only cap-before-cap, so Title-case/lowercase unchanged. Regular/Bold **2255 / 2211** pairs.
+  Ѕ/Ј/С/Е read with extra space in front. Only cap-before-cap, so Title-case/lowercase unchanged. v0.9.35 added
+  three positive-only **floor kerns** (`_floor_pairs`: push apart until a y-band's nearest ink approach ≥ gap):
+  digit pairs (`DIG_GAP=24`), S/Š before ascender letters (`ASC_*`), ascenders before the raised quotes (`QUO_*`);
+  the cap sets now include Ѐ Ѝ / Š Č Ž Ć Đ and the Latin lowercase set š ž č ć đ. Regular/Bold **2821 / 2733** pairs.
 - **OpenType features (GSUB):** `tnum` tabular figures · `zero` slashed zero · `sups`/`subs` · `numr`/`dnom` ·
-  `frac` fractions (multi-digit, 2–3). Built from the digit outlines by `features.py`; HarfBuzz-verified. Both
+  `frac` fractions (multi-digit, 2–3) · `case` (raised dashes) · `calt` (a dash after a figure or a capital takes the
+  raised `.case` form). Built from the digit outlines by `features.py`; HarfBuzz-verified. Both
   weights also carry a **STAT** table (Weight axis) + a **`meta`** table (dlng/slng = Latn, Cyrl). GSUB + the kern
   GPOS are compiled in ONE `add_kern(otf, extra_fea)` call — `addOpenTypeFeaturesFromString` rebuilds BOTH tables
   from its FEA, so two separate calls wipe each other (keep them in one call).
@@ -69,10 +78,15 @@ automatically at the end of each build.
 - **Outlines:** UPM=700; vertical metrics harmonised (typo=hhea=win, USE_TYPO_METRICS, OS/2 v4). The TTFs drop
   degenerate zero-area **speck contours** in `otf2ttf.py` (partial overlap-WARN reduction; full fix = Open #7).
 - **QA:** FontBakery **0 FAIL / 0 ERROR** per-format family (universal + Adobe, OTF + TTF). Remaining are
-  intentional WARNs only: UPM=700 (deliberate render size), `overlapping_path_segments` (intrinsic to the brush;
-  Open #7), post v3 (valid for CFF), contour-count (custom design).
+  intentional WARNs only: UPM=700 (deliberate render size — the OTFs' only WARN since v0.9.35), and on the TTFs
+  `overlapping_path_segments` (intrinsic to the brush; Open #7), post v3 (valid for CFF), contour-count (custom design).
 
 ## What should still be done
+
+**0. Ship v0.9.35** (built 2026-11-02, uncommitted): review `git diff` (scripts + the regenerated suite + docs),
+then steps 5–7 of "Ship a version" — zip, commit, push, `gh release create v0.9.35`, install to
+`~/.local/share/fonts/`, propagate to amici (`?v=27`). The README's jsDelivr tag already says `@v0.9.35`, so the
+release must exist before that CSS snippet works.
 
 **A. Propagate the latest release to the two places OUTSIDE this repo (owner's).**
 - **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.34, pushed** (amici commit `c136ca1`:
@@ -97,6 +111,18 @@ speck-drop in `otf2ttf.py` reduced it (Regular 24→15, Bold 185→62), render-i
 non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a manual Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.35** — **glyph-audit fixes (Open #13–#27):** ѕ/s/š cracks purged (`outline_util.purge_slivers` after the
+  ѕ `embolden`); every disk-brush ribbon now stamps overlap-guaranteed trails (`_disks`, `DISK_OVERLAP`) so hairlines
+  are one stroke; the Bold is a TRUE dilation (fill ∪ `pathops` round stroke in y-stretched space) — no ghost
+  tracks/frayed tips; 8 waist closed; raised quotes ’ ” aligned with ‘ “; dashes at mid x-height + `.case` forms via
+  `case`/`calt`; @ on the baseline; i-dot like ј's; z to the x-height; đ bar across the stem; ° raised; brackets as
+  thinned bars; floor kerns for digits, S/Š/F/T+ascenders, ascenders+quotes, Ф/Ѕ+ascender letters; cap kern covers
+  Ѐ Ѝ Š Č Ž Ć Đ; F bars reshaped + T scaled 1.07; s.lat shrunk to the x-height; lighter carons/acutes; q/f
+  descenders deepened; every traced letter sliver-purged (Н); `frac` denominators-first; new glyphs `& ™ ® § ¶`
+  `` ` `` • ¡ ¿ ‚ ‹ › € ½ ¼ ¾ + ¹²³⁰–⁹/₀–₉ codepoints + hyphen/endash/emdash `.case`; × < > widths 360; third
+  pass: drawn **p** (q's mirror, replaces the р copy), C cap-scaled + G re-aimed to the cap line, entry swashes +
+  terminal curls on **D G Q R U V W**. 243→262 glyphs; overlap scan 0 pairs in every category, both weights;
+  FontBakery 0 FAIL (OTF WARN only UPM). Not shipped yet.
 - **v0.9.34** — **symmetric Latin Z and z:** per request, both Z/z are made point-symmetric by removing the upper
   element and putting the LOWER bar, rotated 180°, on top. **Z** (`_U_Z`): original upper bar deleted; the lower
   bar is lifted, rotated 180° about the Z's symmetry centre, and seated on the stem top — one clean contour (the
@@ -181,8 +207,11 @@ non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a m
 ## Open / optional work (pull on demand)
 1. **Contrast match for drawn Latin** — reused *copies* carry the Cyrillic thin/thick contrast while the *drawn*
    letters are more even. Thin the drawn hairlines (`LW_DMIN`) to match, if wanted. Minor.
-2. **Short caps `C`/`E` (and drawn `G`/`L`)** — `C.lat`/`E.lat` sit a touch short (a bottom swash defeats the
-   `BASEFRAC` lift); drawn `G`/`L` short by design. Would need those caps redrawn (not a global knob). Minor.
+2. ~~**Short caps `C`/`E` (and drawn `G`/`L`)** — `C.lat`/`E.lat` sit a touch short (a bottom swash defeats the
+   `BASEFRAC` lift); drawn `G`/`L` short by design. Would need those caps redrawn (not a global knob). Minor.~~
+   **Resolved 2026-11-02:** `LAT_CAPSCALE={"C.lat":0.935}` (per-cap override of `CAP_SCALE`; C top 577→603u);
+   `_U_G` controls re-aimed (±0.06→1.15/−0.12·LCAP — the Bézier never reached them, so G topped out at 579 and
+   floated 14u above the baseline; now −11..617u) + an entry hook; E measured 603 = A and was left; L is 645 (swash).
 3. **True contextual joining (v2)** — real entry/exit connectors + `GSUB`/`calt`. Auto-generation tried (v0.9.19)
    and rejected (doubled/collided with the traced tails). The kern already reads connected; true joining needs
    **hand-drawn connected forms** (Glyphs/FontForge). Not an auto-fix.
@@ -195,18 +224,130 @@ non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a m
    most but oval↔stroke junctions and tight inner curves still notch. Verdict: feasible, but a real rollout needs
    robust joins across every ribbon type + the embolden interaction + full re-QA = a deliberate v2 (speck-drop
    already made the WARN benign). Prototype in session scratch, not committed.
-   **Deferred glyph:** `&` ampersand — a hand-tuned et-ligature reads wrong (looks like a Q/e), so it's left out
-   rather than shipped bad; it wants a drawn pass in a font editor (Glyphs/FontForge).
+   ~~**Deferred glyph:** `&` ampersand — a hand-tuned et-ligature reads wrong (looks like a Q/e), so it's left out
+   rather than shipped bad; it wants a drawn pass in a font editor (Glyphs/FontForge).~~ **Resolved 2026-11-02:**
+   drawn as the Roman form instead of an et-ligature (`_ampersand`, v0.9.35 — see #27).
 8. **Public distribution** — jsDelivr already serves the public repo/releases (documented in README). Remaining
    channels (manual/owner): free-font aggregators (DaFont / FontSpace / 1001 Free Fonts / Font Squirrel) for
    reach; own VPS/blog download page. **Google Fonts is out** (requires OFL/Apache; this is CC BY-SA 3.0). Every
    posting needs a visible MacedonianBoy + CC BY-SA 3.0 credit.
 11. **Save `specimen_src.html`** — the live-specimen preview source isn't committed; consider adding a
     specimen-source page so it can be regenerated from the current `.woff2` without the private page.
-12. **Colour-unify residuals (v0.9.26 leftovers)** — brackets `[ ]` are drawn with `_poly` and lowercase `p` does
+12. ~~**Colour-unify residuals (v0.9.26 leftovers)** — brackets `[ ]` are drawn with `_poly` and lowercase `p` does
     not go through the disk brush, so both skipped the `_WT` weight pass and stay ~2× / ~1.3× the Cyrillic. Minor
     (rarely used). Fix: rebuild the brackets as 3 `_rect` bars (they'd then honour `_WT`), and trace where `p`'s
-    weight comes from. A couple of lowercase (a/q/u/z ~1.1×) could also take small `LAT_LIGHTEN` entries.
+    weight comes from. A couple of lowercase (a/q/u/z ~1.1×) could also take small `LAT_LIGHTEN` entries.~~
+    **Resolved 2026-11-02:** brackets → `_bracket` bars in the heavy tier; **p is now a drawn letter** (`_L_p` = the
+    mirror of q: stem left, the b/d/q bowl right, `LAT_STRETCH` 1.67, descender ≈ −300 like q) instead of the
+    de-skewed р copy — its weight came from the trace, which is why no `_WT`/`LAT_LIGHTEN` could reach it (the old
+    `"p":0.80` entry was dead). `p.lat` is gone; the glyph is `p`. a/q/u/z were not touched.
+
+**Glyph audit 2026-11-02 (v0.9.34, both weights)** — method: per-glyph metrics + per-contour dump of the OTFs,
+900px/em zoom renders with enclosed-hole counting, a HarfBuzz-kerned ink-overlap scan of ~6000 glyph pairs
+(px² below are at 200px/em), and kerned test lines. Items 13–27 are new; #2/#12 and the plain-caps note (v0.9.31)
+were re-confirmed and are not repeated. Lowercase→lowercase pairs: 0 overlaps in both scripts/weights.
+**Re-confirmed, already tracked (2026-11-02) — all four resolved the same day:** #2 C/E/G short caps (see #2);
+#12 brackets and lowercase `p` (see #12 — p is now drawn); the plain drawn **D G Q R U V W** got the F/I/L/N/Z
+treatment (`_entry_swash(p, sx)` = the I-loop anchored at each stem top, `_top_curl(p, ex)` on the U/V/W right
+tops, an R leg-end curl, Q tail + oval-top curls, the G entry hook — moderate, widths 22–30→14–19 like the others;
+overlap scan stays at 0 pairs in both weights); the TTFs carried the same crack/speck contours as the OTFs (gone
+with #13/#14).
+**Items 13–27 below were all worked 2026-11-02 (v0.9.35 build); each ends with its resolution note.**
+13. ~~**ѕ / s.lat / š — white cracks inside the curls (Regular + both TTFs).**~~ `uni0455` carries 81 contours, 80 of
+    them negative-area slivers (holes); at 900px/em they render as 162 enclosed white gaps, and at 120px the curls
+    read scribbled. **Cause reproduced:** the raw trace (records 85+86, simplified) is ONE clean contour;
+    `embolden(raw, 9)` (`build_font.py` `EMBOLDEN={0x0455:9}` → `embolden()` 9-copy union + `simplify`) returns 81
+    contours; an explicit `pathops.union` of the 9 copies gives the same. Fix: after the union drop hole contours
+    with |area| < ~200u² (they are all holes, so dropping them only adds ink), or weight ѕ by a different method
+    (scale / true stroke offset). The TTF speck-drop does not remove them (Regular ѕ still 74 contours in the TTF).
+    **Resolved 2026-11-02:** `build/scripts/outline_util.py::purge_slivers` (drops contours of mean width < 4u or
+    |area| < 120u², either winding) applied to the ѕ after `embolden`; ѕ/s/š are 1/1/2 contours, 0 enclosed holes.
+14. ~~**Beaded hairlines in drawn Latin (Regular) → tripled/frayed hairlines in Bold.**~~ The thin entry/exit strokes
+    are chains of *separate* 4–7u disks, not a connected stroke: h 64 detached dots, b 54, l 34, k 33, w 12, N 8
+    (swash twist), t 2, F 1. At 120px they blend; at 900px/em they are dotted lines. The Bold inherits it worse:
+    the D=16 dilation copies of a ~5u beaded hairline never merge, so h/b/k/l/w/N/V/W show 3 parallel ghost lines
+    (enclosed holes at 900px: h 137, b 129, k 114, l 101, N 68, V 34; visible at 120px in "hbl", V, W), and the
+    tapered flourish tips of the ornate Bold copies (S Š E H O Č Ć Н F, plus the drawn Q R U bowl edges) fray into
+    3–4 strands with dozens of sliver holes. Fix: a minimum ribbon width for lowercase hairlines (the caps already
+    use `minw` ≥ ~18 for this reason) and/or denser `_sample` step; for the Bold, a min-width pass before dilation
+    or a true stroke offset, plus purging small negative-area contours after the union. Related to #7.
+    **Resolved 2026-11-02:** Regular — `_disks(pen, items)` stamps every ribbon (`ribbon_open/oval/dir/prof`) with
+    intermediate disks so consecutive centres are ≤ `DISK_OVERLAP`(1.1)× the smaller effective radius apart: h/b/l/k
+    went from 65/56/35/34 contours to 1/3/3/2, w/N/t/F to 1. Bold — `make_bold.embolden` is now fill ∪
+    `Path.stroke(2·D, ROUND_CAP, ROUND_JOIN)` in a space stretched by D/DY (a true D×DY-ellipse dilation; conics
+    → quads), then `purge_slivers`: h/b/l/k/N/V/W/w one clean stroke each, every flourish tip solid. Verified at
+    900px/em and 120px. (Final v0.9.35 woff2 sizes with the 19 new glyphs: Regular 79 KB (unchanged), Bold 106→113 KB.)
+15. ~~**8 waist pinholes.**~~ Two ~18u holes at the oval crossing (`[18x18 a=-126 @162,320]`, `[18x16 @120,325]`) in
+    every 8 variant (eight, .tf, .sups/.subs/.numr/.dnom) — a white speck at 120px. Enlarge the `D8` waist
+    `_disk(p,185,316,40)` fill. **Resolved 2026-11-02:** added a flat lens `_oval(p,185,316,104,34)` at the waist —
+    8 has exactly its 2 counters now.
+16. ~~**Н Regular — 3 stray hairline slivers**~~ (<70u², near x≈598,y≈600, top-middle). Technical nit, not visible.
+    **Resolved 2026-11-02:** `letter_path` now ends with `purge_slivers` for every traced letter (the smallest real
+    contour in the trace is ~3300u², far above the 120u²/4u thresholds); Н is 5 contours, 8 before.
+17. ~~**Cap→cap kern skips the accented caps.**~~ `kern_util.py` `_CYR_CAPS`/`_LAT_CAPS` (lines 35–36) list only the 31
+    base caps, so Ѐ Ѝ and Š Č Ž Ć Đ keep raw advances in all-caps: ŠE 185px² (SE 0), TČ 204 (TC 0), ЀБ 340 (ЕБ 0).
+    Fix: append them to both strings (the `_cap_pairs` measure is generic). **Resolved 2026-11-02:** appended (and
+    š ž č ć đ to the lowercase `_LAT`); cap→cap overlap scan is 0 pairs in both scripts/weights.
+18. ~~**Proportional digit pairs collide — no digit kerning exists**~~ (`kern_util` does lowercase + cap pairs only).
+    Regular overlaps: 60 441px², 09 401, 68 368, 66 368, 89 315, 99 167, 04 164, 54 160, 64 107, 84 89, 50 67;
+    Bold adds 63/65/44. "1999", "2006" visibly interlock (digits have lsb −29..−102). Tabular `.tf` are fine
+    (positive lsb). Fix: a digit-pair kern pass, or positive sidebearings on 0/4/6/8/9. **Resolved 2026-11-02:**
+    `_floor_pairs` digit pass (`DIG_GAP=24`, cap `DIG_MAX=120`, full height) — digit overlap scan 0 pairs, both weights.
+19. ~~**S/Š, F, T crash into following ascender letters.**~~ Regular: Sf 158, Sk 126, Sl 95, Sb 53, Tk 54 ("Skopje":
+    the S curl sits on the k loop). Bold: Sk 461, Sl 333, Sf 327, Sb 294, Sh 286, Fk 254, Ff 113, Fl 112, Fb 89,
+    Fh 82, Tk 118. Fix: cap→lowercase kern (or sidebearing) for S/Š, F, T before b f h k l. **Resolved 2026-11-02 for
+    S/Š** (`_floor_pairs` S/Š × b f h k l đ in the ascender band 270–620, `ASC_GAP=10`, cap 150 — "Skopje" clears).
+    **F/T resolved 2026-11-02 (second pass):** the collisions spanned y 315–567 — the k loop ran through BOTH F bars
+    (the top bar dipped to ~517u at its tip, the mid bar reached 150u into the next letter). `_U_F`: the top bar now
+    rises to the right (underside ~596u > the 573u ascender tops) and the mid bar is shortened (150→112); the T is
+    scaled `T_SCALE=1.07` (ymax 585→626, also no longer the shortest cap); and F/T joined `_ASC_CAPS` (band to 640).
+    Overlap scan: 0 pairs, both weights.
+20. ~~**Bold Ф flourish crosses the next letter**~~: Фб 409, Фв 306, Фѓ 270, Фр 206, Фј 155, Фт/Фп 100, Фг 78 (Regular
+    only Фѓ 55). Low priority — hairline calligraphic crossing. **Resolved 2026-11-02:** the Ф tail hangs at
+    y 343–497 over the next letter; `_floor_pairs` Ф/Ѕ × б в ѓ ќ р ј т п г д in band 300–600 (`CFL_*`, gap 10,
+    cap 160) → 0 overlapping pairs in both weights.
+21. ~~**’ and ” sit ~100u lower than ‘ “ and ' "**~~: quoteright/quotedblright y 428–591 vs quoteleft/quotedblleft
+    529–692 and quotesingle/quotedbl 522–677. "“Quote”", "‘q’", "don’t" visibly mismatch; it also causes the б” 56 /
+    в’ 76 / f’ 55 (Bold 273/234/116/101) collisions. Raise the two closing marks by ~100. **Resolved 2026-11-02:**
+    `_pencomma` cy 560→660 for ’ ” (now 528–691 vs ‘ “ 529–692); plus a quote floor-kern (`QUO_*`: b d f h k l đ t
+    в ѓ ќ б before ’ ” ‘ “ ' ") so no ascender touches a raised quote in either weight.
+22. ~~**Hyphen / en / em dash ride the x-height line**~~: hyphen 262–293, dashes 267–291, x-height 264 — in "воз-воз",
+    "a-b" the dash sits on top of the lowercase. Mid x-height ≈132 (math axis 300 is right for figures/caps).
+    Lower them, optionally with `case`-feature alternates for caps/figures. **Resolved 2026-11-02:** default dashes
+    at y 134–165 (centre 150); `hyphen.case`/`endash.case`/`emdash.case` keep the old height; `case` substitutes
+    them, and `calt` does so automatically after a figure or a capital of either script (`@CAPS` in `features.py`).
+23. ~~**@ floats**~~: ink y 134–483 (bottom 134u ABOVE the baseline) — "a@b.c" reads as a superscript. Seat it on the
+    baseline (span ~0..480). **Resolved 2026-11-02:** `_at` translated −124 → y 10–359.
+24. ~~**Latin i dot is a third the size of the j/ј dot and 127u lower**~~: i dot 22×24u at y 291–315 (27u above the
+    stem), j.lat/ј dot 58×65u at 377–442. "ij", "fiji" show it. Match the ј dot size/height. **Resolved
+    2026-11-02:** `_L_i` dot `_oval(84, LXH+158, 38, 42)` → 56×58u at y 376–434.
+25. ~~**Latin z short** (top 251 vs x-height 264, −5%; "zlato"), and **đ bar does not cross the stem**~~: the bar
+    (x −6..116, y 267–299) lies entirely LEFT of the ascender at x-height — "đak" reads as "-d"; `Dcroat` crosses
+    correctly. Raise the đ bar to ~y 400 and run it across the stem. **Resolved 2026-11-02:** z diagonal top at
+    `LXH` (ymax 266); `_acc_glyph` picked the Đ branch by HEIGHT (`top > 400`, true for d's ascender) — now by case
+    (`base[0].isupper()`), so đ takes its own branch: bar at y ≈498–530 across the stem, x 199–315.
+26. ~~**Design nits (judge by eye):**~~ Latin **s** inherits ѕ's tall curl (320 vs x-height 264, +21% — "sos" pokes
+    above the o); carons on **Š/Č** (š/č) read as filled hearts/wedges, the heaviest element of the glyph (Bold →
+    blobs); **°** a little low (411–529 vs figure top 660); descender depths vary q −235 / p −257 / g −286 /
+    y −310 / j −320. **Resolved 2026-11-02:** ° raised (ring centre 470→556, now 497–615); **s.lat** shrunk 0.85
+    about the baseline + `embolden(3)` (`LAT_SHRINK`/`LAT_EMB`; top 320→277, š follows); the ACCENTED loop now runs
+    at `_WT = LAT_WT` and `_caron`/`_acute` are lighter (26→11 / 32→11) — delicate checks instead of hearts; drawn
+    **q**/**f** descenders deepened to ~−300 (`LDESC*1.2` / `*1.25`), so the Latin spread is 257..320 like the traced
+    copies instead of 216..320.
+27. ~~**Coverage gaps.**~~ Printable ASCII: **backtick** `` ` `` missing (plus the deferred `&`, #7). **² ³ ¹ ½ ¼ ¾ and
+    ⁰–⁹ / ₀–₉** have no codepoints although the glyphs exist (`one.sups`, `two.dnom`, `fraction`…) — "m²", "½"
+    render as `.notdef` boxes; cheap cmap/composite additions. **€** missing (have `$`); also § ¶ • ™ ® ¡ ¿ ‚ ‹ ›
+    soft hyphen U+00AD, U+2010/2011 — € and U+00AD are the useful ones. Latin-1 accented letters (À…ÿ) are all
+    absent — out of scope by design, noted only. Nit: with `frac` ON, a date "10/11/2025" shapes the middle 11 as
+    numerators and 2025 as three `.dnom` + one lining digit. **Resolved 2026-11-02:** added `` ` `` (`_grave`), • , ¡ ¿
+    (`_flip` of ! ?), ‚ ‹ ›, € (`_euro`), `onehalf`/`onequarter`/`threequarters` composed from the numr/dnom
+    variants, cmap for ¹ ² ³ ⁰ ⁴–⁹ ₀–₉ onto the `.sups`/`.subs` glyphs, U+2010/2011→hyphen, U+2015→emdash.
+    **Second pass 2026-11-02:** `&` drawn (`_ampersand` — the Roman one-stroke form: tail → thin diagonal → small
+    top loop → thick stroke down-left → bowl → arm; reads as & at 120px, closes Open #7's deferral), `™` `®` `§` `¶`
+    added (`_trademark`/`_registered`/`_section`/`_pilcrow`), and `frac` reordered (denominators first, up to four
+    figures) so "10/11/2025" shapes ¹⁰⁄₁₁⁄₂₀₂₅ with no leftover lining digit. Deliberately still out: U+00AD
+    (FontBakery flags a soft hyphen; browsers substitute the hyphen glyph at a break) and the Latin-1 accented
+    letters (scope: Macedonian + South-Slavic Latin).
 
 ## Done (resolved)
 - **Shipped + public release pipeline** — v0.9.21/0.9.22/0.9.23/0.9.24/0.9.25 pushed, GitHub-released, repo made public.

@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.34** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.35** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 **Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
 (tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½),
 **South-Slavic Latin diacritics** (`š č ž ć đ` / `Š Č Ž Ć Đ`), and **math + symbols**
@@ -75,7 +75,7 @@ h1.strong { font-weight: 700; }
 ```css
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.34/MakedonkaCursive-Regular.woff2") format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.35/MakedonkaCursive-Regular.woff2") format("woff2");
   font-weight: 400; font-display: swap;
 }
 ```
@@ -86,9 +86,10 @@ h1.strong { font-weight: 700; }
 - **Weights:** Regular + Bold (a faux-bold derived from the Regular by a **contrast-preserving** dilation —
   it weights the stems while keeping the hairlines, overbars and connectors delicate).
 - **Digits:** 0–9, designed to match (calligraphic pen numerals; not in the source chart).
-- **Punctuation:** space `. , : ; ! ? - – — ( ) ' " „ " « » / … · ° %` — calligraphic pen marks,
-  including the Macedonian `„ "` and `« »` quotes (designed to match; not in the source chart).
-  A no-break space (U+00A0) is mapped too.
+- **Punctuation:** space `. , : ; ! ? ¡ ¿ - – — ( ) ' " „ " ‚ ‘ ’ « » ‹ › / … · • ° % `` ` `` — calligraphic
+  pen marks, including the Macedonian `„ "` and `« »` quotes (designed to match; not in the source chart).
+  A no-break space (U+00A0) is mapped too. Dashes sit at mid x-height for lowercase text and rise
+  automatically after a figure or a capital (`2025-11-02`, `А–Б`); the `case` feature raises them all.
 - **Latin:** full A–Z / a–z, a calmer companion to the ornate Macedonian hand — one
   consistent, moderately upright slant across all letters, figures and punctuation, in a
   **restrained** pen style. Every Latin glyph is either drawn or a re-angled copy of a
@@ -103,10 +104,11 @@ h1.strong { font-weight: 700; }
   Turn them on in any OpenType-aware app (InDesign, Illustrator, Word's advanced typography) or on the
   web with CSS `font-feature-settings` / `font-variant`. Both weights carry a **STAT** table so the
   family groups correctly across apps.
-- **Math & symbols:** `+ − = × ÷ < > ±` operators; `№` numero, `@` at, `$` dollar, `©` copyright,
-  `‰` per-mille, `′ ″` primes; and the ASCII set `# * _ | ~ \ ^ [ ] { }` — calligraphic pen forms.
-- **Not included:** other-Cyrillic (Russian/Serbian-specific letters), and `&` (the ampersand wants a
-  careful drawn pass — a rushed one reads wrong, so it's deferred rather than shipped bad).
+- **Math & symbols:** `+ − = × ÷ < > ±` operators; `&` ampersand, `№` numero, `@` at, `$` dollar, `€` euro,
+  `© ® ™`, `§ ¶`, `‰` per-mille, `′ ″` primes; the precomposed `½ ¼ ¾`, superscript `¹ ² ³ ⁰–⁹` and subscript
+  `₀–₉` figures; and the ASCII set `# * _ | ~ \ ^ [ ] { }` — calligraphic pen forms.
+- **Not included:** other-Cyrillic (Russian/Serbian-specific letters) and the Western-European accented
+  Latin letters (À…ÿ) — the Latin set is for names and the South-Slavic languages.
 
 ## Scope & roadmap
 - **A display face — use it large.** An ornate copperplate for headings, logos, titles and short text.

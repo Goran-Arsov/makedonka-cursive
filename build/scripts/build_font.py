@@ -16,6 +16,7 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.ttLib import TTFont, newTable
 from PIL import Image, ImageDraw
 import pathops
+from outline_util import purge_slivers
 
 DATA, OUTDIR = sys.argv[1], sys.argv[2]
 M_BODY = float(sys.argv[3]) if len(sys.argv) > 3 else 8.0
@@ -165,27 +166,47 @@ DIGIT_WT, LAT_WT = 0.45, 0.70
 # ~1.1-1.5x) thins gently so it isn't over-lightened.
 SYM_HEAVY_WT, SYM_MILD_WT = 0.55, 0.80
 SYM_HEAVY = {0x002B, 0x2212, 0x003D, 0x00D7, 0x00F7, 0x003C, 0x003E, 0x00B1, 0x2116, 0x0023, 0x007C,
-             0x002E, 0x003A, 0x2026, 0x00B7, 0x002D, 0x2013, 0x2014}
+             0x002E, 0x003A, 0x2026, 0x00B7, 0x002D, 0x2013, 0x2014, 0x005B, 0x005D}   # + [ ] (v0.9.35: rebuilt as bars, Open #12)
 def _disk(pen, cx, cy, r, n=16):
     # a filled polygon disk; circles never fold/flip winding, so unioning a trail
     # of them along a centerline always fills solid (no slivers / no counters mid-stroke).
     r *= _WT
     _emit(pen, [(cx + r*math.cos(2*math.pi*j/n), cy + r*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=True)
+DISK_OVERLAP = 1.1   # max centre spacing as a multiple of the smaller EFFECTIVE radius (notch depth ~0.17r)
+def _disks(pen, items):
+    # Stamp a trail of (x, y, r) disks. Consecutive centres are subdivided so neighbouring disks ALWAYS
+    # overlap, whatever the sample step: a weight-thinned hairline (r ≈ 2u at step 4.2u) used to break
+    # into separate dots — h/b/k/l entry strokes were 30–60 detached 5u contours (v0.9.35 audit #14).
+    prev = None
+    for (x, y, r) in items:
+        if prev is not None:
+            px, py, pr = prev
+            d = math.hypot(x - px, y - py); re = max(0.5, min(r, pr) * _WT)
+            n = int(math.ceil(d / (DISK_OVERLAP * re)))
+            for j in range(1, n):
+                t = j / n
+                _disk(pen, px + (x - px) * t, py + (y - py) * t, pr + (r - pr) * t)
+        _disk(pen, x, y, r)
+        prev = (x, y, r)
 def ribbon_open(pen, segs, maxw=96, minw=24):
     maxw *= WMAX_SCALE; minw *= WMIN_SCALE
-    pts = _sample(segs); m = len(pts)
+    pts = _sample(segs); m = len(pts); items = []
     for i, p in enumerate(pts):
         a = pts[max(0, i-1)]; b = pts[min(m-1, i+1)]
         dx, dy = b[0]-a[0], b[1]-a[1]; L = math.hypot(dx, dy) or 1.0
         ty = dy/L; down = max(0.0, -ty); wgt = 0.30*abs(ty)+0.70*down
-        _disk(pen, p[0], p[1], (minw+(maxw-minw)*wgt)/2)
+        items.append((p[0], p[1], (minw+(maxw-minw)*wgt)/2))
+    _disks(pen, items)
 def ribbon_oval(pen, cx, cy, rx, ry, maxw=92, minw=30, n=140):
     maxw *= WMAX_SCALE; minw *= WMIN_SCALE
     n = int(round(n * max(1.0, 1.0 / _WT)))   # more disks when thinned, so the oval stays solid
     pts = [(cx+rx*math.cos(2*math.pi*i/n), cy+ry*math.sin(2*math.pi*i/n)) for i in range(n)]
-    for i in range(n):
-        a = pts[(i-1) % n]; b = pts[(i+1) % n]; dx, dy = b[0]-a[0], b[1]-a[1]; L = math.hypot(dx, dy) or 1.0
-        _disk(pen, pts[i][0], pts[i][1], (minw+(maxw-minw)*abs(dy/L))/2)
+    items = []
+    for i in range(n + 1):                      # n+1: close the loop (last == first)
+        k = i % n
+        a = pts[(k-1) % n]; b = pts[(k+1) % n]; dx, dy = b[0]-a[0], b[1]-a[1]; L = math.hypot(dx, dy) or 1.0
+        items.append((pts[k][0], pts[k][1], (minw+(maxw-minw)*abs(dy/L))/2))
+    _disks(pen, items)
 # ---- calligraphic strokes for punctuation (reuse the digit disk-brush) ----
 # drawn-Latin weight bump — active ONLY while building the drawn Latin glyphs
 # (digits/punctuation share these strokers, so they stay byte-identical):
@@ -199,21 +220,25 @@ def ribbon_dir(pen, segs, maxw, minw):
     if _LATIN_MODE: maxw *= LW_DMAX * _LWT; minw *= LW_DMIN * _LWT
     pts = _sample(segs); m = len(pts)
     if _LATIN_MODE and _LSX != 1.0: pts = [(x*_LSX, y) for (x, y) in pts]
+    items = []
     for i, p in enumerate(pts):
         a = pts[max(0, i-1)]; b = pts[min(m-1, i+1)]
         dx, dy = b[0]-a[0], b[1]-a[1]; L = math.hypot(dx, dy) or 1.0
         ty = dy/L; down = max(0.0, -ty)
         wgt = down**1.45 if _LATIN_MODE else 0.30*abs(ty)+0.70*down   # Latin: pointed-pen contrast (thin upstrokes/horizontals)
-        _disk(pen, p[0], p[1], (minw+(maxw-minw)*wgt)/2)
+        items.append((p[0], p[1], (minw+(maxw-minw)*wgt)/2))
+    _disks(pen, items)
 def ribbon_prof(pen, segs, w0, w1, gamma=1.4):
     # broad-nib ribbon with an explicit pressure taper: width w0 at the start of
     # the centreline easing to w1 at the end (a nib swelling, then lifting).
     if _LATIN_MODE: w0 *= LW_P0 * _LWT; w1 *= LW_P1 * _LWT
     pts = _sample(segs); m = len(pts)
     if _LATIN_MODE and _LSX != 1.0: pts = [(x*_LSX, y) for (x, y) in pts]
+    items = []
     for i, p in enumerate(pts):
         t = i/(m-1) if m > 1 else 0.0
-        _disk(pen, p[0], p[1], (w1 + (w0-w1)*((1-t)**gamma))/2)
+        items.append((p[0], p[1], (w1 + (w0-w1)*((1-t)**gamma))/2))
+    _disks(pen, items)
 def _oval(pen, cx, cy, rx, ry, n=24):
     rx *= _WT; ry *= _WT                       # filled dots/bowls honour the per-category weight too
     _emit(pen, [(cx+rx*math.cos(2*math.pi*j/n), cy+ry*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=True)
@@ -241,7 +266,7 @@ def digit_path(draw_fn):
         q = pathops.Path(); p.draw(TransformPen(q.getPen(), (1, 0, 0, 1, -b2[0], 0))); return q
     return p
 def D0(p): ribbon_oval(p, 185, 325, 120, 300)
-def D8(p): ribbon_oval(p, 188, 468, 98, 168, maxw=78, minw=26); ribbon_oval(p, 182, 165, 122, 168, maxw=92, minw=28); _disk(p, 185, 316, 40)
+def D8(p): ribbon_oval(p, 188, 468, 98, 168, maxw=78, minw=26); ribbon_oval(p, 182, 165, 122, 168, maxw=92, minw=28); _disk(p, 185, 316, 40); _oval(p, 185, 316, 104, 34)   # waist: disk + a flat lens so no pinholes stay where the ovals cross (audit #15)
 def D1(p):
     ribbon_open(p, [('M', (95, 455)), ('C', (150, 540), (205, 585), (220, 625)), ('C', (212, 420), (208, 210), (205, 15))], maxw=104, minw=30)
     ribbon_open(p, [('M', (120, 22)), ('L', (300, 22))], maxw=40, minw=36)
@@ -282,8 +307,13 @@ def letter_path(idxs, cp):
         parse_path(recs[i]["d"], ShiftPen(tpen, shift) if shift else tpen)
     p.simplify()
     if cp in EMBOLDEN:
+        # the 9-copy union leaves ~80 hairline sliver HOLES inside ѕ's curls (white cracks at display
+        # size — v0.9.35 audit #13); they are all wound opposite to the body, so purge them (adds ink only)
         p = embolden(p, EMBOLDEN[cp])
-    return p
+    # every traced letter: drop sliver contours (the POINT_SHIFT'ed Н carried three <70u² hairline slivers
+    # at its crossbar junction — audit #16); the smallest real contour in the trace is ~3300u², so nothing
+    # intentional is near the 120u²/4u thresholds
+    return purge_slivers(p)
 
 def gname(cp):
     return "uni%04X" % cp if cp > 0x40 else {0x30: "zero", 0x31: "one", 0x32: "two", 0x33: "three",
@@ -385,10 +415,10 @@ charstrings["space"] = T2CharStringPen(300, None).getCharString(); metrics["spac
 # Macedonian accented letters: ѐ (е + grave) and ѝ (и + grave) — base trace + a calligraphic grave accent.
 def _grave(pen, cx, cy, s=1.0):   # short pen grave `, thick→thin, descending left→right, centred ~(cx, cy); s scales it
     ribbon_dir(pen, [('M',(cx-28*s,cy+26*s)),('C',(cx-10*s,cy+9*s),(cx+8*s,cy-9*s),(cx+26*s,cy-28*s))], 43.7*s, 13.3*s)
-def _caron(pen, cx, cy, s=1.0):   # ˇ — a calligraphic check (š č ž Š Č Ž)
-    ribbon_prof(pen, [('M', (cx-30*s, cy+20*s)), ('L', (cx-2*s, cy-16*s)), ('L', (cx+30*s, cy+20*s))], 36*s, 18*s, 1.2)
+def _caron(pen, cx, cy, s=1.0):   # ˇ — a calligraphic check (š č ž Š Č Ž); v0.9.35: lighter (was 36→18 at full
+    ribbon_prof(pen, [('M', (cx-30*s, cy+20*s)), ('L', (cx-2*s, cy-16*s)), ('L', (cx+30*s, cy+20*s))], 26*s, 11*s, 1.2)   # weight — read as a filled heart, audit #26)
 def _acute(pen, cx, cy, s=1.0):   # ´ — a short rising pen stroke (ć Ć)
-    ribbon_prof(pen, [('M', (cx-16*s, cy-18*s)), ('L', (cx+20*s, cy+22*s))], 44*s, 14*s, 1.4)
+    ribbon_prof(pen, [('M', (cx-16*s, cy-18*s)), ('L', (cx+20*s, cy+22*s))], 32*s, 11*s, 1.4)
 _accsrc = {cpx: pth for (gnx, cpx, pth) in NEUT}
 for _anm, _acp, _ascp, _agx, _agy in [("uni0450",0x0450,0x0435,8,330),("uni045D",0x045D,0x0438,16,330)]:
     _ab = _accsrc[_ascp]; _am = measure(_ab, _ascp); _acx = (_am[0]+_am[1])/2 + _agx
@@ -490,10 +520,47 @@ def _dollar(pen):   # $ : an S stroke with a vertical bar through it
 def _copyright(pen):   # © : a small c inside a ring
     _ring(pen, 185, 320, 182, 150)
     ribbon_dir(pen, [('M', (252, 392)), ('C', (150, 432), (110, 360), (118, 320)), ('C', (126, 272), (168, 212), (252, 250))], 24, 12)
-def _at(pen):   # @ : a small 'a' inside a ring open at lower-right
-    ribbon_dir(pen, [('M', (300, 206)), ('C', (258, 116), (110, 112), (90, 252)), ('C', (72, 392), (152, 498), (272, 470)),
-                     ('C', (322, 458), (344, 414), (336, 352))], 32, 20)
-    _ring(pen, 196, 300, 76, 40); _rect(pen, 256, 236, 288, 360)
+def _at(pen):   # @ : a small 'a' inside a ring open at lower-right — seated on the baseline (it floated 134u above it, audit #23)
+    t = pathops.Path(); tp = t.getPen()
+    ribbon_dir(tp, [('M', (300, 206)), ('C', (258, 116), (110, 112), (90, 252)), ('C', (72, 392), (152, 498), (272, 470)),
+                    ('C', (322, 458), (344, 414), (336, 352))], 32, 20)
+    _ring(tp, 196, 300, 76, 40); _rect(tp, 256, 236, 288, 360)
+    t.draw(TransformPen(pen, (1, 0, 0, 1, 0, -124)))
+def _flip(pen, fn, top):   # draw fn, rotate 180° about its centre, seat the new top at `top` (¡ ¿ from ! ?)
+    t = pathops.Path(); fn(t.getPen()); t.simplify(); b = t.bounds
+    cx, cy = (b[0]+b[2])/2.0, (b[1]+b[3])/2.0
+    t.draw(TransformPen(pen, (-1, 0, 0, -1, 2*cx, 2*cy + (top - b[3]))))
+def _exclam(p): ribbon_prof(p, [('M', (80, 483)), ('C', (78, 350), (76, 224), (74, 118))], 64, 17, 1.2); _oval(p, 70, 46, 28, 30)
+def _question(p): ribbon_dir(p, [('M', (92, 364)), ('C', (92, 490), (248, 490), (240, 382)), ('C', (234, 319), (168, 316), (165, 252)), ('C', (162, 224), (160, 210), (158, 175))], 44, 11); _oval(p, 150, 46, 27, 29)
+def _euro(pen):   # € : an open C stroke (the $'s pen weight) with two bars through its left side
+    ribbon_dir(pen, [('M', (286, 520)), ('C', (190, 616), (62, 540), (60, 330)), ('C', (58, 120), (190, 10), (286, 96))], 44, 15)
+    _rect(pen, 30, 298, 232, 334); _rect(pen, 30, 214, 232, 250)
+def _ampersand(pen):   # & : the Roman form in one pen stroke (v0.9.35, audit #27; replaces the deferred et-ligature):
+    # tail (lower right) → thin diagonal up-left into the small top loop → around it → the thick stroke down-left
+    # (crossing the diagonal) → around the bottom → up the right side (crossing it again) → the arm at mid-right
+    ribbon_dir(pen, [('M', (370, 20)), ('C', (300, 180), (200, 400), (120, 520)), ('C', (80, 580), (90, 660), (160, 664)),
+                     ('C', (230, 668), (250, 600), (220, 540)), ('C', (190, 480), (90, 320), (50, 200)),
+                     ('C', (20, 100), (60, 10), (170, 10)), ('C', (260, 10), (330, 80), (360, 160)),
+                     ('C', (380, 210), (385, 260), (372, 300))], 46, 14)
+def _trademark(pen):   # ™ : small raised T + M
+    _rect(pen, 36, 598, 186, 630); _rect(pen, 96, 420, 128, 630)
+    ribbon_prof(pen, [('M', (212, 420)), ('L', (212, 630)), ('L', (290, 470)), ('L', (368, 630)), ('L', (368, 420))], 24, 24)
+def _registered(pen):   # ® : a small R inside the © ring
+    _ring(pen, 185, 320, 182, 150)
+    ribbon_prof(pen, [('M', (134, 230)), ('L', (134, 412))], 30, 30)
+    ribbon_prof(pen, [('M', (134, 412)), ('C', (236, 412), (236, 318), (134, 318))], 26, 26)
+    ribbon_prof(pen, [('M', (160, 318)), ('L', (236, 230))], 28, 24)
+def _section(pen):   # § : two overlapping S strokes (the $'s curve) offset vertically, so the middle closes into a loop
+    for dy in (92, -138):
+        ribbon_dir(pen, [('M', (258, 486+dy)), ('C', (200, 548+dy), (84, 540+dy), (96, 446+dy)), ('C', (108, 384+dy), (232, 372+dy), (252, 300+dy)),
+                         ('C', (274, 214+dy), (160, 150+dy), (88, 214+dy))], 42, 15)
+def _pilcrow(pen):   # ¶ : a filled bowl on the left + two stems to the baseline
+    _oval(pen, 150, 480, 112, 150); _rect(pen, 186, 0, 220, 630); _rect(pen, 258, 0, 292, 630)
+def _bracket(pen, left=True):   # [ ] as three bars of one thinned width (honours _WT — they were ~2x heavy `_poly`s, Open #12)
+    w = 54 * _WT; x0, x1 = (66, 196) if left else (34, 164); vx0 = x0 if left else x1 - w
+    _poly(pen, [(vx0, -78), (vx0 + w, -78), (vx0 + w, 698), (vx0, 698)])
+    _poly(pen, [(x0, 698 - w), (x1, 698 - w), (x1, 698), (x0, 698)])
+    _poly(pen, [(x0, -78), (x1, -78), (x1, -78 + w), (x0, -78 + w)])
 # (& ampersand deferred: the et-ligature doesn't read cleanly from hand-tuned Béziers — a wrong
 #  glyph at U+0026 is worse than none; it wants a careful drawn pass in a font editor.)
 # Calligraphic set: dots are slanted ovals, comma/quotes are pen-commas, ! and ?
@@ -506,33 +573,42 @@ PUNCT = [
     (0x003A, "colon", 160, lambda p: (_oval(p, 80, 48, 33, 38), _oval(p, 80 - SLANT*252, 300, 33, 38))),
     (0x003B, "semicolon", 160, lambda p: (_oval(p, 93 - SLANT*203, 300, 33, 38), _pencomma(p, 85, 92))),
     # ! and ? : ~30% shorter and lighter in colour (thinner ribbons + smaller dots).
-    (0x0021, "exclam", 180, lambda p: (ribbon_prof(p, [('M', (80, 483)), ('C', (78, 350), (76, 224), (74, 118))], 64, 17, 1.2), _oval(p, 70, 46, 28, 30))),
-    (0x003F, "question", 320, lambda p: (ribbon_dir(p, [('M', (92, 364)), ('C', (92, 490), (248, 490), (240, 382)), ('C', (234, 319), (168, 316), (165, 252)), ('C', (162, 224), (160, 210), (158, 175))], 44, 11), _oval(p, 150, 46, 27, 29))),
-    (0x002D, "hyphen", 260, lambda p: _rect(p, 40, 250, 230, 305)), (0x2013, "endash", 460, lambda p: _rect(p, 40, 258, 420, 300)),
-    (0x2014, "emdash", 720, lambda p: _rect(p, 40, 258, 680, 300)), (0x0028, "parenleft", 300, lambda p: _paren(p, 300, True)),
+    (0x0021, "exclam", 180, _exclam),
+    (0x003F, "question", 320, _question),
+    # dashes: centred at mid x-height (~150u; they sat ON the x-height line at ~277u — audit #22). The old
+    # height lives on as `.case` alternates (feature `case`, and `calt` after a figure or a capital).
+    (0x002D, "hyphen", 260, lambda p: _rect(p, 40, 122, 230, 177)), (0x2013, "endash", 460, lambda p: _rect(p, 40, 130, 420, 172)),
+    (0x2014, "emdash", 720, lambda p: _rect(p, 40, 130, 680, 172)), (0x0028, "parenleft", 300, lambda p: _paren(p, 300, True)),
+    (None, "hyphen.case", 260, lambda p: _rect(p, 40, 250, 230, 305)), (None, "endash.case", 460, lambda p: _rect(p, 40, 258, 420, 300)),
+    (None, "emdash.case", 720, lambda p: _rect(p, 40, 258, 680, 300)),
     (0x0029, "parenright", 300, lambda p: _paren(p, 300, False)), (0x0027, "quotesingle", 190, lambda p: _pencomma(p, 90, 648, 0.95)),
     (0x0022, "quotedbl", 320, lambda p: (_pencomma(p, 95, 648, 0.95), _pencomma(p, 205, 648, 0.95))),
     (0x201E, "quotedblbase", 330, lambda p: (_pencomma(p, 100, 120), _pencomma(p, 212, 120))),   # „ low opening (9-form)
     (0x201C, "quotedblleft", 330, lambda p: (_pencomma(p, 100, 560, 1.0, True), _pencomma(p, 212, 560, 1.0, True))),  # “ raised 6-form (opening)
-    (0x201D, "quotedblright", 330, lambda p: (_pencomma(p, 100, 560, 1.0), _pencomma(p, 212, 560, 1.0))),             # ” raised 9-form (Latin closing — both marks UP)
+    # 9-form closing marks hang DOWN from cy, the 6-form opening marks rise UP from it — so the closing pair
+    # takes cy 660 (not 560) to share the opening marks' top (~692u); they sat 101u lower (audit #21).
+    (0x201D, "quotedblright", 330, lambda p: (_pencomma(p, 100, 660, 1.0), _pencomma(p, 212, 660, 1.0))),             # ” raised 9-form (Latin closing — both marks UP)
     (0x2018, "quoteleft", 180, lambda p: _pencomma(p, 100, 560, 1.0, True)),                                           # ‘ single raised 6-form
-    (0x2019, "quoteright", 180, lambda p: _pencomma(p, 100, 560, 1.0)),                                                # ’ single raised 9-form (= apostrophe, up)
+    (0x2019, "quoteright", 180, lambda p: _pencomma(p, 100, 660, 1.0)),                                                # ’ single raised 9-form (= apostrophe, up)
+    (0x201A, "quotesinglbase", 180, lambda p: _pencomma(p, 100, 120)),                                                 # ‚ single low 9-form (one mark of „)
     # ---- v0.9.16: fill real coverage gaps, reusing the calligraphic pen primitives above ----
     (0x002F, "slash", 300, lambda p: ribbon_prof(p, [('M', (74, -46)), ('L', (150, 586))], 40, 40)),                   # / solidus (dates, fractions, URLs)
     (0x2026, "ellipsis", 470, lambda p: (_oval(p, 75, 48, 35, 41), _oval(p, 225, 48, 35, 41), _oval(p, 375, 48, 35, 41))),  # … three baseline dots = period×3
     (0x00B7, "periodcentered", 150, lambda p: _oval(p, 75, 132, 35, 41)),                                              # · middle dot = period raised to mid x-height
     (0x00AB, "guillemotleft", 310, lambda p: (ribbon_prof(p, [('M', (124, 232)), ('L', (48, 130)), ('L', (124, 28))], 26, 26), ribbon_prof(p, [('M', (236, 232)), ('L', (160, 130)), ('L', (236, 28))], 26, 26))),  # « Macedonian 2ndary quote
     (0x00BB, "guillemotright", 310, lambda p: (ribbon_prof(p, [('M', (48, 232)), ('L', (124, 130)), ('L', (48, 28))], 26, 26), ribbon_prof(p, [('M', (160, 232)), ('L', (236, 130)), ('L', (160, 28))], 26, 26))),  # »
-    (0x00B0, "degree", 210, lambda p: _ring(p, 98, 470, 62, 34)),                                                      # ° small ring near figure top
+    (0x00B0, "degree", 210, lambda p: _ring(p, 98, 556, 62, 34)),                                                      # ° small ring near figure top (raised from 470: it sat at 71% of the figure height — audit #26)
+    (0x2039, "guilsinglleft", 190, lambda p: ribbon_prof(p, [('M', (124, 232)), ('L', (48, 130)), ('L', (124, 28))], 26, 26)),   # ‹ single guillemet (one chevron of «)
+    (0x203A, "guilsinglright", 190, lambda p: ribbon_prof(p, [('M', (48, 232)), ('L', (124, 130)), ('L', (48, 28))], 26, 26)),   # ›
     (0x0025, "percent", 480, lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 338, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (368, 600))], 34, 34))),  # % two rings + stroke
     # ---- v0.9.22: math operators + ASCII tech symbols + № numero ----
     (0x002B, "plus", 360, lambda p: (_rect(p, 52, 272, 308, 328), _rect(p, 152, 180, 208, 420))),
     (0x2212, "minus", 360, lambda p: _rect(p, 52, 272, 308, 328)),
     (0x003D, "equal", 360, lambda p: (_rect(p, 52, 236, 308, 288), _rect(p, 52, 318, 308, 370))),
-    (0x00D7, "multiply", 340, lambda p: (ribbon_prof(p, [('M', (84, 196)), ('L', (256, 404))], 42, 42), ribbon_prof(p, [('M', (256, 196)), ('L', (84, 404))], 42, 42))),
+    (0x00D7, "multiply", 360, lambda p: (ribbon_prof(p, [('M', (84, 196)), ('L', (256, 404))], 42, 42), ribbon_prof(p, [('M', (256, 196)), ('L', (84, 404))], 42, 42))),
     (0x00F7, "divide", 360, lambda p: (_rect(p, 52, 272, 308, 328), _oval(p, 180, 398, 31, 34), _oval(p, 180, 202, 31, 34))),
-    (0x003C, "less", 330, lambda p: ribbon_prof(p, [('M', (266, 172)), ('L', (72, 300)), ('L', (266, 428))], 40, 40)),
-    (0x003E, "greater", 330, lambda p: ribbon_prof(p, [('M', (64, 172)), ('L', (258, 300)), ('L', (64, 428))], 40, 40)),
+    (0x003C, "less", 360, lambda p: ribbon_prof(p, [('M', (266, 172)), ('L', (72, 300)), ('L', (266, 428))], 40, 40)),
+    (0x003E, "greater", 360, lambda p: ribbon_prof(p, [('M', (64, 172)), ('L', (258, 300)), ('L', (64, 428))], 40, 40)),
     (0x00B1, "plusminus", 360, lambda p: (_rect(p, 152, 250, 208, 470), _rect(p, 52, 332, 308, 388), _rect(p, 52, 150, 308, 206))),
     (0x002A, "asterisk", 300, lambda p: _asterisk(p, 150, 486, 92)),
     (0x0023, "numbersign", 420, lambda p: (_rect(p, 128, 120, 172, 540), _rect(p, 258, 120, 302, 540), _rect(p, 58, 238, 372, 286), _rect(p, 58, 372, 372, 420))),
@@ -541,8 +617,8 @@ PUNCT = [
     (0x007E, "asciitilde", 360, lambda p: ribbon_prof(p, [('M', (46, 286)), ('C', (96, 346), (150, 346), (194, 302)), ('C', (236, 262), (286, 262), (318, 314))], 30, 30)),
     (0x005C, "backslash", 300, lambda p: ribbon_prof(p, [('M', (74, 586)), ('L', (226, -46))], 40, 40)),
     (0x005E, "asciicircum", 340, lambda p: ribbon_prof(p, [('M', (72, 468)), ('L', (170, 624)), ('L', (268, 468))], 36, 36)),
-    (0x005B, "bracketleft", 230, lambda p: _poly(p, [(66, -78), (196, -78), (196, -26), (120, -26), (120, 646), (196, 646), (196, 698), (66, 698)])),
-    (0x005D, "bracketright", 230, lambda p: _poly(p, [(164, -78), (34, -78), (34, -26), (110, -26), (110, 646), (34, 646), (34, 698), (164, 698)])),
+    (0x005B, "bracketleft", 230, lambda p: _bracket(p, True)),
+    (0x005D, "bracketright", 230, lambda p: _bracket(p, False)),
     (0x007B, "braceleft", 280, lambda p: _brace(p, True)),
     (0x007D, "braceright", 280, lambda p: _brace(p, False)),
     (0x2116, "numero", 470, _numero),
@@ -553,11 +629,24 @@ PUNCT = [
     (0x2030, "permille", 640, lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 300, 120, 58, 31), _ring(p, 480, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (420, 600))], 34, 34))),
     (0x2032, "prime", 160, lambda p: ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20)),
     (0x2033, "doubleprime", 270, lambda p: (ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), ribbon_prof(p, [('M', (176, 640)), ('L', (222, 456))], 44, 20))),
+    # ---- v0.9.35: coverage gaps (audit #27) ----
+    (0x0060, "grave", 190, lambda p: _grave(p, 95, 612, 1.3)),                                                         # ` ASCII grave (the pen grave of ѐ, larger, at apostrophe height)
+    (0x2022, "bullet", 250, lambda p: _oval(p, 125, 150, 56, 60)),                                                     # • at mid x-height
+    (0x00A1, "exclamdown", 180, lambda p: _flip(p, _exclam, 270)),                                                     # ¡ = ! rotated, top at the x-height
+    (0x00BF, "questiondown", 320, lambda p: _flip(p, _question, 270)),                                                 # ¿
+    (0x20AC, "Euro", 360, _euro),
+    (0x0026, "ampersand", 420, _ampersand),
+    (0x2122, "trademark", 420, _trademark),
+    (0x00AE, "registered", 440, _registered),
+    (0x00A7, "section", 340, _section),
+    (0x00B6, "paragraph", 360, _pilcrow),
 ]
 for cp, name, width, fn in PUNCT:   # unify symbol/punct colour to the Cyrillic (two weight tiers)
-    _WT = SYM_HEAVY_WT if cp in SYM_HEAVY else SYM_MILD_WT
-    cs, xmin = _make(fn, width); glyph_order.append(name); cmap[cp] = name; charstrings[name] = cs; metrics[name] = (width, xmin)
+    _WT = SYM_HEAVY_WT if (cp in SYM_HEAVY or name.endswith(".case")) else SYM_MILD_WT
+    cs, xmin = _make(fn, width); glyph_order.append(name); charstrings[name] = cs; metrics[name] = (width, xmin)
+    if cp is not None: cmap[cp] = name
 _WT = 1.0
+cmap[0x2010] = cmap[0x2011] = "hyphen"; cmap[0x2015] = "emdash"   # ‐ ‑ ― : same marks (U+00AD soft hyphen deliberately NOT mapped — FontBakery flags it)
 
 # ========================= Latin =========================
 # ~27 Latin letters reuse a visually identical Cyrillic glyph (homoglyphs: incl. g=д,
@@ -568,7 +657,7 @@ _WT = 1.0
 LXH, LASC, LCAP, LDESC = 247.0, 553.0, 653.0, -240.0
 # per-glyph horizontal stretch for drawn letters that read too condensed (widen only, weight unchanged):
 LAT_STRETCH = {"i":1.36,"t":1.25,"l":1.52,"k":1.63,"n":1.72,"h":1.73,"b":1.68,"d":1.65,"r":1.73,
-               "q":1.67,"f":1.06,"v":1.80,"w":1.52,"z":1.22,
+               "q":1.67,"p":1.67,"f":1.06,"v":1.80,"w":1.52,"z":1.22,
                "D":1.55,"F":1.48,"G":1.50,"I":1.35,"L":1.75,"N":1.62,"Q":1.65,"R":1.72,"U":1.78,"V":1.78,"W":1.75,"Z":1.52}
 # extra side-spacing (units each side) for drawn letters that read too tight — adds whitespace, not glyph width:
 LAT_SPACE = {"b":40,"h":40,"i":15,"l":40,"r":40,"t":40}   # d: none — its round bowl sits like o/e (8 each side); z: none since v0.9.34 (the symmetric z is a normal-width letter, not a narrow stem)
@@ -578,6 +667,9 @@ LAT_LSP = {"k": -6}                    # less LEFT-side space (space in front of
 CAP_H = 0.90                  # drawn caps: scale height (before slant, so the 15° tilt is kept)
 CAP_SCALE = 0.89              # reused ornate caps: uniform scale (round caps lifted via BASEFRAC to match)
 LAT_XCOMP = {"o.lat": 0.88}   # horizontal squeeze for specific reused copies (the Latin o read too wide/open)
+LAT_SHRINK = {"s.lat": 0.85}  # uniform shrink of a reused copy (s: ѕ's tall curl down to ~x-height; š follows)
+LAT_CAPSCALE = {"C.lat": 0.935}   # per-cap override of CAP_SCALE: C's deep bottom swash fooled the baseline lift and its body topped out at 577u vs the ~606u Latin cap line (Open #2); E measures 603 like A and is left alone
+LAT_EMB = {"s.lat": 3}        # re-weight after the shrink (ѕ itself is EMBOLDEN'd 9 after its 0.78 SCALE_OVERRIDE); 3 keeps the curl eyes open
 # One Latin tilt: every reused Cyrillic letter becomes a copy de-skewed to the single slant SLANT.
 # LAT_NAT = measured natural slant (deg) of each Cyrillic SOURCE; de-skew = tan(nat) - SLANT lands it on SLANT.
 LAT_NAT = {   # v0.9.29: re-measured (projection-profile slant of each copy backed out its source's true slant)
@@ -589,14 +681,14 @@ def _dsk(scp): return math.tan(math.radians(LAT_NAT[scp])) - SLANT
 LAT_LIGHTEN = {"h":0.84, "w":0.82, "b":0.90,            # per-glyph weight scale for the dense ones
                # drawn letters still heavier than the Cyrillic body after LAT_WT — thin to match:
                "I":0.62, "N":0.56, "L":0.70, "R":0.72, "F":0.74, "D":0.82, "Z":0.80, "U":0.84, "V":0.90,
-               "i":0.82, "p":0.80, "t":0.84, "n":0.86}
+               "i":0.82, "t":0.84, "n":0.86}   # (p: none — it is q's mirror and q is not lightened; the old "p":0.80 was dead while p was a р copy)
 def _loopasc(pen, x, top, mx=46, mn=9):
     ribbon_dir(pen, [('M',(x+4,16)),('C',(x-8,top*0.5),(x-26,top*0.88),(x+22,top)),('C',(x+56,top*1.08),(x+58,top*0.8),(x+32,top*0.70)),('C',(x+12,top*0.6),(x+18,top*0.42),(x+16,16))], mx, mn)
 def _lbowl(pen, cx, cy, rx, ry):
     ribbon_prof(pen, [('M',(cx+rx*0.35,cy+ry)),('C',(cx-rx*0.9,cy+ry*0.85),(cx-rx*0.9,cy-ry*0.85),(cx+rx*0.2,cy-ry)),('C',(cx+rx*0.95,cy-ry*0.55),(cx+rx*0.95,cy+ry*0.55),(cx+rx*0.35,cy+ry))], 32, 20)
 def _archright(pen, lx, rx, mx=40, mn=8):
     ribbon_dir(pen, [('M',(lx+2,LXH-2)),('C',(lx,LXH*0.5),(lx,18),(lx,14)),('C',(lx+1,LXH*0.5),(lx+2,LXH*0.86),(lx+6,LXH*0.99)),('C',(lx+22,LXH*1.07),(rx-10,LXH*1.02),(rx,LXH*0.6)),('C',(rx+1,LXH*0.33),(rx,18),(rx,14))], mx, mn)
-def _L_i(p): ribbon_dir(p,[('M',(60,LXH-6)),('C',(55,LXH*0.55),(50,20),(52,14))],44,11); _oval(p,74,LXH+56,15,17)
+def _L_i(p): ribbon_dir(p,[('M',(60,LXH-6)),('C',(55,LXH*0.55),(50,20),(52,14))],44,11); _oval(p,84,LXH+158,38,42)   # dot sized/raised like the ј/j dot (58×65u at y 377–442; was 22×24u at 291–315 — audit #24)
 def _L_t(p): ribbon_dir(p,[('M',(66,LASC*0.78)),('C',(56,LXH*0.55),(52,LXH*0.22),(56,18)),('C',(62,6),(84,10),(100,30))],44,12); ribbon_prof(p,[('M',(24,LXH+10)),('L',(100,LXH+2))],18,18)
 def _L_l(p): _loopasc(p,62,LASC); ribbon_dir(p,[('M',(74,17)),('C',(84,0),(112,8),(140,40))],36,12)
 def _L_n(p): _archright(p,42,108)
@@ -604,14 +696,15 @@ def _L_h(p): _loopasc(p,48,LASC); ribbon_dir(p,[('M',(64,14)),('C',(63,LXH*0.5),
 def _L_b(p): _loopasc(p,54,LASC); _lbowl(p,98,LXH*0.5,38,LXH*0.5)
 def _L_d(p): _lbowl(p,55,LXH*0.5,50,LXH*0.5); ribbon_dir(p,[('M',(108,LASC)),('C',(104,LXH*0.6),(103,20),(104,14))],44,12)
 def _L_r(p): ribbon_dir(p,[('M',(46,LXH-4)),('C',(41,LXH*0.55),(41,20),(43,14))],44,12); ribbon_dir(p,[('M',(42,LXH*0.6)),('C',(56,LXH*0.95),(84,LXH*1.0),(104,LXH*0.8))],28,9)
-def _L_q(p): _lbowl(p,66,LXH*0.5,38,LXH*0.5); ribbon_dir(p,[('M',(108,LXH-2)),('C',(104,LXH*0.5),(100,-60),(98,LDESC*0.9))],44,12)
-def _L_f(p): ribbon_dir(p,[('M',(66,LASC*0.55)),('C',(60,LASC*0.92),(84,LASC*1.12),(104,LASC*0.96)),('C',(120,LASC*0.82),(100,LASC*0.6),(72,LASC*0.58)),('C',(58,LASC*0.5),(54,LXH),(50,LXH*0.1)),('C',(46,-70),(34,LDESC),(14,LDESC*0.82))],44,11); ribbon_prof(p,[('M',(18,LXH+6)),('L',(96,LXH-2))],17,17)
+def _L_q(p): _lbowl(p,66,LXH*0.5,38,LXH*0.5); ribbon_dir(p,[('M',(108,LXH-2)),('C',(104,LXH*0.5),(100,-70),(97,LDESC*1.2))],44,12)   # descender to ~-288u — the drawn q/f were the shallowest Latin descenders (-235/-216 vs the copies' -257..-320; audit #26)
+def _L_p(p): ribbon_dir(p,[('M',(60,LXH-2)),('C',(56,LXH*0.5),(52,-70),(49,LDESC*1.2))],44,12); _lbowl(p,104,LXH*0.5,38,LXH*0.5)   # v0.9.35: drawn p = the mirror of q (stem left, b/d/q bowl right) — it was a de-skewed copy of the traced р, ~1.3× the Latin weight (Open #12)
+def _L_f(p): ribbon_dir(p,[('M',(66,LASC*0.55)),('C',(60,LASC*0.92),(84,LASC*1.12),(104,LASC*0.96)),('C',(120,LASC*0.82),(100,LASC*0.6),(72,LASC*0.58)),('C',(58,LASC*0.5),(54,LXH),(50,LXH*0.1)),('C',(45,-90),(36,LDESC*1.25),(12,LDESC*1.18))],44,11); ribbon_prof(p,[('M',(18,LXH+6)),('L',(96,LXH-2))],17,17)
 def _L_v(p): ribbon_dir(p,[('M',(34,LXH-2)),('C',(40,LXH*0.4),(58,12),(74,16)),('C',(92,20),(102,LXH*0.55),(100,LXH-2)),('C',(104,LXH*0.78),(116,LXH*0.7),(126,LXH*0.6))],44,11)
 def _L_w(p): ribbon_dir(p,[('M',(30,LXH-2)),('C',(36,LXH*0.4),(52,12),(66,16)),('C',(82,20),(88,LXH*0.5),(88,LXH-6))],44,11); ribbon_dir(p,[('M',(88,LXH-6)),('C',(90,LXH*0.4),(104,12),(118,16)),('C',(134,20),(144,LXH*0.55),(142,LXH-2)),('C',(146,LXH*0.78),(158,LXH*0.7),(168,LXH*0.6))],44,11)
 def _L_z(p):   # per request: top curved hair replaced by the BOTTOM horizontal line inverted 180° on top (a small symmetric z, like the cap Z)
-    ribbon_dir(p,[('M',(110,LXH*0.94)),('C',(96,LXH*0.56),(58,LXH*0.28),(44,18)),('C',(70,14),(96,20),(116,14))],44,11)   # diagonal (raised to x-height) + bottom line
+    ribbon_dir(p,[('M',(110,LXH)),('C',(96,LXH*0.58),(58,LXH*0.28),(44,18)),('C',(70,14),(96,20),(116,14))],44,11)   # diagonal (top AT the x-height: was 0.94·LXH → z read 5% short, audit #25) + bottom line
     def _zbot(pen): ribbon_dir(pen,[('M',(44,18)),('C',(70,14),(96,20),(116,14))],44,11)                                   # the bottom line
-    _cx, _cy = 77.0 * _LSX, (18 + LXH*0.94) / 2.0     # centre (x scaled by _LSX): rotating the bottom-line start (44,18) by 180° lands on the diagonal top (110, LXH*0.94)
+    _cx, _cy = 77.0 * _LSX, (18 + LXH) / 2.0          # centre (x scaled by _LSX): rotating the bottom-line start (44,18) by 180° lands on the diagonal top (110, LXH)
     _bar = pathops.Path(); _zbot(_bar.getPen()); _bar.simplify()
     _rot = pathops.Path(); _bar.draw(TransformPen(_rot.getPen(), (-1, 0, 0, -1, 2 * _cx, 2 * _cy))); _rot.simplify()
     _rot.draw(p)                                                                                                            # top bar = bottom line rotated 180°
@@ -623,20 +716,24 @@ def _U_L(p):
     ribbon_dir(p,[('M',(70,LCAP*0.96)),('C',(58,LCAP*0.5),(50,LCAP*0.16),(56,22))],58,15)                                                                             # stem
     ribbon_prof(p,[('M',(70,LCAP*0.90)),('C',(50,LCAP*1.12),(-8,LCAP*1.15),(-32,LCAP*0.98)),('C',(-54,LCAP*0.84),(-40,LCAP*0.69),(-14,LCAP*0.70)),('C',(4,LCAP*0.71),(8,LCAP*0.82),(-6,LCAP*0.88))],30,17)   # long upper swash + small twist (like N)
     ribbon_prof(p,[('M',(56,22)),('C',(74,-8),(136,-4),(192,34)),('C',(220,52),(226,92),(204,110)),('C',(190,120),(172,113),(176,96)),('C',(179,85),(192,86),(195,95))],42,24)   # thick bottom bar + twist
-def _U_D(p): ribbon_dir(p,[('M',(58,LCAP)),('C',(52,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(60,LCAP-6)),('C',(170,LCAP*0.98),(196,LCAP*0.55),(188,LCAP*0.3)),('C',(176,LCAP*0.08),(120,14),(58,16))],30,30)
+def _entry_swash(p, sx):   # v0.9.35: the I/L/N-style entry swash loop, anchored at a stem top at x=sx (sweeps up-left, curls back)
+    ribbon_prof(p,[('M',(sx+2,LCAP*0.90)),('C',(sx-14,LCAP*1.08),(sx-64,LCAP*1.10),(sx-78,LCAP*0.90)),('C',(sx-84,LCAP*0.80),(sx-66,LCAP*0.76),(sx-44,LCAP*0.82))],30,19)
+def _top_curl(p, ex):      # a small outward terminal curl at a right-hand stroke top ending at (ex, LCAP) (U V W)
+    ribbon_prof(p,[('M',(ex,LCAP)),('C',(ex+8,LCAP*1.07),(ex+30,LCAP*1.08),(ex+36,LCAP*0.98)),('C',(ex+38,LCAP*0.92),(ex+28,LCAP*0.90),(ex+22,LCAP*0.94))],24,15)
+def _U_D(p): ribbon_dir(p,[('M',(58,LCAP)),('C',(52,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(60,LCAP-6)),('C',(170,LCAP*0.98),(196,LCAP*0.55),(188,LCAP*0.3)),('C',(176,LCAP*0.08),(120,14),(58,16))],30,30); _entry_swash(p,58)   # v0.9.35: + entry swash (was the plain drawn cap)
 def _U_F(p):
     ribbon_dir(p,[('M',(62,LCAP*0.90)),('C',(54,LCAP*0.5),(52,LXH*0.3),(48,-30)),('C',(44,-82),(22,-112),(2,-92))],54,12)                                             # stem + descender
     ribbon_prof(p,[('M',(62,LCAP*0.84)),('C',(48,LCAP*1.04),(2,LCAP*1.08),(-10,LCAP*0.88)),('C',(-15,LCAP*0.78),(2,LCAP*0.74),(24,LCAP*0.80))],30,19)                 # top swash loop
-    ribbon_prof(p,[('M',(52,LCAP-18)),('C',(112,LCAP*0.96),(160,LCAP),(202,LCAP*0.88))],26,18)                                                                       # top bar
-    ribbon_prof(p,[('M',(48,LCAP*0.54)),('C',(92,LCAP*0.56),(118,LCAP*0.58),(150,LCAP*0.54))],22,16)                                                                 # mid bar
+    ribbon_prof(p,[('M',(52,LCAP-18)),('C',(112,LCAP*1.00),(160,LCAP*1.04),(202,LCAP*1.02))],26,18)                                                                  # top bar — rises to the right so its underside (~596u) clears the ascender tops (≤573u); it used to dip to ~517u and the next k/l/f/b/h poked through it (audit #19)
+    ribbon_prof(p,[('M',(48,LCAP*0.54)),('C',(76,LCAP*0.56),(96,LCAP*0.58),(112,LCAP*0.55))],22,16)                                                                  # mid bar — shortened (150→112) so it no longer reaches into the next letter's ascender loop
 def _U_N(p):
     ribbon_dir(p,[('M',(50,LCAP*0.96)),('C',(44,LCAP*0.5),(42,18),(44,14))],54,14)                                                                                   # left stem
     ribbon_dir(p,[('M',(46,LCAP*0.94)),('C',(88,LCAP*0.60),(128,LCAP*0.34),(160,16))],56,16)                                                                         # diagonal
     ribbon_dir(p,[('M',(160,LCAP*0.94)),('C',(156,LCAP*0.5),(154,20),(156,16))],54,14)                                                                               # right stem
     ribbon_prof(p,[('M',(50,LCAP*0.90)),('C',(30,LCAP*1.12),(-28,LCAP*1.15),(-52,LCAP*0.98)),('C',(-74,LCAP*0.84),(-60,LCAP*0.69),(-34,LCAP*0.70)),('C',(-16,LCAP*0.71),(-12,LCAP*0.82),(-26,LCAP*0.88))],30,17)   # long entry swash + small twist (right hair removed)
-def _U_U(p): ribbon_dir(p,[('M',(52,LCAP)),('C',(44,LCAP*0.28),(50,14),(92,11)),('C',(134,8),(168,LCAP*0.3),(160,LCAP*0.72))],58,15); ribbon_dir(p,[('M',(158,LCAP)),('C',(156,LCAP*0.6),(158,LCAP*0.75),(160,LCAP*0.72))],44,16)
-def _U_V(p): ribbon_dir(p,[('M',(44,LCAP)),('C',(66,LCAP*0.5),(90,24),(100,18)),('C',(114,24),(136,LCAP*0.5),(162,LCAP))],58,13)
-def _U_W(p): ribbon_dir(p,[('M',(32,LCAP)),('C',(50,LCAP*0.5),(70,22),(80,18)),('C',(92,24),(106,LCAP*0.5),(112,LCAP*0.9))],56,13); ribbon_dir(p,[('M',(112,LCAP*0.9)),('C',(118,LCAP*0.5),(132,22),(144,18)),('C',(156,24),(178,LCAP*0.5),(198,LCAP))],56,13)
+def _U_U(p): ribbon_dir(p,[('M',(52,LCAP)),('C',(44,LCAP*0.28),(50,14),(92,11)),('C',(134,8),(168,LCAP*0.3),(160,LCAP*0.72))],58,15); ribbon_dir(p,[('M',(158,LCAP)),('C',(156,LCAP*0.6),(158,LCAP*0.75),(160,LCAP*0.72))],44,16); _entry_swash(p,52); _top_curl(p,158)   # v0.9.35: + entry swash, right-top curl
+def _U_V(p): ribbon_dir(p,[('M',(44,LCAP)),('C',(66,LCAP*0.5),(90,24),(100,18)),('C',(114,24),(136,LCAP*0.5),(162,LCAP))],58,13); _entry_swash(p,44); _top_curl(p,162)   # v0.9.35: + entry swash, right-top curl
+def _U_W(p): ribbon_dir(p,[('M',(32,LCAP)),('C',(50,LCAP*0.5),(70,22),(80,18)),('C',(92,24),(106,LCAP*0.5),(112,LCAP*0.9))],56,13); ribbon_dir(p,[('M',(112,LCAP*0.9)),('C',(118,LCAP*0.5),(132,22),(144,18)),('C',(156,24),(178,LCAP*0.5),(198,LCAP))],56,13); _entry_swash(p,32); _top_curl(p,198)   # v0.9.35: + entry swash, right-top curl
 def _U_Z(p):   # per request: original upper bar removed; the top bar is the LOWER bar inverted 180° onto the stem top
     ribbon_dir(p,[('M',(172,LCAP-14)),('C',(130,LCAP*0.6),(86,LCAP*0.3),(46,24))],56,14)                                                          # diagonal
     def _zbar(pen): ribbon_prof(pen,[('M',(46,24)),('C',(82,-2),(134,2),(182,24)),('C',(216,35),(226,64),(212,90))],32,19)                        # bottom sweep + swash curl
@@ -645,15 +742,17 @@ def _U_Z(p):   # per request: original upper bar removed; the top bar is the LOW
     _bar = pathops.Path(); _zbar(_bar.getPen()); _bar.simplify()
     _rot = pathops.Path(); _bar.draw(TransformPen(_rot.getPen(), (-1, 0, 0, -1, 2 * _cx, 2 * _cy))); _rot.simplify()
     _rot.draw(p)                                                                                                                                  # top bar = lower bar rotated 180°
-def _U_R(p): ribbon_dir(p,[('M',(60,LCAP)),('C',(54,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(58,LCAP-6)),('C',(150,LCAP),(168,LCAP*0.72),(140,LCAP*0.58)),('C',(112,LCAP*0.46),(70,LCAP*0.52),(58,LCAP*0.52))],26,18); ribbon_dir(p,[('M',(96,LCAP*0.52)),('C',(120,LCAP*0.4),(150,LCAP*0.2),(170,16))],52,14)
-def _U_G(p): ribbon_prof(p,[('M',(176,LCAP*0.82)),('C',(150,LCAP*1.06),(40,LCAP*1.06),(40,LCAP*0.5)),('C',(40,LCAP*-0.06),(150,LCAP*-0.06),(176,LCAP*0.2)),('C',(182,LCAP*0.3),(182,LCAP*0.42),(176,LCAP*0.46))],30,16); ribbon_prof(p,[('M',(176,LCAP*0.46)),('C',(140,LCAP*0.44),(122,LCAP*0.46),(118,LCAP*0.46))],24,24)
-def _U_Q(p): ribbon_prof(p,[('M',(112,LCAP)),('C',(42,LCAP*0.98),(42,LCAP*0.02),(112,0)),('C',(182,LCAP*0.02),(182,LCAP*0.98),(112,LCAP))],30,20); ribbon_dir(p,[('M',(120,LCAP*0.36)),('C',(140,LCAP*0.25),(162,LCAP*0.12),(188,-40))],50,13)
+def _U_R(p): ribbon_dir(p,[('M',(60,LCAP)),('C',(54,LCAP*0.5),(52,20),(56,14))],58,16); ribbon_prof(p,[('M',(58,LCAP-6)),('C',(150,LCAP),(168,LCAP*0.72),(140,LCAP*0.58)),('C',(112,LCAP*0.46),(70,LCAP*0.52),(58,LCAP*0.52))],26,18); ribbon_dir(p,[('M',(96,LCAP*0.52)),('C',(120,LCAP*0.4),(150,LCAP*0.2),(170,16))],52,14); _entry_swash(p,60); ribbon_prof(p,[('M',(170,16)),('C',(184,4),(202,2),(210,14)),('C',(216,26),(206,36),(196,30))],26,16)   # v0.9.35: + entry swash, leg-end curl
+def _U_G(p):   # v0.9.35 (Open #2): the C-curve's controls at ±0.06·LCAP never reached them — the body topped out at 579u and floated 14u above the baseline; re-aimed (1.15 / −0.12) so the bowl spans ~−9..612u like D, + a small entry hook at the top terminal
+    ribbon_prof(p,[('M',(176,LCAP*0.82)),('C',(150,LCAP*1.15),(40,LCAP*1.15),(40,LCAP*0.5)),('C',(40,LCAP*-0.12),(150,LCAP*-0.12),(176,LCAP*0.2)),('C',(182,LCAP*0.3),(182,LCAP*0.42),(176,LCAP*0.46))],30,16); ribbon_prof(p,[('M',(176,LCAP*0.46)),('C',(140,LCAP*0.44),(122,LCAP*0.46),(118,LCAP*0.46))],24,24)
+    ribbon_prof(p,[('M',(176,LCAP*0.82)),('C',(190,LCAP*0.88),(196,LCAP*0.76),(184,LCAP*0.70)),('C',(178,LCAP*0.67),(170,LCAP*0.69),(168,LCAP*0.73))],22,15)
+def _U_Q(p): ribbon_prof(p,[('M',(112,LCAP)),('C',(42,LCAP*0.98),(42,LCAP*0.02),(112,0)),('C',(182,LCAP*0.02),(182,LCAP*0.98),(112,LCAP))],30,20); ribbon_dir(p,[('M',(120,LCAP*0.36)),('C',(140,LCAP*0.25),(162,LCAP*0.12),(188,-40))],50,13); ribbon_prof(p,[('M',(188,-40)),('C',(200,-58),(224,-60),(232,-44)),('C',(238,-30),(226,-20),(214,-28))],28,16); ribbon_prof(p,[('M',(112,LCAP)),('C',(134,LCAP*1.07),(164,LCAP*1.02),(170,LCAP*0.92)),('C',(172,LCAP*0.86),(160,LCAP*0.84),(154,LCAP*0.89))],22,14)   # v0.9.35: + tail curl, top entry curl
 # Latin T is no longer a drawn pen glyph: it is built by clipping the Cyrillic Т (uni0422) down to its
 # top CAP + central stem (left curl and outer pipes removed) — see the "Latin T" block after REUSE_DESKEW.
 LATIN_HOMO = {}   # none: every Latin letter is now drawn or a de-skewed copy (built below),
 # so the Macedonian Cyrillic glyphs are never reused directly and keep their steeper slant.
 LATIN_DRAWN = [("i",0x69,_L_i),("t",0x74,_L_t),("l",0x6C,_L_l),("k",0x6B,_L_k),("n",0x6E,_L_n),("h",0x68,_L_h),("b",0x62,_L_b),
-    ("d",0x64,_L_d),("r",0x72,_L_r),("q",0x71,_L_q),("f",0x66,_L_f),("v",0x76,_L_v),("w",0x77,_L_w),("z",0x7A,_L_z),
+    ("d",0x64,_L_d),("r",0x72,_L_r),("q",0x71,_L_q),("p",0x70,_L_p),("f",0x66,_L_f),("v",0x76,_L_v),("w",0x77,_L_w),("z",0x7A,_L_z),
     ("D",0x44,_U_D),("F",0x46,_U_F),("G",0x47,_U_G),("I",0x49,_U_I),("L",0x4C,_U_L),("N",0x4E,_U_N),
     ("Q",0x51,_U_Q),("R",0x52,_U_R),("U",0x55,_U_U),("V",0x56,_U_V),("W",0x57,_U_W),("Z",0x5A,_U_Z)]   # T built separately (clip of Cyrillic Т)
 def _latin_sb(path):          # side bearings from ink in the x-height join band (baseline 0)
@@ -681,7 +780,7 @@ for nm, cp, fn in LATIN_DRAWN:
 #   p/j brought fully to the drawn slant; all caps + a/u have their tilt reduced by CAP/LC_DETILT.
 _neut = {g: pth for g, cpt, pth in NEUT}
 REUSE_DESKEW = [  # (newname, latin_cp, src_glyph, src_cp, is_cap) — de-skew = _dsk(src_cp) to the single slant
-    ("p.lat",0x70,"uni0440",0x0440,False), ("j.lat",0x6A,"uni0458",0x0458,False),
+    ("j.lat",0x6A,"uni0458",0x0458,False),   # (p is a drawn letter since v0.9.35 — see _L_p)
     ("a.lat",0x61,"uni0430",0x0430,False), ("u.lat",0x75,"uni0438",0x0438,False),
     ("c.lat",0x63,"uni0441",0x0441,False), ("e.lat",0x65,"uni0435",0x0435,False),
     ("g.lat",0x67,"uni0434",0x0434,False), ("m.lat",0x6D,"uni043C",0x043C,False),
@@ -700,7 +799,12 @@ for nm, cp, src, scp, iscap in REUSE_DESKEW:
     base0 = pathops.Path(); _neut[src].draw(TransformPen(base0.getPen(), (1, 0, 0, 1, 0, -basey0))); base0.simplify()
     de = pathops.Path(); base0.draw(TransformPen(de.getPen(), (1, 0, -dsk, 1, 0, 0))); de.simplify()
     if iscap:                 # reused ornate caps: uniform shrink (slant preserved)
-        de2 = pathops.Path(); de.draw(TransformPen(de2.getPen(), (CAP_SCALE, 0, 0, CAP_SCALE, 0, 0))); de2.simplify(); de = de2
+        _cs = LAT_CAPSCALE.get(nm, CAP_SCALE)
+        de2 = pathops.Path(); de.draw(TransformPen(de2.getPen(), (_cs, 0, 0, _cs, 0, 0))); de2.simplify(); de = de2
+    if nm in LAT_SHRINK:      # v0.9.35: the Latin s is a copy of ѕ, whose top curl reaches 320u — 21% above the
+        k = LAT_SHRINK[nm]    # 264u x-height (audit #26). Uniform shrink about the baseline, then a small embolden
+        de2 = pathops.Path(); de.draw(TransformPen(de2.getPen(), (k, 0, 0, k, 0, 0))); de2.simplify()   # so its stroke
+        de = purge_slivers(embolden(de2, LAT_EMB.get(nm, 0))) if LAT_EMB.get(nm) else de2                  # keeps the colour
     if nm in LAT_XCOMP:       # horizontal squeeze (e.g. the too-wide Latin o)
         de3 = pathops.Path(); de.draw(TransformPen(de3.getPen(), (LAT_XCOMP[nm], 0, 0, 1, 0, 0))); de3.simplify(); de = de3
     b = de.bounds
@@ -724,6 +828,7 @@ T_CURL_CUT = 360.0  # cut the cap this many (post-scale) units in from its left 
 T_CAP_SEAT = 10.0   # overlap the bar onto the pipe's top by this many units (seat is otherwise auto-computed)
 T_STEM_PCT = 0.10   # move the middle pipe right this fraction of the (bar+pipe) width, per request
 T_RSP      = 60.0   # extra right-side room past the stem, so the next letter isn't jammed under the bar
+T_SCALE    = 1.07   # v0.9.35: the T sat lowest of all caps (585u) and its arm landed on a following k/l loop (569u) — 7% bigger lifts the arm clear (audit #19)
 def _build_T_latin():
     src0 = _neut["uni0422"]
     basey0 = measure(src0, 0x0422)[4]
@@ -741,7 +846,7 @@ def _build_T_latin():
         return p
     def _deskew(p):                                              # onto the single Latin slant + cap scale
         s = pathops.Path(); p.draw(TransformPen(s.getPen(), (1, 0, -_dsk(0x0422), 1, 0, 0))); s.simplify()
-        d = pathops.Path(); s.draw(TransformPen(d.getPen(), (CAP_SCALE, 0, 0, CAP_SCALE, 0, 0))); d.simplify(); return d
+        d = pathops.Path(); s.draw(TransformPen(d.getPen(), (CAP_SCALE * T_SCALE, 0, 0, CAP_SCALE * T_SCALE, 0, 0))); d.simplify(); return d
     def _bb(p):
         fp = FlattenPen(); p.draw(fp); q = [pt for cc in fp.contours for pt in cc]
         return min(x for x, y in q), max(x for x, y in q), min(y for x, y in q), max(y for x, y in q)
@@ -788,7 +893,7 @@ _lp = pathops.Path(); _T.draw(TransformPen(_lp.getPen(), (1, 0, 0, 1, hshift, -b
 def _acc_glyph(base, kind):
     bp = latin_paths[base]; b = bp.bounds
     out = pathops.Path(); bp.draw(out.getPen())
-    cx = (b[0]+b[2])/2.0; top = b[3]; cap = top > 400
+    cx = (b[0]+b[2])/2.0; top = b[3]; cap = base[0].isupper()   # by CASE, not height: the ascender of d made đ take the Đ branch (bar left of the bowl at x-height — audit #25)
     axc = cx + SLANT*(top - (b[1]+b[3])/2.0)          # shift the accent right to follow the italic lean
     if kind == "caron":
         _caron(out.getPen(), axc, top + (54 if cap else 42), 1.3 if cap else 1.0)
@@ -803,10 +908,12 @@ ACCENTED = [("scaron", 0x0161, "s.lat", "caron"), ("ccaron", 0x010D, "c.lat", "c
             ("zcaron", 0x017E, "z", "caron"), ("cacute", 0x0107, "c.lat", "acute"), ("dcroat", 0x0111, "d", "stroke"),
             ("Scaron", 0x0160, "S.lat", "caron"), ("Ccaron", 0x010C, "C.lat", "caron"),
             ("Zcaron", 0x017D, "Z", "caron"), ("Cacute", 0x0106, "C.lat", "acute"), ("Dcroat", 0x0110, "D", "stroke")]
-for anm, acp, base, kind in ACCENTED:
+_WT = LAT_WT   # v0.9.35: the accents are drawn onto Latin letters, so they take the Latin weight tier (they were
+for anm, acp, base, kind in ACCENTED:   # stamped at _WT=1.0 — the heaviest element of their glyphs)
     g = _acc_glyph(base, kind); adv, lsb = metrics[base]
     t2 = T2CharStringPen(adv, None); g.draw(t2)
     glyph_order.append(anm); charstrings[anm] = t2.getCharString(); metrics[anm] = (adv, lsb); cmap[acp] = anm
+_WT = 1.0
 for cp, gn in LATIN_HOMO.items():
     cmap[cp] = gn
 cmap[0x00A0] = "space"   # no-break space: same advance as space, so it never shows tofu or breaks layout
@@ -831,13 +938,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.934", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.935", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.934",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.934", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.935",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.935", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -859,7 +966,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.934    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.935    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

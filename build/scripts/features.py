@@ -43,11 +43,18 @@ def generate_figures(base_paths, charstrings, metrics, glyph_order, cmap):
 
     # scaled figure variants (scale about the baseline origin keeps the slant).
     # numr/dnom sit snug around the fraction bar, so they get less side spacing than sups/subs.
+    var = {}   # name -> positioned path (reused to compose ½ ¼ ¾ below)
     for d in DIG:
         for suf, dy in (("sups", 300), ("subs", -70), ("numr", 290), ("dnom", 10)):
             s = _xf(base_paths[d], (SC, 0, 0, SC, 0, 0)); b = s.bounds
             pad = 6 if suf in ("numr", "dnom") else 20
-            add(d+"."+suf, _xf(s, (1, 0, 0, 1, -b[0], dy)), int(round((b[2]-b[0])+pad)))
+            var[d+"."+suf] = _xf(s, (1, 0, 0, 1, -b[0], dy))
+            add(d+"."+suf, var[d+"."+suf], int(round((b[2]-b[0])+pad)))
+    # v0.9.35 (audit #27): the super/subscript figures also get their Unicode codepoints
+    # (¹ ² ³ ⁰ ⁴–⁹, ₀–₉), so "m²" / "H₂O" typed as characters no longer render tofu.
+    for i, d in enumerate(DIG):
+        cmap[{1: 0x00B9, 2: 0x00B2, 3: 0x00B3}.get(i, 0x2070 + i)] = d + ".sups"
+        cmap[0x2080 + i] = d + ".subs"
 
     # slashed zero — a diagonal bar through the counter
     pz = base_paths["zero"]; b = pz.bounds
@@ -69,6 +76,16 @@ def generate_figures(base_paths, charstrings, metrics, glyph_order, cmap):
             (x1+nx2*th2, y1+ny2*th2), (x0+nx2*th2, y0+ny2*th2)]
     fp.moveTo(fpts[0]); [fp.lineTo(q) for q in fpts[1:]]; fp.closePath()
     add("fraction", fr, 180, 0x2044)
+    # precomposed vulgar fractions ½ ¼ ¾ (U+00BD/BC/BE) = numerator + fraction bar + denominator, laid out
+    # exactly as `frac` would shape them (v0.9.35, audit #27)
+    for name, uni, n, dn in (("onehalf", 0x00BD, "one", "two"), ("onequarter", 0x00BC, "one", "four"), ("threequarters", 0x00BE, "three", "four")):
+        comp = pathops.Path(); x = 0.0
+        for part, pname in ((var[n + ".numr"], n + ".numr"), (fr, "fraction"), (var[dn + ".dnom"], dn + ".dnom")):
+            part.draw(TransformPen(comp.getPen(), (1, 0, 0, 1, x, 0)))
+            x += metrics[pname][0]
+        try: comp.simplify()
+        except pathops.PathOpsError: pass
+        add(name, comp, int(round(x)), uni)
     return FIGURE_FEA
 
 FIGURE_FEA = """
@@ -79,7 +96,19 @@ FIGURE_FEA = """
 @numr = [zero.numr one.numr two.numr three.numr four.numr five.numr six.numr seven.numr eight.numr nine.numr];
 @dnom = [zero.dnom one.dnom two.dnom three.dnom four.dnom five.dnom six.dnom seven.dnom eight.dnom nine.dnom];
 
+@dash  = [hyphen endash emdash];
+@dashc = [hyphen.case endash.case emdash.case];
+# capitals of both scripts (for the raised-dash context)
+@CAPS = [""" + " ".join("uni%04X" % ord(c) for c in "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШЀЍ") + """
+         A.lat B.lat C.lat D E.lat F G H.lat I J.lat K.lat L M.lat N O.lat P.lat Q R S.lat T U V W X.lat Y.lat Z
+         Scaron Ccaron Zcaron Cacute Dcroat];
+
 feature tnum { sub @figs by @tf; } tnum;
+# dashes sit at mid x-height by default (lowercase text); after a figure or a capital, or in all-caps
+# settings (`case`), the raised `.case` forms are used (v0.9.35, audit #22)
+lookup DASH_CASE { sub hyphen by hyphen.case; sub endash by endash.case; sub emdash by emdash.case; } DASH_CASE;
+feature case { lookup DASH_CASE; } case;
+feature calt { sub [@figs @tf @CAPS] @dash' lookup DASH_CASE; } calt;
 feature zero { sub zero by zero.slash; } zero;
 feature sups { sub @figs by @sups; } sups;
 feature subs { sub @figs by @subs; } subs;
@@ -90,13 +119,16 @@ lookup FRAC_NUMR { sub @figs by @numr; } FRAC_NUMR;
 lookup FRAC_DNOM { sub @figs by @dnom; } FRAC_DNOM;
 feature frac {
     sub slash by fraction;
-    # numerators: up to three figures before the fraction bar (longest match first)
-    sub @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR fraction;
-    sub @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR fraction;
-    sub @figs' lookup FRAC_NUMR fraction;
-    # denominators: up to three figures after the fraction bar
+    # denominators FIRST (up to four figures after a bar), so a figure run between two bars — "10/11/2025" —
+    # is a denominator and never re-matched as the next numerator (v0.9.35, audit #27)
+    sub fraction @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM;
     sub fraction @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM;
     sub fraction @figs' lookup FRAC_DNOM @figs' lookup FRAC_DNOM;
     sub fraction @figs' lookup FRAC_DNOM;
+    # numerators: up to four figures before the fraction bar (longest match first)
+    sub @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR fraction;
+    sub @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR fraction;
+    sub @figs' lookup FRAC_NUMR @figs' lookup FRAC_NUMR fraction;
+    sub @figs' lookup FRAC_NUMR fraction;
 } frac;
 """

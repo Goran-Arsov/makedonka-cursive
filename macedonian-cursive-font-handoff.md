@@ -328,6 +328,72 @@ vectorizing the Wikimedia chart (see *Source material* below).
   sits like o/n (8). Lesson: when rotating/placing a sub-stroke of a Latin glyph, remember the ribbon has already
   applied the `_LSX` x-stretch — any geometric centre/offset you compute must be in that stretched space. Only Z/z
   changed; 243 glyphs; both weights; FontBakery 0 FAIL/0 ERROR per-format.
+- **(v0.9.35) glyph-audit fixes — built 2026-11-02, not yet shipped.** A per-glyph audit (metrics + per-contour
+  dump, 900px/em zooms with enclosed-hole counting, a HarfBuzz-kerned ink-overlap scan of ~6000 pairs) found the
+  defects tracked as followups Open #13–#27; all fixed in one build. **Outline mechanics:** (1) new
+  `build/scripts/outline_util.py::purge_slivers(path, max_width=4, max_area=120)` drops hairline sliver contours
+  (either winding) — skia-pathops leaves them behind when unioning many near-coincident copies; used after the ѕ
+  `embolden` (ѕ/s/š had 80 white cracks) and at the end of the Bold dilation. (2) `_disks(pen, items)` — every
+  ribbon (`ribbon_open/oval/dir/prof`) now builds its (x,y,r) list and stamps it through `_disks`, which inserts
+  intermediate disks so consecutive centres are ≤ `DISK_OVERLAP`(=1.1)× the smaller EFFECTIVE radius apart; a
+  weight-thinned hairline (r≈2u at the 4.2u sample step) used to break into separate 5u dots (h: 64 of them).
+  Digits/punctuation only gain disks where they were under-sampled, so they are visually identical. (3)
+  `make_bold.embolden` is a TRUE dilation: un-slant and stretch y by D/DY, `Path.stroke(2·D, ROUND_CAP,
+  ROUND_JOIN, 4)` (then `convertConicsToQuads()` — the stroker emits conics a pen can't draw), union with the fill,
+  unstretch/re-slant, `purge_slivers`. The old 8-copy union only covered 9 discrete offsets, so a 5u hairline came
+  out as 3 parallel ghost lines 16u apart and every tapered tip frayed. Same D=16/DY=7 knobs. **Glyph edits:** `D8`
+  waist + a flat `_oval(185,316,104,34)` lens (pinholes); quotes ’ ” `_pencomma` cy 660 (were 101u below ‘ “);
+  dashes `_rect` y 122–177 / 130–172 (mid x-height) + `hyphen.case`/`endash.case`/`emdash.case` at the old height
+  (PUNCT rows with `cp=None`; the loop skips cmap for None and gives `.case` the heavy tier); `_at` translated −124
+  (sat 134u above the baseline); `_L_i` dot `_oval(84, LXH+158, 38, 42)` = the ј dot's size/height; `_L_z` top at
+  `LXH` (was 0.94·LXH); `_acc_glyph` chooses the Đ/đ branch by `base[0].isupper()` (the height test put đ's bar
+  left of the bowl at x-height); `degree` ring centre 556; `[ ]` via `_bracket` (three bars of one `_WT`-thinned
+  width, heavy tier); `× < >` advance 360 like the other operators (clears FontBakery's math-width WARN). **New
+  glyphs (243→257):** `grave` `` ` `` (`_grave` 1.3× at 612), `bullet`, `exclamdown`/`questiondown` (`_flip`: the
+  ! ? rotated 180° about their centre, top seated at 270), `quotesinglbase`, `guilsinglleft/right`, `Euro`
+  (`_euro`: open C stroke + 2 bars), `onehalf`/`onequarter`/`threequarters` (numr + fraction + dnom composed in
+  `features.generate_figures`, which also maps U+00B9/B2/B3, U+2070/2074–2079 → `.sups` and U+2080–2089 → `.subs`);
+  cmap aliases U+2010/2011→hyphen, U+2015→emdash. **GSUB:** `features.FIGURE_FEA` adds `lookup DASH_CASE`,
+  `feature case` and `feature calt { sub [@figs @tf @CAPS] @dash' lookup DASH_CASE; }` (@CAPS = both scripts' caps
+  incl. Ѐ Ѝ Š Č Ž Ć Đ). **Kerning (`kern_util.py`):** `_CYR_CAPS`+Ѐ Ѝ, `_LAT_CAPS`+Š Č Ž Ć Đ, `_LAT`+š ž č ć đ; new
+  `_floor_pairs(gs, cm, hm, lefts, rights, lo, hi, gap, cap)` = positive-only kern until the nearest ink approach
+  within y∈[lo,hi) is ≥ gap, used for digit pairs (`DIG_GAP=24`, `DIG_MAX=120`, y −10..670), S/Š before b f h k l đ
+  (`ASC_GAP=10`, `ASC_MAX=150`, y 270..620) and b d f h k l đ t в ѓ ќ б before ’ ” ‘ “ ' " (`QUO_GAP=8`,
+  `QUO_MAX=150`, y 420..700). Pairs Reg 2255→2821, Bold 2211→2733. **Verified:** overlap scan 0 pairs for
+  cap→cap, digit→digit, lower→lower, lower→quote in both weights (remaining: Фѓ/Tk/Fk ≈50px² touches in Regular,
+  Bold Ф flourish crossings and F/T bar over ascenders — accepted as the overhang design); FontBakery 0 FAIL/0 ERROR
+  on all four files, OTF WARN only UPM; final woff2 Regular 79 KB (unchanged), Bold 106→113 KB. Version strings 0.935, demo/CSS
+  `?v=46`, README jsDelivr tag `@v0.9.35` (release not yet created).
+  **Second pass (same day) — the items first parked as "design":** `_U_F` top bar rises to the right
+  (`(112,LCAP*1.00),(160,LCAP*1.04),(202,LCAP*1.02)` — underside ~596u clears the 573u ascender tops; it dipped to
+  ~517u) and the mid bar is shortened to x=112 (was 150, reaching into the next letter); the Latin T takes
+  `T_SCALE=1.07` inside `_deskew` (ymax 585→626); `_ASC_CAPS="SŠFT"`, `ASC_HI=640`, `ASC_MAX=160`. Cyrillic
+  `_CYR_FL_CAPS="ФЅ"` × `_CYR_FL_LOW="бвѓќрјтпгд"` floor kern in band 300–600 (`CFL_*`; the Ф tail hangs at y
+  343–497 over the next letter). `letter_path` ends with `purge_slivers` for EVERY traced letter (Н's 3 junction
+  slivers; nothing real in the trace is under ~3300u²). `LAT_SHRINK={"s.lat":0.85}` + `LAT_EMB={"s.lat":3}` in the
+  REUSE_DESKEW loop (uniform shrink about the baseline, then a small `embolden` + purge — 5 closed the curl eyes,
+  3 keeps them open); š inherits. The ACCENTED loop runs at `_WT = LAT_WT` (it was stamping at 1.0, the heaviest
+  element of each glyph) with `_caron` 26→11 and `_acute` 32→11 widths. `_L_q` descender end `LDESC*1.2`, `_L_f`
+  `LDESC*1.25` (both ≈ −300u). `features.FIGURE_FEA` `frac`: denominator rules BEFORE numerator rules, both up to
+  four figures (a run between two bars is a denominator; "10/11/2025" → ¹⁰⁄₁₁⁄₂₀₂₅). New glyphs `ampersand`
+  (`_ampersand`: ONE ribbon_dir stroke on the Roman topology — tail at lower right → thin diagonal up-left → small
+  top loop → thick stroke down-left crossing the diagonal → bowl → up the right side crossing it again → arm at
+  mid-right; the first attempt, arm-first with a tall teardrop bowl, read as a "d" — the two crossings are what
+  make it read as &), `trademark`, `registered` (© ring + R), `section` (two $-curves offset ±115), `paragraph`
+  (oval bowl + two stems). 257→262 glyphs. Overlap scan: 0 pairs in all categories, both weights.
+  **Third pass (same day) — the three "known" items:** (1) **p is drawn** — `_L_p` in `LATIN_DRAWN` = the mirror of
+  q (stem `ribbon_dir` from (60,LXH−2) down to `LDESC*1.2`, bowl `_lbowl(104, LXH/2, 38, LXH/2)` to its right),
+  `LAT_STRETCH["p"]=1.67`; the `("p.lat", …, "uni0440")` REUSE_DESKEW entry is removed (glyph name `p.lat`→`p`), and
+  the dead `LAT_LIGHTEN["p"]` dropped (q is not lightened). Its weight was the traced р's — nothing in the brush
+  pipeline could thin it. (2) **C/G to the cap line** — `LAT_CAPSCALE = {"C.lat": 0.935}` overrides `CAP_SCALE` in
+  the REUSE_DESKEW loop (C top 577→603; E already 603 like A); `_U_G`'s C-curve controls go to `1.15·LCAP` /
+  `−0.12·LCAP` (a cubic reaches only ~¾ of the way to its controls — the old ±0.06 gave a 579 top and a bottom 14u
+  ABOVE the baseline; now −11..617) + an entry hook `ribbon_prof` at the top terminal. (3) **Flourished D G Q R U V
+  W** — `_entry_swash(p, sx)` (the `_U_I` loop re-anchored at stem x `sx`: sweeps up-left to `sx−78` at `1.10·LCAP`
+  and curls back, widths 30→19) on D R U V W; `_top_curl(p, ex)` (a small outward curl at a right-hand stroke top,
+  24→15) on U V W; R gets a leg-end curl, Q a tail twist + a small oval-top curl. All via `ribbon_prof`, so `_LSX`
+  applies. The swashes sit above the join band so sidebearings are unchanged (U/V/W lsb go negative like N/L; the
+  right curls overhang the advance like T's arm — the cap kern's 100–590 band and the scans keep every pair clear).
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

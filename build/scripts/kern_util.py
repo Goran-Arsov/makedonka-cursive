@@ -19,7 +19,21 @@ from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
 
 W_LOW, W_HIGH, N_FLOOR, S_MAX, MIN_KERN = 115, 180, 14, 60, 5
 _CYR = "абвгдѓежзѕијклљмнњопрстќуфхцчџшѐѝ"
-_LAT = "abcdefghijklmnopqrstuvwxyz"
+_LAT = "abcdefghijklmnopqrstuvwxyzšžčćđ"   # + the South-Slavic diacritics (v0.9.35)
+# v0.9.35 (audit #18): proportional figures have negative sidebearings (lsb −29..−102) and NO kerning, so
+# 60 09 68 66 89 99 04 54 … interlocked. Push every figure pair apart to a minimum full-height ink gap.
+DIG_GAP, DIG_MAX = 24, 120
+_DIG = "0123456789"
+# v0.9.35 (audit #19): the ornate S/Š top curl lands on a following ascender loop (Sk Sl Sf Sb Sh); push
+# those pairs apart until the ascender band (above the x-height) clears by ASC_GAP, capped at ASC_MAX.
+ASC_GAP, ASC_MAX, ASC_LO, ASC_HI = 10, 160, 270, 640
+_ASC_CAPS, _ASC_LOW = "SŠFT", "bfhklđ"      # + F/T (their bars over a following ascender loop; the glyphs were also reshaped)
+# the ornate Ф/Ѕ right flourishes cross a following ascender/overbar letter in the Bold (Фб 448px²…) — same
+# floor model in the band where the Ф tail hangs (y 343..497 measured)
+_CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX = "ФЅ", "бвѓќрјтпгд", 300, 600, 10, 160
+# the raised closing quotes now share the opening quotes' height, so in the Bold a tall ascender (f d đ в)
+# can touch a following ’ ” — same floor model in the quote band (v0.9.35)
+_QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX = "bdfhklđtвѓќб", "’”‘“'\"", 420, 700, 8, 150   # б's flag needs ~120 in the Bold
 
 # Uppercase spacing kern (v0.9.17; reworked v0.9.25, v0.9.27, v0.9.28): equalise the gap the EYE reads
 # between cap bodies. v0.9.27 used a full-height 15/85 ink-MASS percentile for the body edges, but that
@@ -32,8 +46,8 @@ _LAT = "abcdefghijklmnopqrstuvwxyz"
 # perceived whitespace to ~10px spread. Fires ONLY capital-before-capital, so the capital->lowercase tuck is
 # untouched. (The band excludes descenders/top flourishes, so those still cross thinly between ornate pairs.)
 CAP_BAND_GAP, CAP_BAND_LO, CAP_BAND_HI, MIN_CAP_KERN = 290, 100, 590, 10
-_CYR_CAPS = "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШ"
-_LAT_CAPS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+_CYR_CAPS = "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШЀЍ"      # + Ѐ Ѝ (v0.9.35, audit #17 — they had no cap kern)
+_LAT_CAPS = "ABCDEFGHIJKLMNOPQRSTUVWXYZŠČŽĆĐ"
 
 
 class _FP:   # flatten pen: collect on-curve + sampled-curve points
@@ -52,12 +66,32 @@ class _FP:   # flatten pen: collect on-curve + sampled-curve points
     def endPath(s): pass
 
 
-def _profiles(gs, gn):
+def _profiles(gs, gn, lo=0, hi=270):
     fp = _FP(); gs[gn].draw(fp); R = {}; L = {}
     for x, y in fp.pts:
-        if 0 <= y < 270:
+        if lo <= y < hi:
             b = int(y // 6); R[b] = max(R.get(b, -1e9), x); L[b] = min(L.get(b, 1e9), x)
     return R, L
+
+
+def _floor_pairs(gs, cm, hm, lefts, rights, lo, hi, gap, cap):
+    # positive-only kern: push each (a, b) pair apart until the nearest ink approach within the
+    # y-band [lo, hi) is at least `gap` units (never tightens; capped at `cap`)
+    present_l = [c for c in lefts if ord(c) in cm]; present_r = [c for c in rights if ord(c) in cm]
+    R = {c: _profiles(gs, cm[ord(c)], lo, hi)[0] for c in present_l}
+    L = {c: _profiles(gs, cm[ord(c)], lo, hi)[1] for c in present_r}
+    out = []
+    for a in present_l:
+        for b in present_r:
+            bins = set(R[a]) & set(L[b])
+            if not bins:
+                continue
+            near = min(L[b][k] + hm[cm[ord(a)]][0] - R[a][k] for k in bins)
+            if near < gap:
+                k = min(int(round(gap - near)), cap)
+                if k >= MIN_KERN:
+                    out.append((cm[ord(a)], cm[ord(b)], k))
+    return out
 
 
 def _pairs(gs, cm, hm, letters):
@@ -152,7 +186,11 @@ def add_kern(otf_path, extra_fea=""):
     f = TTFont(otf_path); gs = f.getGlyphSet(); cm = f.getBestCmap(); hm = f["hmtx"]
     pilfont = ImageFont.truetype(otf_path, f["head"].unitsPerEm)   # 1px == 1 unit, for the cap body measure
     pairs = _pairs(gs, cm, hm, _CYR) + _pairs(gs, cm, hm, _LAT) \
-          + _cap_pairs(pilfont, cm, hm, _CYR_CAPS) + _cap_pairs(pilfont, cm, hm, _LAT_CAPS)
+          + _cap_pairs(pilfont, cm, hm, _CYR_CAPS) + _cap_pairs(pilfont, cm, hm, _LAT_CAPS) \
+          + _floor_pairs(gs, cm, hm, _DIG, _DIG, -10, 670, DIG_GAP, DIG_MAX) \
+          + _floor_pairs(gs, cm, hm, _ASC_CAPS, _ASC_LOW, ASC_LO, ASC_HI, ASC_GAP, ASC_MAX) \
+          + _floor_pairs(gs, cm, hm, _QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX) \
+          + _floor_pairs(gs, cm, hm, _CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX)
     # register the feature under both scripts (+ default), so shapers that look up `cyrl`/`latn`
     # apply it — not just those that fall back to DFLT
     fea = ("languagesystem DFLT dflt;\nlanguagesystem latn dflt;\nlanguagesystem cyrl dflt;\n"

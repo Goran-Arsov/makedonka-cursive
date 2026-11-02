@@ -571,7 +571,7 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
-- **(v0.9.41) ш/Ш underbar back under the stems — built 2026-11-02, NOT yet committed/shipped** (owner: "the
+- **(v0.9.41) ш/Ш underbar back under the stems — shipped 2026-11-02 (commit `ccdd5ef`, release v0.9.41, amici `?v=33`)** (owner: "the
   bottom bar on Ш and ш has been displaced … move them back"). A knock-on of the v0.9.39 de-slant that the scans
   could not see: the bar's ends were placed as FRACTIONS of the glyph's whole ink width (`_fL/_fR` 0.00/0.60 for
   ш, 0.205/0.659 for Ш), tuned on the 30° trace; the shear moved the top flourishes and the stems' feet by

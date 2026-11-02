@@ -40,23 +40,17 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
   so the old private specimen page can be retired or replaced by it.
 
-## Current state (v0.9.41 BUILT in the tree, uncommitted; v0.9.40 is the last SHIPPED; updated 2026-11-02)
-- **v0.9.41 (built, not shipped):** the **ш/Ш underbar** back under the stems — it had slid left with the
-  v0.9.39 de-slant (its ends were fractions of the whole ink width); now anchored to the stems' feet with offsets
-  measured off v0.9.38, so it sits exactly where it did. Whole suite rebuilt (font-internal **"0.941"**,
-  demo/CSS `?v=53`, README jsDelivr tag `@v0.9.41`), verified (FontBakery 0 FAIL; 0 overlapping pairs; triple
-  scan clean; 294 glyphs), **uncommitted** — ship steps 5–8 to do. The installed OTFs in
-  `~/.local/share/fonts/` and amici (`?v=32`) are still v0.9.40.
-- **Shipped + public.** `origin/main` is at **v0.9.40** (commit `df9eac3`: the drawn Latin m — `_L_m`, the n's
-  stem + two arches at the n's stretch/weight, middle leg tapered to `M_MID_LEG` 0.65 at the foot; the
-  de-skewed м copy `m.lat` removed, `@XH` updated). Before that, v0.9.39 (commit `ed54883`) was the slant
-  redesign: traced Cyrillic 14° both cases via `cyr_shear` from the measured ~30° natural lean,
-  Latin/figures/punctuation 10° via `T_DEG`, per-glyph targets С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°, Latin s
-  extra 0.3 de-skew; descender floor before j/ј, wider Ф/Ѕ/Р flourish floor, d + V W U in the ascender floor.
-  GitHub releases v0.9.15–v0.9.40 are live (each with its zip; v0.9.40's has 15 entries). Repo is **PUBLIC**
-  (published as-is, no history rewrite — verified no real secrets across history). Font-internal version
-  **"0.940"**, demo/CSS `?v=52`, README jsDelivr tag `@v0.9.40`; both OTFs installed in `~/.local/share/fonts/`;
-  amici at `?v=32` (commit `614e59b`, pushed). Verified before shipping: FontBakery 0 FAIL / 0 ERROR on all four
+## Current state (v0.9.41 SHIPPED 2026-11-02)
+- **Shipped + public.** `origin/main` is at **v0.9.41** (commit `ccdd5ef`: the ш/Ш underbar re-anchored to the
+  stems' feet — it had slid left with the v0.9.39 de-slant). Before that: v0.9.40 (`df9eac3`) the drawn Latin m
+  (`_L_m`, the n's stem + two arches at the n's stretch/weight, middle leg tapered to `M_MID_LEG` 0.65; the м copy
+  `m.lat` removed, `@XH` updated); v0.9.39 (`ed54883`) the slant redesign: traced Cyrillic 14° both cases via
+  `cyr_shear` from the measured ~30° natural lean, Latin/figures/punctuation 10° via `T_DEG`, per-glyph targets
+  С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°, Latin s extra 0.3 de-skew; descender floor before j/ј, wider Ф/Ѕ/Р
+  flourish floor, d + V W U in the ascender floor. GitHub releases v0.9.15–v0.9.41 are live (each with its zip;
+  v0.9.41's has 15 entries). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets
+  across history). Font-internal version **"0.941"**, demo/CSS `?v=53`, README jsDelivr tag `@v0.9.41`; both
+  OTFs installed in `~/.local/share/fonts/`; amici at `?v=33` (commit `8545fc8`, pushed). Verified before shipping: FontBakery 0 FAIL / 0 ERROR on all four
   files, 0 overlapping pairs in all 9 scan sections of both weights, the 16 384-triple apostrophe scan fully
   clean in both weights, 294 glyphs. Measured slants (projection profile, Regular, v0.9.39): Cyrillic 14.2° /
   13.5°, Latin 10.2° / 9.8°, punctuation 10.0°.
@@ -128,7 +122,7 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
-- **v0.9.41** — **(built 2026-11-02, unshipped)** ш/Ш underbar anchored to the stems' feet (it had slid left with
+- **v0.9.41** — **(2026-11-02)** ш/Ш underbar anchored to the stems' feet (it had slid left with
   the de-slant; back to its v0.9.38 position).
 - **v0.9.40** — **(2026-11-02)** drawn Latin m (n's stem + two arches, `_L_m`, middle leg
   tapered to 65% at the foot) replaces the de-skewed copy of the Cyrillic м; `m.lat` removed, `@XH` updated.
@@ -274,7 +268,7 @@ Windows/.NET step, optional.)
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
-**2026-11-02, v0.9.41 (built):**
+**2026-11-02, v0.9.41 (shipped):**
 - ~~**"The bottom bar on Ш and ш has been displaced — move them back"** (owner)~~ — unintended knock-on of the
   v0.9.39 de-slant (bar ends were fractions of the whole ink width); re-anchored to the stems' feet, matching
   v0.9.38 exactly.

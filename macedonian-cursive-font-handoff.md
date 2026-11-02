@@ -328,7 +328,8 @@ vectorizing the Wikimedia chart (see *Source material* below).
   sits like o/n (8). Lesson: when rotating/placing a sub-stroke of a Latin glyph, remember the ribbon has already
   applied the `_LSX` x-stretch — any geometric centre/offset you compute must be in that stretched space. Only Z/z
   changed; 243 glyphs; both weights; FontBakery 0 FAIL/0 ERROR per-format.
-- **(v0.9.35) glyph-audit fixes — built 2026-11-02, not yet shipped.** A per-glyph audit (metrics + per-contour
+- **(v0.9.35) glyph-audit fixes — shipped 2026-11-02 (commit `34e3155`, GitHub release v0.9.35, installed locally,
+  amici `?v=27` pushed as `5104a2b`).** A per-glyph audit (metrics + per-contour
   dump, 900px/em zooms with enclosed-hole counting, a HarfBuzz-kerned ink-overlap scan of ~6000 pairs) found the
   defects tracked as followups Open #13–#27; all fixed in one build. **Outline mechanics:** (1) new
   `build/scripts/outline_util.py::purge_slivers(path, max_width=4, max_area=120)` drops hairline sliver contours
@@ -363,7 +364,7 @@ vectorizing the Wikimedia chart (see *Source material* below).
   cap→cap, digit→digit, lower→lower, lower→quote in both weights (remaining: Фѓ/Tk/Fk ≈50px² touches in Regular,
   Bold Ф flourish crossings and F/T bar over ascenders — accepted as the overhang design); FontBakery 0 FAIL/0 ERROR
   on all four files, OTF WARN only UPM; final woff2 Regular 79 KB (unchanged), Bold 106→113 KB. Version strings 0.935, demo/CSS
-  `?v=46`, README jsDelivr tag `@v0.9.35` (release not yet created).
+  `?v=46`, README jsDelivr tag `@v0.9.35` (release created, so the CDN snippet resolves).
   **Second pass (same day) — the items first parked as "design":** `_U_F` top bar rises to the right
   (`(112,LCAP*1.00),(160,LCAP*1.04),(202,LCAP*1.02)` — underside ~596u clears the 573u ascender tops; it dipped to
   ~517u) and the mid bar is shortened to x=112 (was 150, reaching into the next letter); the Latin T takes

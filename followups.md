@@ -37,13 +37,11 @@ automatically at the end of each build.
   base64 `@font-face`, so the kern renders natively) and a non-technical install/use guide exist as private
   shareable pages; the owner holds the links. (See Open work #11 — consider committing a specimen source.)
 
-## Current state (v0.9.35 — BUILT in the working tree, NOT yet committed or released; updated 2026-11-02)
-- **v0.9.35 is built but unshipped.** The whole suite in the tree (both OTF/TTF/woff2/woff, `specimen.png`,
-  README/demo/CSS `?v=46`, font-internal **"0.935"**) is the glyph-audit fix release (see the changelog line and
-  Open #13–#27 below, all resolved). It is **uncommitted** — ship steps 5–7 (zip, commit, push, release, install,
-  amici) are still to do. The last SHIPPED version is **v0.9.34** (`origin/main`, GitHub release, amici `?v=26`).
-- **Shipped + public.** `origin/main` is at **v0.9.34**; GitHub releases v0.9.15–v0.9.34 are live (each with its
-  zip). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
+## Current state (v0.9.35 — SHIPPED + repo PUBLIC; updated 2026-11-02)
+- **Shipped + public.** `origin/main` is at **v0.9.35** (commit `34e3155`, the glyph-audit fix release — see the
+  changelog line and Open #2/#12/#13–#27 below, all resolved); GitHub releases v0.9.15–v0.9.35 are live (each with
+  its zip). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets across history).
+  Font-internal version **"0.935"**, demo/CSS `?v=46`; both OTFs installed in `~/.local/share/fonts/`.
 - **Coverage — 262 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
   uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
   South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ ‚ ‹ › / … · • ° %
@@ -83,18 +81,14 @@ automatically at the end of each build.
 
 ## What should still be done
 
-**0. Ship v0.9.35** (built 2026-11-02, uncommitted): review `git diff` (scripts + the regenerated suite + docs),
-then steps 5–7 of "Ship a version" — zip, commit, push, `gh release create v0.9.35`, install to
-`~/.local/share/fonts/`, propagate to amici (`?v=27`). The README's jsDelivr tag already says `@v0.9.35`, so the
-release must exist before that CSS snippet works.
-
 **A. Propagate the latest release to the two places OUTSIDE this repo (owner's).**
-- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.34, pushed** (amici commit `c136ca1`:
-  new Regular+Bold `woff`/`woff2`, cache-buster `?v=25→26`, Tailwind CSS rebuilt). amici's own cache-buster
-  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.33=`?v=25`, v0.9.34=`?v=26`). **Only
+- **Separate website** (`~/IT/Rails/MyApps/amici`) — **code is at v0.9.35, pushed** (amici commit `5104a2b`:
+  new Regular+Bold `woff`/`woff2`, cache-buster `?v=26→27`, Tailwind CSS rebuilt). amici's own cache-buster
+  counter is independent of this repo's `?v=` (amici v0.9.23=`?v=15` … v0.9.34=`?v=26`, v0.9.35=`?v=27`). **Only
   the live DEPLOY remains** — its GitHub Actions deploy is blocked on missing secrets, so it needs a manual deploy
   or the secrets set; the live site state can't be verified from this checkout. (`app/assets/builds/tailwind.css`
-  is gitignored there — regenerated on deploy, so the commit carries only the source CSS + the font binaries.)
+  is gitignored there — regenerated on deploy, so the commit carries only the source CSS + the font binaries.
+  Note: amici's local `main` has no upstream set — push with `git push origin main`.)
 - **Live specimen preview page** — stale; re-embed the current `woff2` so it shows the new features + diacritics
   + symbols. Owner holds the private link.
 
@@ -122,7 +116,7 @@ non-self-intersecting stroker — **Open #7**. (FontValidator cross-check is a m
   `` ` `` • ¡ ¿ ‚ ‹ › € ½ ¼ ¾ + ¹²³⁰–⁹/₀–₉ codepoints + hyphen/endash/emdash `.case`; × < > widths 360; third
   pass: drawn **p** (q's mirror, replaces the р copy), C cap-scaled + G re-aimed to the cap line, entry swashes +
   terminal curls on **D G Q R U V W**. 243→262 glyphs; overlap scan 0 pairs in every category, both weights;
-  FontBakery 0 FAIL (OTF WARN only UPM). Not shipped yet.
+  FontBakery 0 FAIL (OTF WARN only UPM). Shipped 2026-11-02 (commit `34e3155`, release v0.9.35, amici `?v=27`).
 - **v0.9.34** — **symmetric Latin Z and z:** per request, both Z/z are made point-symmetric by removing the upper
   element and putting the LOWER bar, rotated 180°, on top. **Z** (`_U_Z`): original upper bar deleted; the lower
   bar is lifted, rotated 180° about the Z's symmetry centre, and seated on the stem top — one clean contour (the
@@ -350,6 +344,11 @@ with #13/#14).
     letters (scope: Macedonian + South-Slavic Latin).
 
 ## Done (resolved)
+- **Glyph audit + fixes (v0.9.35, 2026-11-02)** — every finding of the per-glyph audit (Open #13–#27) and the
+  older #2/#12/plain-caps items fixed in one release: outline clean-up (ѕ cracks, beaded hairlines, true Bold
+  dilation), placement (quotes, dashes + `case`/`calt`, @, i-dot, z, đ, °), reshaped/drawn glyphs (F, T, p, C, G,
+  flourished D G Q R U V W, s, carons, q/f), floor kerns (0 overlapping pairs), 19 new glyphs incl. `&`; shipped,
+  released, installed, re-propagated to amici (`?v=27`; live deploy owner-side).
 - **Shipped + public release pipeline** — v0.9.21/0.9.22/0.9.23/0.9.24/0.9.25 pushed, GitHub-released, repo made public.
 - **Cap spacing (v0.9.24 → v0.9.25)** — all-caps Cyrillic now lined up, evenly distanced, non-overlapping (visual-ink-gap
   kern); re-propagated to amici each time (pushed, `?v=17`; live deploy owner-side). Residual: cap-body *heights* still

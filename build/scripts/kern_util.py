@@ -28,10 +28,16 @@ _DIG_CASE = [n + ".case" for n in ("zero", "one", "two", "three", "four", "five"
 # v0.9.35 (audit #19): the ornate S/Š top curl lands on a following ascender loop (Sk Sl Sf Sb Sh); push
 # those pairs apart until the ascender band (above the x-height) clears by ASC_GAP, capped at ASC_MAX.
 ASC_GAP, ASC_MAX, ASC_LO, ASC_HI = 10, 160, 270, 640
-_ASC_CAPS, _ASC_LOW = "SŠFT", "bfhklđ"      # + F/T (their bars over a following ascender loop; the glyphs were also reshaped)
+_ASC_CAPS, _ASC_LOW = "SŠFTVWU", "bfhkldđ"   # v0.9.39 (de-slant): + d (Sd/Šd 66–80px²: the S curl met the d loop), + V W U (their top curls; Vk 59px² in the Bold)      # + F/T (their bars over a following ascender loop; the glyphs were also reshaped)
 # the ornate Ф/Ѕ right flourishes cross a following ascender/overbar letter in the Bold (Фб 448px²…) — same
 # floor model in the band where the Ф tail hangs (y 343..497 measured)
-_CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX = "ФЅ", "бвѓќрјтпгд", 300, 600, 10, 160
+_CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX = "ФЅР", "бвѓќрјтпгдѐѝ", 300, 600, 10, 240
+# v0.9.39: + Р (its flourish met г's overbar after the de-slant), + ѐ ѝ (grave accents in the same band), and the
+# cap 160 → 240 — Ф's tail now reaches ~220u into a following г/ѓ overbar (the pairs are theoretical in
+# Macedonian, but the scan policy is zero overlapping pairs)
+# v0.9.39 (20% de-slant): descenders moved right relative to their bodies, so a q/g/y/р… tail now meets the
+# left-sweeping descender hook of a following j/ј (qj 86px²). Same floor model in the descender band.
+_DESC_L, _DESC_R, DESC_LO, DESC_HI, DESC_GAP, DESC_MAX = "qgjypfđ" + "јруфџц", "jј", -300, -10, 10, 120
 # the raised closing quotes now share the opening quotes' height, so in the Bold a tall ascender (f d đ в)
 # can touch a following ’ ” — same floor model in the quote band (v0.9.35)
 _QUO_L_LOW, _QUO_L_CAPS = "bdfhklđtвѓќб", "ABCDEFGHIJKLMNOPQRSTUVWXYZŠČŽĆĐ" + "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШ"
@@ -58,7 +64,7 @@ QUO_LC_LO, QUO_LC_HI = 250, 540   # LO 250 since v0.9.38 (tail at the x-height �
 # with ink inside the quote band: ascenders, t, i-dot, overbars) are left to them. TUCK_G 215 ≈ the air the
 # untouched good pairs already have (n'r 249, a'a 199, you're 249).
 _QUO_APOS = ["quotesingle", "quoteright", "quotesingle.lc", "quoteright.lc"]
-TUCK_G, TUCK_MAX, TUCK_BAND, TUCK_SLANT_DEG = 215, 110, 70, 15.0   # TUCK_SLANT_DEG == build_font.T_DEG
+TUCK_G, TUCK_MAX, TUCK_BAND, TUCK_SLANT_DEG = 215, 110, 70, 10.0   # TUCK_SLANT_DEG == build_font.T_DEG (10° since v0.9.39; was 15)
 TUCK_XH_MAX = 300   # a letter whose ink tops out below this is an x-height letter and tucks (tallest: Bold s 282);
                     # anything taller (ascenders 569+, i/j dots ~397, overbars ~356, ѓ/ќ accents) is floor-owned.
                     # Since the quote tail now sits AT the x-height (QUO_DY −175), "reaches the mark's lowest ink"
@@ -260,7 +266,8 @@ def add_kern(otf_path, extra_fea=""):
           + _floor_pairs(gs, cm, hm, _QUO_LC, _QUO_L + _QUO_LC_L, QUO_LC_LO, QUO_LC_HI, QUO_GAP_REV, QUO_MAX) \
           + _tuck_pairs(gs, cm, hm, _QUO_APOS[:2], _CYR + _LAT) \
           + _tuck_pairs(gs, cm, hm, _QUO_APOS[2:], _CYR + _LAT) \
-          + _floor_pairs(gs, cm, hm, _CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX)
+          + _floor_pairs(gs, cm, hm, _CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX) \
+          + _floor_pairs(gs, cm, hm, _DESC_L, _DESC_R, DESC_LO, DESC_HI, DESC_GAP, DESC_MAX)
     # one value per pair: the passes are listed collision-avoiders first, so if a tuck (negative) and a floor
     # (positive) ever both speak for the same pair, the floor wins (feaLib would otherwise reject the duplicate)
     seen = set(); uniq = []

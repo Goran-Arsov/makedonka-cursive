@@ -19,11 +19,11 @@ from outline_util import purge_slivers
 
 REG, OUTDIR = sys.argv[1], sys.argv[2]
 D = float(sys.argv[3]) if len(sys.argv) > 3 else 16.0    # horizontal bold amount (the thick-stem axis)
-TAN = math.tan(math.radians(18))                         # the font's italic angle
+TAN = math.tan(math.radians(14))                         # the font's italic angle model: 14° since v0.9.39 (= build_font.CYR_TARGET_DEG; Latin/figures are 10°). Was 18°.
 DY = max(4.0, round(D * 0.44))                           # vertical growth < horizontal, so weight lands on the thick
                                                          # near-vertical stems, not the thin horizontals (т/г/п overbars,
                                                          # ш underline, connectors) — this keeps the Regular's contrast
-VER = "0.938"
+VER = "0.939"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
@@ -105,7 +105,7 @@ _b.ulCodePageRange1 = 0x00000005; _b.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=8, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_b.panose, _k, _v)          # PANOSE: Latin hand-written / script, bold
-fb.font["head"].fontRevision = 0.938
+fb.font["head"].fontRevision = 0.939
 # STAT (Bold's position on the Weight axis) + meta (design/supported scripts), matching the
 # Regular. Placed BEFORE the Mac-name strip so buildStatTable's platform-1 names are removed too.
 from fontTools.otlLib.builder import buildStatTable

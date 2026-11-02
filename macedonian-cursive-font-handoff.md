@@ -571,6 +571,79 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
+- **(v0.9.39) absolute slants: Cyrillic 14°, Latin 10°, everything else 10° — built 2026-11-02, NOT yet
+  committed/shipped** (owner, same day, in three steps: first "20% less slant on every glyph", then the absolute
+  targets "Cyrillic lowercase and caps 12° (both!), Latin lowercase and caps 10° (both), take special care of
+  the small s, all remaining glyphs 10°", then "make Cyrillic lowercase and uppercase 14°"). Slant is a shear,
+  and the font has two kinds of glyph:
+  **Drawn glyphs** (Latin letters, figures, punctuation, operators, symbols — everything sheared by `SLANT`):
+  **`T_DEG` 15 → 10**, `SLANT = tan(T_DEG)`. `kern_util.TUCK_SLANT_DEG` 15 → 10 to match (the tuck projects
+  along the slant).
+  **Traced Cyrillic glyphs** (the chart's own lean, baked into `paths.json`): the lean had to be MEASURED. Three
+  methods were tried on v0.9.38 (`scratchpad/slant.py` downstroke-segment angle, `slant2.py` row-centroid
+  axis, `slant3.py` projection profile = the un-shear angle that makes the column histogram sharpest). Only the
+  projection-profile one is trustworthy: calibrated on the drawn figures/punctuation (known 15°) it reads 16.0/15.0,
+  and it agrees with the project's own `LAT_NAT` per-source values (same method, v0.9.29); the centroid method
+  under-read the cursive (22°) and the segment method far more (13°). Natural lean, v0.9.38 medians:
+  **lowercase 30.5°, caps 29.5°** → knobs `CYR_TARGET_DEG = 14`, `CYR_NAT_LOWER_DEG = 30.5`,
+  `CYR_NAT_CAPS_DEG = 29.5`, and **`cyr_shear(cp)` = tan(14°) − tan(natural)** per case (−0.340 lowercase,
+  −0.317 caps; caps = cp < U+0430), applied as a shear about the chart's y=0 at the end of `letter_path` (after
+  `purge_slivers`); y is untouched so baselines/heights hold and the per-glyph horizontal offset is absorbed by
+  the sidebearing normalisation downstream. ѐ ѝ Ѐ Ѝ are composed from the sheared base's bounds, so the grave
+  follows. The Latin de-skew copies (`REUSE_DESKEW`, the T cap) take `_neut` sources that already carry
+  `cyr_shear`, so **`_dsk = tan(nat) + cyr_shear(src) − SLANT`** keeps them landing on SLANT whatever the
+  Cyrillic target. `make_bold.TAN` = tan(14°) (= CYR_TARGET_DEG; was 18°; its un-slant/stretch/re-slant dilation
+  model). `post.italicAngle` and the caret stay
+  0/vertical (upright-classified, unchanged).
+  **The small s:** `s.lat` is a de-skewed copy of ѕ, an S-curve with no stem, so its lean is its spine and no
+  stem-based measure sees it; at the old de-skew (`LAT_NAT[ѕ]` 25) the spine still stood ~35° beside the 10°
+  letters. Rendered with extra shears 0/−0.1/−0.2/−0.3/−0.4 against 10° guides (`scratchpad/s_variants.png`):
+  −0.3 reads level with u/e without squashing the curls, −0.4 already leans back. So **`LAT_NAT[0x0455]` 25 →
+  37.5** (tan 37.5° = tan 25° + 0.3). š follows (built from s.lat).
+  **Measured result** (projection profile, v0.9.39 Regular medians): cyr lower **14.2°**, cyr caps **13.5°**
+  (at the earlier 12° target they read 12.2/11.5 — the method tracks the knob), lat lower **10.2°**, lat caps
+  **9.8°**, punct **10.0°**, digits 11.2° (the method reads the figures +1°; the sheared rectangles | [ ] # read
+  exactly 10). The Bold outlines are the Regular's; its thickened stems skew that measure by a degree or two.
+  **Knock-ons (kerning):** the re-angled glyphs meet differently, found by the pair scan in two rounds —
+  (1) at the first (20%) step: qj 86 px² both weights, Bold Фѐ 95 / Фг 75 / Фѓ 63 / Рг 49 → a new
+  descender-band floor pass (`_DESC_L` q g j y p f đ ј р у ф џ ц → `_DESC_R` j ј, band −300..−10, gap 10,
+  cap 120) and the Ф/Ѕ flourish floor extended (`_CYR_FL_CAPS` + Р, `_CYR_FL_LOW` + ѐ ѝ, `CFL_MAX` 160 → 240);
+  (2) at the absolute targets: Sd/Šd 66/80 px² (the de-skewed S curl met the d loop) and Bold Vk 59 → the
+  S/F/T ascender floor gets **d** in `_ASC_LOW` and **V W U** in `_ASC_CAPS`. Result: pair scan 0 overlaps in all
+  9 sections of both weights; the 16 384-triple apostrophe scan is now **completely clean in both weights**
+  (ј's descender hook no longer sweeps under the previous letter at 14°, re-verified after the 12 → 14 change);
+  FontBakery 0 FAIL / 0 ERROR; TTFs shape identically to the OTFs. 3038/3108 kern pairs (fewer: the gentler
+  lean needs fewer pushes); 294 glyphs.
+  **Per-glyph slant factors (same day, owner):** "increase the slant of Cyrillic capital S (as in 'Star') by 10%
+  of its current amount; decrease Cyrillic Ѕ and ѕ (as in 'ѕид') by 20%; decrease Latin S and s by 20%". Read
+  as: С (U+0421, "Стар" — item 2 is the dze, item 3 the Latin S, so 'Star' is the transliteration), and
+  "current amount" = the glyph's nominal slant set that day (14° Cyrillic, 10° Latin). Knobs
+  **`CYR_SLANT_FACTOR = {С: 1.10, Ѕ: 0.80, ѕ: 0.80}`** — a factor on the group's nominal tangent inside
+  `cyr_shear` (С → 15.4°, Ѕ ѕ → 11.2°; shears +0.025 / −0.050 relative to the group) — and
+  **`LAT_SLANT_FACTOR = {S.lat: 0.80, s.lat: 0.80}`** applied in the `REUSE_DESKEW` loop as
+  `dsk = _dsk(src) − (factor − 1)·SLANT` (S s → 8°; shear −0.035; Š š follow, and s keeps its extra
+  `LAT_NAT[ѕ]` 37.5 de-skew). The Latin C (a copy of С) is NOT affected by С's factor: `_dsk` backs the whole
+  source shear out again. These are small moves on stemless letters whose visible lean is mostly their own
+  curve; if the owner meant the perceived spine lean, scale the factors further. Before/after render:
+  `scratchpad/S_factors.png`. Scans/FontBakery/TTF check re-run: all clean.
+  **Then (same day): "Ѕ ѕ and Latin S s to a target of 6° for all."** The knobs became absolute per-glyph
+  degrees — **`CYR_SLANT_DEG = {С: 15.35, Ѕ: 6, ѕ: 6}`** (С keeps its +10% tangent) inside `cyr_shear`, and
+  **`LAT_SLANT_DEG = {S.lat: 6, s.lat: 6}`** in the `REUSE_DESKEW` loop (`dsk = _dsk(src) − (tan(target) −
+  SLANT)`). Shears relative to the group: Ѕ ѕ −0.144, S s −0.071. 3033/3109 kern pairs; scans, FontBakery and
+  the TTF check re-run: all clean. Before/after render: `scratchpad/S_6deg.png`.
+  **Then: "to a target of 2° for all"** — the same four entries 6 → **2** (Ѕ ѕ shear −0.214 relative to the
+  14° group, S s −0.141 relative to 10°; the letters are now near-upright beside their neighbours). Scans,
+  FontBakery and the TTF check re-run: all clean. Render: `scratchpad/S_2deg.png`.
+  **Then: "to a target of −2° (minus 2) for all"** — the same four entries 2 → **−2**, a slight backslant (the
+  knobs take negative degrees as-is: Ѕ ѕ shear −0.284 relative to the 14° group, S s −0.211 relative to 10°).
+  Scans, FontBakery and the TTF check re-run: all clean. Render: `scratchpad/S_minus2deg.png`.
+  **Then: "to a target of −8° (minus 8) for all"** — the same four entries −2 → **−8** (Ѕ ѕ shear −0.390
+  relative to the 14° group, S s −0.317 relative to 10°). Scans, FontBakery and the TTF check re-run: all
+  clean. Render: `scratchpad/S_minus8deg.png`.
+  **Then: "Latin small s to −3°"** — `LAT_SLANT_DEG["s.lat"]` −8 → **−3** only (S Ѕ ѕ stay at −8; š follows s).
+  Shear relative to the 10° Latin group −0.229. Scans, FontBakery and the TTF check re-run: all clean.
+  Render: `scratchpad/s_minus3deg.png`.
+  Version strings 0.939, demo/CSS `?v=51`, README `@v0.9.39`. Before/after render: `scratchpad/slant_compare.png`.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

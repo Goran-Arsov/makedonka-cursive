@@ -40,7 +40,18 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
   so the old private specimen page can be retired or replaced by it.
 
-## Current state (v0.9.38 SHIPPED 2026-11-02)
+## Current state (v0.9.39 BUILT in the tree, uncommitted; v0.9.38 is the last SHIPPED; updated 2026-11-02)
+- **v0.9.39 (built, not shipped):** **absolute slants — Cyrillic (lowercase + caps) 14°, Latin (both cases)
+  10°, figures/punctuation/operators 10°.** Drawn glyphs via `T_DEG` 15 → 10; traced Cyrillic via a per-case
+  shear `cyr_shear(cp)` = tan(`CYR_TARGET_DEG` 14) − tan(measured natural lean 30.5° lowercase / 29.5° caps,
+  projection-profile method); Latin de-skew copies and the Bold model follow; the Latin s gets an extra 0.3
+  de-skew (`LAT_NAT[ѕ]` 37.5) so its stemless spine reads level with its neighbours. Measured (Regular): 14.2° /
+  13.5° / 10.2° / 9.8° / 10.0°. Per-glyph targets on top (`CYR_SLANT_DEG`, `LAT_SLANT_DEG`): С 15.35°
+  (+10% tangent), Ѕ ѕ −8°, Latin S −8°, Latin s −3° (backslants). Kerning extended to keep the scans at zero (descender floor before j/ј, wider
+  Ф/Ѕ/Р flourish floor, d + V W U in the ascender floor); the apostrophe triple scan is now fully clean. Whole
+  suite rebuilt (font-internal **"0.939"**, demo/CSS `?v=51`, README jsDelivr tag `@v0.9.39`), verified
+  (FontBakery 0 FAIL; 0 overlapping pairs; 294 glyphs), **uncommitted** — ship steps 5–8 to do. The installed
+  OTFs in `~/.local/share/fonts/` and amici (`?v=30`) are still v0.9.38.
 - **Shipped + public.** `origin/main` is at **v0.9.38** (commit `54ba98f`: every raised quote/apostrophe 175u
   lower — tail at the x-height, one height in every context, `.lc` machinery kept at offset 0; capitals get 80u
   before an apostrophe; № ring 44u further from the N). GitHub releases v0.9.15–v0.9.38 are live (each with its
@@ -117,6 +128,11 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.39** — **(built 2026-11-02, unshipped)** absolute slants: traced Cyrillic 14° both cases (`cyr_shear`
+  from the measured 30.5°/29.5° natural lean), Latin and all drawn glyphs 10° (`T_DEG` 10), Latin s extra
+  de-skew (`LAT_NAT[ѕ]` 37.5); per-glyph targets С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°; de-skew copies + Bold model
+  follow; descender floor kern before j/ј, Ф/Ѕ/Р flourish floor widened (cap 240, + ѐ ѝ), d + V W U added to
+  the ascender floor.
 - **v0.9.38** — **(2026-11-02)** every raised quote/apostrophe 175u lower (`QUO_DY`; tail at the
   x-height — one height for all contexts, `QUO_LC_DY` 0; quote kern bands from 250, tuck ownership by
   `TUCK_XH_MAX`); capitals get 80u of air before an apostrophe (`CAP_QUO_GAP`); № ring 44u further from the N;
@@ -254,6 +270,17 @@ Windows/.NET step, optional.)
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
+**2026-11-02, v0.9.39 (built):**
+- ~~**"Decrease the slant of all glyphs by 20%"**, then **"Cyrillic lowercase + caps 12°, Latin both cases 10°
+  (special care of the small s), all remaining glyphs 10°"**, then **"Cyrillic lowercase and uppercase 14°"**
+  (owner)~~ — measured the natural lean properly (projection-profile method; the first centroid measure had
+  under-read the cursive), then per-case shear to the Cyrillic target (12, then 14) for the traced glyphs,
+  `T_DEG` 10 for everything drawn, Latin s de-skewed 0.3 further by eye; eight resulting crossings closed with
+  three floor-kern extensions.
+- ~~**"С (as in Стар) +10% slant; Ѕ ѕ −20%; Latin S s −20%"**, then **"Ѕ ѕ S s to 6° for all"**, then **"to 2°"**,
+  then **"to −2°"**, then **"to −8°"**, then **"Latin small s to −3°"** (owner)~~ — per-glyph absolute targets
+  (`CYR_SLANT_DEG`, `LAT_SLANT_DEG`): С 15.35°, Ѕ ѕ −8°, S −8°, s −3°.
+
 **2026-11-02, v0.9.38 (shipped):**
 - ~~**"‘quote’" apostrophes too high; "I'd" apostrophe too close to the I** (owner's examples-sheet screenshot
   of v0.9.37)~~ — the whole raised quote family lowered 130u (`QUO_DY`; head at the ascender line, the height

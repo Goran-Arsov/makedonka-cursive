@@ -251,8 +251,27 @@ def _pencomma(pen, cx, cy, s=1.0, up=False, tail=12.0):
     segs = [('M', (cx+8*s, cy+5*s*sy)),
             ('C', (cx+20*s, cy-42*s*sy), (cx+2*s, cy-92*s*sy), (cx-30*s, cy-130*s*sy))]
     ribbon_prof(pen, segs, 64*s, tail, 1.6)
-T_DEG = 15.0                          # single tilt for drawn Latin, digits and punctuation (the "Make" slant)
+T_DEG = 10.0                          # single tilt for drawn Latin, digits and punctuation (the "Make" slant)
+# v0.9.39 — absolute slant targets (owner): traced Cyrillic lowercase AND caps 14° (CYR_TARGET_DEG), Latin (drawn + de-skewed
+# copies) 10°, everything else drawn (figures, punctuation, operators, symbols) 10°. Slant is a shear, so:
+# drawn glyphs are sheared by SLANT = tan(T_DEG = 10°); traced glyphs carry the chart's own lean, measured by
+# the projection-profile method (`scratchpad/slant3.py`: the un-shear angle that makes the column histogram
+# sharpest — calibrated on the drawn figures/punctuation, which it reads within 1° of their known 15°):
+# v0.9.38 medians lowercase 30.5°, caps 29.5° (the LAT_NAT per-source values, same method, agree). Every traced
+# outline gets the shear tan(target) − tan(natural) about the baseline in `letter_path`, per case, and the
+# Latin de-skew copies subtract that shear again (`_dsk`) so they land on SLANT.
 SLANT = math.tan(math.radians(T_DEG))
+CYR_TARGET_DEG = 14.0                                  # owner: 12 first, then "make it 14" (same day)
+CYR_NAT_LOWER_DEG, CYR_NAT_CAPS_DEG = 30.5, 29.5       # measured natural lean of the traced glyphs (v0.9.38)
+# per-glyph slant targets (degrees) overriding the group's nominal (owner, v0.9.39): С (as in "Стар") +10% of
+# the 14° tangent → 15.35°; the dze Ѕ ѕ first −20% (11.2°), then "a target of 6° for all" together with the
+# Latin S s. The Latin copies of these sources are unaffected by the Cyrillic entries (their de-skew backs the
+# whole source shear out again — see _dsk) and take their own targets from LAT_SLANT_DEG.
+CYR_SLANT_DEG = {0x0421: 15.35, 0x0405: -8.0, 0x0455: -8.0}   # Ѕ ѕ: 11.2 → 6 → 2 → −2 → −8 (owner, same day; negative = backslant)
+LAT_SLANT_DEG = {"S.lat": -8.0, "s.lat": -3.0}        # S: 8 → 6 → 2 → −2 → −8; s the same then back to −3; Š š follow; s keeps its extra LAT_NAT de-skew too
+def cyr_shear(cp):   # the de-slant shear applied to a traced glyph of code point cp (caps < U+0430)
+    nat = CYR_NAT_CAPS_DEG if cp < 0x0430 else CYR_NAT_LOWER_DEG
+    return math.tan(math.radians(CYR_SLANT_DEG.get(cp, CYR_TARGET_DEG))) - math.tan(math.radians(nat))   # −0.317 caps / −0.340 lowercase at the group target
 # v0.9.36 figure heights: the DEFAULT figures are "hybrid" — ascender height (570u, between the 264u x-height and
 # the 685u caps), so they sit with lowercase text ("31 letters", "digits 0–9"); a second CAP-HEIGHT set (660u,
 # `zero.case`…`nine.case`) is chosen by `calt` next to a capital and by `case` always, so all-caps lines
@@ -324,7 +343,11 @@ def letter_path(idxs, cp):
     # every traced letter: drop sliver contours (the POINT_SHIFT'ed Н carried three <70u² hairline slivers
     # at its crossbar junction — audit #16); the smallest real contour in the trace is ~3300u², so nothing
     # intentional is near the 120u²/4u thresholds
-    return purge_slivers(p)
+    p = purge_slivers(p)
+    # v0.9.39: de-slant to CYR_TARGET_DEG (cyr_shear, about the chart's y=0 — the horizontal offset that leaves
+    # per glyph is absorbed by the sidebearing normalisation downstream, and y is untouched so baselines/heights hold)
+    q = pathops.Path(); p.draw(TransformPen(q.getPen(), (1, 0, cyr_shear(cp), 1, 0, 0))); q.simplify()
+    return q
 
 def gname(cp):
     return "uni%04X" % cp if cp > 0x40 else {0x30: "zero", 0x31: "one", 0x32: "two", 0x33: "three",
@@ -733,10 +756,10 @@ LAT_EMB = {"s.lat": 3}        # re-weight after the shrink (ѕ itself is EMBOLDE
 # LAT_NAT = measured natural slant (deg) of each Cyrillic SOURCE; de-skew = tan(nat) - SLANT lands it on SLANT.
 LAT_NAT = {   # v0.9.29: re-measured (projection-profile slant of each copy backed out its source's true slant)
     0x0430:29,0x0438:28,0x0440:26,0x0458:27, 0x0435:26,0x043E:21,0x0441:20,0x0434:29,  # а и р ј · е о с д  (v0.9.30: и/р less de-skew -> u/p stems match)
-    0x043C:30,0x0455:25,0x0445:27,0x0443:29,                                            # м ѕ х у
+    0x043C:30,0x0455:37.5,0x0445:27,0x0443:29,   # ѕ 25 → 37.5 (v0.9.39, "special care of the small s"): the s is an S-curve with no stem, so its lean is its spine; at the old de-skew the spine still stood ~35° beside 10° letters — an extra 0.3 shear (tan 37.5° = tan 25° + 0.3) brings it level with u/e by eye (scratchpad/s_variants.png)                                            # м ѕ х у
     0x0410:30,0x0412:34,0x0421:26,0x0415:33,0x041D:26,0x0408:29,0x041A:33,0x041C:31,     # А В С Е Н Ј К М
     0x041E:22,0x0420:33,0x0405:30,0x0422:32,0x0425:38,0x0423:30}                         # О Р Ѕ Т Х У
-def _dsk(scp): return math.tan(math.radians(LAT_NAT[scp])) - SLANT
+def _dsk(scp): return math.tan(math.radians(LAT_NAT[scp])) + cyr_shear(scp) - SLANT   # the source already carries cyr_shear (v0.9.39)
 LAT_LIGHTEN = {"h":0.84, "w":0.82, "b":0.90,            # per-glyph weight scale for the dense ones
                # drawn letters still heavier than the Cyrillic body after LAT_WT — thin to match:
                "I":0.62, "N":0.56, "L":0.70, "R":0.72, "F":0.74, "D":0.82, "Z":0.80, "U":0.84, "V":0.90,
@@ -853,7 +876,7 @@ REUSE_DESKEW = [  # (newname, latin_cp, src_glyph, src_cp, is_cap) — de-skew =
     ("S.lat",0x53,"uni0405",0x0405,True),   # T is now a drawn plain T (_U_T), not a Cyrillic-Т copy
     ("X.lat",0x58,"uni0425",0x0425,True), ("Y.lat",0x59,"uni0423",0x0423,True)]
 for nm, cp, src, scp, iscap in REUSE_DESKEW:
-    dsk = _dsk(scp)
+    dsk = _dsk(scp) - (math.tan(math.radians(LAT_SLANT_DEG[nm])) - SLANT if nm in LAT_SLANT_DEG else 0.0)   # lands on SLANT, or on its own target (S s, v0.9.39)
     basey0 = measure(_neut[src], scp)[4]
     base0 = pathops.Path(); _neut[src].draw(TransformPen(base0.getPen(), (1, 0, 0, 1, 0, -basey0))); base0.simplify()
     de = pathops.Path(); base0.draw(TransformPen(de.getPen(), (1, 0, -dsk, 1, 0, 0))); de.simplify()
@@ -997,13 +1020,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.938", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.939", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.938",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.938", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.939",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.939", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -1025,7 +1048,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.938    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.939    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

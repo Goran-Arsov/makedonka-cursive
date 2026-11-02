@@ -34,11 +34,26 @@ _ASC_CAPS, _ASC_LOW = "SŠFT", "bfhklđ"      # + F/T (their bars over a followi
 _CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX = "ФЅ", "бвѓќрјтпгд", 300, 600, 10, 160
 # the raised closing quotes now share the opening quotes' height, so in the Bold a tall ascender (f d đ в)
 # can touch a following ’ ” — same floor model in the quote band (v0.9.35)
-_QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX = "bdfhklđtвѓќб", "’”‘“'\"", 420, 700, 36, 170   # б's flag needs ~120 in the Bold;
+_QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX = ("bdfhklđtвѓќб" + "ABCDEFGHIJKLMNOPQRSTUVWXYZŠČŽĆĐ" + "АБВГДЃЕЖЗЅИЈКЛЉМНЊОПРСТЌУФХЦЧЏШ"), "’”‘“'\"", 300, 700, 36, 170   # + capitals ("I'd", "O'Neil"); б's flag needs ~120 in the Bold;
 # gap 36 (not the usual 8): the b/h/k/l ascender loops lean right, and an apostrophe parked 8u from the loop
 # read as part of it ("capital's") — it needs visible white before it. The reverse pass (quote → ascender)
 # keeps the small gap.
 QUO_GAP_REV = 8
+# the lowered `.lc` apostrophes (after x-height letters) are kerned in their own, lower band (v0.9.37)
+_QUO_LC = ["quoteright.lc", "quotesingle.lc"]
+_QUO_LC_L = "acegijmnopqrsuvwxyzšžćtагдежзѕијклљмнњопрстќуфхцчџшѐѝ"
+QUO_LC_LO, QUO_LC_HI = 280, 540
+# v0.9.37 "tuck": an x-height letter after an apostrophe (s in "Let's", m in "I'mma") never enters the quote
+# band, so no pass above touches the pair and the letter sits a full apostrophe-advance away — the s/m/м
+# start with a long low entry stroke, so their x-height ink is far right of the mark's tail and the pair reads
+# with a hole under the mark. Pull such a letter under the mark until its top-left ink is TUCK_G from the
+# tail tip MEASURED ALONG THE SLANT (the tail line extended down to the letter's top); negative-only, capped
+# at TUCK_MAX so the tucked letter's ink stays ≥ ~60u right of the mark's origin (the mark's own left air —
+# an I's foot swash or a cursive exit before the mark is never reached). Pairs the floor passes own (letters
+# with ink inside the quote band: ascenders, t, i-dot, overbars) are left to them. TUCK_G 215 ≈ the air the
+# untouched good pairs already have (n'r 249, a'a 199, you're 249).
+_QUO_APOS = ["quotesingle", "quoteright", "quotesingle.lc", "quoteright.lc"]
+TUCK_G, TUCK_MAX, TUCK_BAND, TUCK_SLANT_DEG = 215, 110, 70, 15.0   # TUCK_SLANT_DEG == build_font.T_DEG
 
 # Uppercase spacing kern (v0.9.17; reworked v0.9.25, v0.9.27, v0.9.28): equalise the gap the EYE reads
 # between cap bodies. v0.9.27 used a full-height 15/85 ink-MASS percentile for the body edges, but that
@@ -102,6 +117,35 @@ def _floor_pairs(gs, cm, hm, lefts, rights, lo, hi, gap, cap):
                 k = min(int(round(gap - near)), cap)
                 if k >= MIN_KERN:
                     out.append((a, b, k))
+    return out
+
+
+def _tuck_pairs(gs, cm, hm, marks, letters):
+    # negative-only kern (see TUCK_G): for (mark, letter) where the letter stays entirely BELOW the mark's
+    # ink (so no floor pass can see the pair), pull the letter under the mark until its top-left ink is
+    # TUCK_G from the mark's tail tip along the slant; capped at TUCK_MAX
+    import math
+    slant = math.tan(math.radians(TUCK_SLANT_DEG))
+    def points(g):
+        fp = _FP(); gs[g].draw(fp); return fp.pts
+    tails = {}
+    for m in marks:
+        if m not in gs: continue
+        P = points(m); ylo = min(y for x, y in P)
+        tails[m] = min((x, y) for x, y in P if y < ylo + 30)          # leftmost ink in the lowest 30u = the tail tip
+    out = []
+    y_mark = min(ty for tx, ty in tails.values())
+    for b in (_gn(cm, gs, c) for c in letters):
+        if not b: continue
+        P = points(b)
+        if any(y >= y_mark for x, y in P): continue                    # reaches the mark's ink: a floor pass owns it
+        yhi = max(y for x, y in P)
+        lx, ly = min((x, y) for x, y in P if y > yhi - TUCK_BAND)      # top-left ink of the letter
+        for m, (tx, ty) in tails.items():
+            g = lx + hm[m][0] - (tx + slant * (ly - ty))
+            k = int(round(TUCK_G - g))
+            if k <= -MIN_KERN:
+                out.append((m, b, max(k, -TUCK_MAX)))
     return out
 
 
@@ -203,6 +247,10 @@ def add_kern(otf_path, extra_fea=""):
           + _floor_pairs(gs, cm, hm, _ASC_CAPS, _ASC_LOW, ASC_LO, ASC_HI, ASC_GAP, ASC_MAX) \
           + _floor_pairs(gs, cm, hm, _QUO_L, _QUO_R, QUO_LO, QUO_HI, QUO_GAP, QUO_MAX) \
           + _floor_pairs(gs, cm, hm, _QUO_R, _QUO_L, QUO_LO, QUO_HI, QUO_GAP_REV, QUO_MAX) \
+          + _floor_pairs(gs, cm, hm, _QUO_LC_L, _QUO_LC, QUO_LC_LO, QUO_LC_HI, 24, QUO_MAX) \
+          + _floor_pairs(gs, cm, hm, _QUO_LC, _QUO_L + _QUO_LC_L, QUO_LC_LO, QUO_LC_HI, QUO_GAP_REV, QUO_MAX) \
+          + _tuck_pairs(gs, cm, hm, _QUO_APOS[:2], _CYR + _LAT) \
+          + _tuck_pairs(gs, cm, hm, _QUO_APOS[2:], _CYR + _LAT) \
           + _floor_pairs(gs, cm, hm, _CYR_FL_CAPS, _CYR_FL_LOW, CFL_LO, CFL_HI, CFL_GAP, CFL_MAX)
     # register the feature under both scripts (+ default), so shapers that look up `cyrl`/`latn`
     # apply it — not just those that fall back to DFLT

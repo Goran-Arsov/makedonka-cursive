@@ -243,13 +243,14 @@ def ribbon_prof(pen, segs, w0, w1, gamma=1.4):
 def _oval(pen, cx, cy, rx, ry, n=24):
     rx *= _WT; ry *= _WT                       # filled dots/bowls honour the per-category weight too
     _emit(pen, [(cx+rx*math.cos(2*math.pi*j/n), cy+ry*math.sin(2*math.pi*j/n)) for j in range(n)], ccw=True)
-def _pencomma(pen, cx, cy, s=1.0, up=False):
-    # a pointed-pen comma: swelling head tapering to a fine curved tail.
+def _pencomma(pen, cx, cy, s=1.0, up=False, tail=12.0):
+    # a pointed-pen comma: swelling head tapering to a curved tail (tail = end width; 12 keeps the tail
+    # visible at text sizes — at 6 the raised apostrophes read as a dot, v0.9.36).
     # up=True = the raised "6" form (closing “ quote / apostrophe tops).
     sy = -1 if up else 1
     segs = [('M', (cx+8*s, cy+5*s*sy)),
             ('C', (cx+20*s, cy-42*s*sy), (cx+2*s, cy-92*s*sy), (cx-30*s, cy-130*s*sy))]
-    ribbon_prof(pen, segs, 64*s, 6.0, 1.6)
+    ribbon_prof(pen, segs, 64*s, tail, 1.6)
 T_DEG = 15.0                          # single tilt for drawn Latin, digits and punctuation (the "Make" slant)
 SLANT = math.tan(math.radians(T_DEG))
 # v0.9.36 figure heights: the DEFAULT figures are "hybrid" — ascender height (570u, between the 264u x-height and
@@ -257,7 +258,7 @@ SLANT = math.tan(math.radians(T_DEG))
 # `zero.case`…`nine.case`) is chosen by `calt` next to a capital and by `case` always, so all-caps lines
 # (МАКЕДОНИЈА 2025) keep lining figures. Both sets are scaled UNIFORMLY from the drawn figures (the old y-only
 # normalisation stretched them ~1.1× vertically).
-DIGIT_H = 570.0          # default figure height (ascender ~553 + overshoot)
+DIGIT_H = 450.0          # default figure height: 1.7× the 264u x-height, clearly below the ~553u ascenders (570 still read as tall as b/d/l — owner, 2026-11-02)
 DIGIT_CASE_H = 660.0     # `.case` (cap-height) figure height — the pre-v0.9.36 lining height
 DIGIT_UNIFORM = True
 FIG_K = DIGIT_H / 660.0  # vertical scale for the figure-relative symbols (% ‰ and the fraction bar follow the figures)
@@ -501,14 +502,14 @@ def _paren(pen, width, left=True):
     x0 = width*0.60 if left else width*0.40; s = 1 if left else -1; top, bot = 720, -150
     pen.moveTo((x0, top)); pen.curveTo((x0-s*185, top-300), (x0-s*185, bot+300), (x0, bot))
     pen.curveTo((x0-s*140, bot+300), (x0-s*140, top-300), (x0, top)); pen.closePath()
-def _make(fn, width):
-    # draw upright, slant to the 18° italic, then centre the ink in the advance.
+def _make(fn, width, xoff=0.0):
+    # draw upright, slant to the 18° italic, then centre the ink in the advance (+ xoff for asymmetric sidebearings).
     p = pathops.Path(); fn(p.getPen()); p.simplify()
     sl = pathops.Path(); p.draw(TransformPen(sl.getPen(), (1, 0, SLANT, 1, 0, 0))); sl.simplify()
     b = sl.bounds
     if not b:
         return T2CharStringPen(width, None).getCharString(), 0
-    dx = width/2.0 - (b[0]+b[2])/2.0
+    dx = width/2.0 - (b[0]+b[2])/2.0 + xoff
     out = pathops.Path(); sl.draw(TransformPen(out.getPen(), (1, 0, 0, 1, dx, 0))); out.simplify()
     t2 = T2CharStringPen(width, None); out.draw(t2); ob = out.bounds
     return t2.getCharString(), int(round(ob[0])) if ob else 0
@@ -599,37 +600,52 @@ _OPS = [   # drawn on the FIGURE axis (centre 300 = mid lining figure) — these
     (0x003E, "greater", lambda p: ribbon_prof(p, [('M', (64, 172)), ('L', (258, 300)), ('L', (64, 428))], 40, 40)),
     (0x00B1, "plusminus", lambda p: (_rect(p, 152, 250, 208, 470), _rect(p, 52, 332, 308, 388), _rect(p, 52, 150, 308, 206))),
 ]
-OPS_LC_DY = -135.0   # lowercase-text default = the figure-axis form lowered to centre 165
-OPS_CASE_DY = DIGIT_H / 2.0 - 300.0   # `.case` forms centred on the figure centre (285 for 570u figures)
+# three heights for dashes and operators (v0.9.36): lowercase text (default), next to the hybrid figures
+# (`.fig`, centred on DIGIT_H/2) and next to capitals / cap-height figures (`.case`); `calt` chooses, `case` forces `.case`
+OPS_LC_DY = -115.0                        # default: centre 185 — a compromise that also reads right between figures (225) in apps that do not apply calt (Word)
+OPS_FIG_DY = DIGIT_H / 2.0 - 300.0        # `.fig`: centre = hybrid figure middle (225 for 450u figures)
+OPS_CASE_DY = DIGIT_CASE_H / 2.0 - 300.0  # `.case`: centre = cap-height figure middle (330; caps are 685)
+_DASHES = [   # drawn at the lowercase height (centre ~150, mid x-height)
+    (0x002D, "hyphen", 260, lambda p: _rect(p, 40, 157, 230, 212)),
+    (0x2013, "endash", 460, lambda p: _rect(p, 40, 165, 420, 207)),
+    (0x2014, "emdash", 720, lambda p: _rect(p, 40, 165, 680, 207)),
+]
+DASH_FIG_DY = DIGIT_H / 2.0 - 185.0       # `.fig` dashes: centre = hybrid figure middle (225)
+DASH_CASE_DY = 115.0                      # `.case` dashes: centre 300 (a touch below the cap-figure middle, as hyphens sit)
+PUNCT_XOFF = {n: 35 for n in ("quotesingle", "quotedbl", "quoteleft", "quoteright", "quotedblleft", "quotedblright", "quotesingle.lc", "quoteright.lc")}   # raised quotes: air on the LEFT (ink shifted +35u in the advance)
+QUO_LC_DY = -130.0   # `.lc` apostrophes (after an x-height letter, via calt): 130u lower — the high one floated far above "it's"
 PUNCT = [
-    (0x002E, "period", 150, lambda p: _oval(p, 75, 48, 35, 41)),
+    (0x002E, "period", 150, lambda p: _oval(p, 75, 50, 50, 56)),   # dots 35×41→50×56 (×0.55 tier = ~55×62u; the 40u dots read as specks)
     (0x002C, "comma", 150, lambda p: _pencomma(p, 85, 92)),
-    (0x003A, "colon", 160, lambda p: (_oval(p, 80, 48, 33, 38), _oval(p, 80 - SLANT*252, 300, 33, 38))),
-    (0x003B, "semicolon", 160, lambda p: (_oval(p, 93 - SLANT*203, 300, 33, 38), _pencomma(p, 85, 92))),
+    (0x003A, "colon", 160, lambda p: (_oval(p, 80, 50, 46, 52), _oval(p, 80 - SLANT*165, 215, 46, 52))),
+    (0x003B, "semicolon", 160, lambda p: (_oval(p, 93 - SLANT*118, 215, 46, 52), _pencomma(p, 85, 92))),
     # ! and ? : ~30% shorter and lighter in colour (thinner ribbons + smaller dots).
     (0x0021, "exclam", 180, _exclam),
     (0x003F, "question", 320, _question),
     # dashes: centred at mid x-height (~150u; they sat ON the x-height line at ~277u — audit #22). The old
     # height lives on as `.case` alternates (feature `case`, and `calt` after a figure or a capital).
-    (0x002D, "hyphen", 260, lambda p: _rect(p, 40, 122, 230, 177)), (0x2013, "endash", 460, lambda p: _rect(p, 40, 130, 420, 172)),
-    (0x2014, "emdash", 720, lambda p: _rect(p, 40, 130, 680, 172)), (0x0028, "parenleft", 300, lambda p: _paren(p, 300, True)),
-    (None, "hyphen.case", 260, lambda p: _rect(p, 40, 250, 230, 305)), (None, "endash.case", 460, lambda p: _rect(p, 40, 258, 420, 300)),
-    (None, "emdash.case", 720, lambda p: _rect(p, 40, 258, 680, 300)),
-    # quotes/apostrophes (v0.9.36): 1.25× bigger (a 155u apostrophe read as a tick at text sizes) and on TIGHT
-    # advances (single 140, double 250; were 180–330) — an apostrophe used to add a letter's worth of space
-    # ("capital's"). QS = the pen-comma scale; the 9-form marks hang DOWN from cy, the 6-form marks rise UP.
-    (0x0029, "parenright", 300, lambda p: _paren(p, 300, False)), (0x0027, "quotesingle", 140, lambda p: _pencomma(p, 70, 662, QS)),
-    (0x0022, "quotedbl", 250, lambda p: (_pencomma(p, 70, 662, QS), _pencomma(p, 182, 662, QS))),
+    *[(cp, nm, w, fn) for cp, nm, w, fn in _DASHES],                                   # default: mid x-height
+    *[(None, nm + ".fig", w, _shifted(fn, DASH_FIG_DY)) for cp, nm, w, fn in _DASHES],   # between hybrid figures (2025-11-02)
+    *[(None, nm + ".case", w, _shifted(fn, DASH_CASE_DY)) for cp, nm, w, fn in _DASHES], # between capitals / cap-height figures
+    (0x0028, "parenleft", 300, lambda p: _paren(p, 300, True)),
+    # quotes/apostrophes (v0.9.36): 1.25× bigger with a visible tail (QS, `tail`), on tight advances (single 160,
+    # double 270; were 180–330) with more air on the left (PUNCT_XOFF), and with the HEAD at the ascender line —
+    # the 9-form marks hang DOWN from cy (span ~437–640), the 6-form marks rise UP to the same top. They used to
+    # top out at ~700u, above the capitals, and read as a tick ("I'd", "it's" — owner, 2026-11-02).
+    (0x0029, "parenright", 300, lambda p: _paren(p, 300, False)), (0x0027, "quotesingle", 180, lambda p: _pencomma(p, 70, 602, QS)),
+    (None, "quotesingle.lc", 180, _shifted(lambda p: _pencomma(p, 70, 602, QS), QUO_LC_DY)),
+    (None, "quoteright.lc", 180, _shifted(lambda p: _pencomma(p, 70, 602, QS), QUO_LC_DY)),
+    (0x0022, "quotedbl", 290, lambda p: (_pencomma(p, 70, 602, QS), _pencomma(p, 182, 602, QS))),
     (0x201E, "quotedblbase", 250, lambda p: (_pencomma(p, 70, 108, QS), _pencomma(p, 182, 108, QS))),              # „ low opening (9-form)
-    (0x201C, "quotedblleft", 250, lambda p: (_pencomma(p, 70, 530, QS, True), _pencomma(p, 182, 530, QS, True))),  # “ raised 6-form (opening)
-    (0x201D, "quotedblright", 250, lambda p: (_pencomma(p, 70, 662, QS), _pencomma(p, 182, 662, QS))),             # ” raised 9-form (Latin closing — both marks UP)
-    (0x2018, "quoteleft", 140, lambda p: _pencomma(p, 70, 530, QS, True)),                                           # ‘ single raised 6-form
-    (0x2019, "quoteright", 140, lambda p: _pencomma(p, 70, 662, QS)),                                                # ’ single raised 9-form (= apostrophe, up)
+    (0x201C, "quotedblleft", 290, lambda p: (_pencomma(p, 70, 478, QS, True), _pencomma(p, 182, 478, QS, True))),  # “ raised 6-form (opening)
+    (0x201D, "quotedblright", 290, lambda p: (_pencomma(p, 70, 602, QS), _pencomma(p, 182, 602, QS))),             # ” raised 9-form (Latin closing — both marks UP)
+    (0x2018, "quoteleft", 180, lambda p: _pencomma(p, 70, 478, QS, True)),                                           # ‘ single raised 6-form
+    (0x2019, "quoteright", 180, lambda p: _pencomma(p, 70, 602, QS)),                                                # ’ single raised 9-form (= apostrophe, up)
     (0x201A, "quotesinglbase", 140, lambda p: _pencomma(p, 70, 108, QS)),                                            # ‚ single low 9-form (one mark of „)
     # ---- v0.9.16: fill real coverage gaps, reusing the calligraphic pen primitives above ----
     (0x002F, "slash", 300, lambda p: ribbon_prof(p, [('M', (74, -46)), ('L', (150, 586))], 40, 40)),                   # / solidus (dates, fractions, URLs)
-    (0x2026, "ellipsis", 470, lambda p: (_oval(p, 75, 48, 35, 41), _oval(p, 225, 48, 35, 41), _oval(p, 375, 48, 35, 41))),  # … three baseline dots = period×3
-    (0x00B7, "periodcentered", 150, lambda p: _oval(p, 75, 132, 35, 41)),                                              # · middle dot = period raised to mid x-height
+    (0x2026, "ellipsis", 470, lambda p: (_oval(p, 75, 50, 50, 56), _oval(p, 225, 50, 50, 56), _oval(p, 375, 50, 50, 56))),  # … three baseline dots = period×3
+    (0x00B7, "periodcentered", 150, lambda p: _oval(p, 75, 140, 50, 56)),                                              # · middle dot = period raised to mid x-height
     (0x00AB, "guillemotleft", 310, lambda p: (ribbon_prof(p, [('M', (124, 232)), ('L', (48, 130)), ('L', (124, 28))], 26, 26), ribbon_prof(p, [('M', (236, 232)), ('L', (160, 130)), ('L', (236, 28))], 26, 26))),  # « Macedonian 2ndary quote
     (0x00BB, "guillemotright", 310, lambda p: (ribbon_prof(p, [('M', (48, 232)), ('L', (124, 130)), ('L', (48, 28))], 26, 26), ribbon_prof(p, [('M', (160, 232)), ('L', (236, 130)), ('L', (160, 28))], 26, 26))),  # »
     (0x00B0, "degree", 210, lambda p: _ring(p, 98, DIGIT_H - 59, 62, 34)),                                             # ° small ring, top at the figure top (v0.9.36: follows DIGIT_H)
@@ -641,6 +657,7 @@ PUNCT = [
     # and the `.case` forms on the figure axis (centre 300); `calt` picks `.case` next to a figure or a capital,
     # `case` always — same scheme as the dashes ("upper + lowercase" floated 36u above the x-height)
     *[(cp, nm, 360, _shifted(fn, OPS_LC_DY)) for cp, nm, fn in _OPS],
+    *[(None, nm + ".fig", 360, _shifted(fn, OPS_FIG_DY)) for cp, nm, fn in _OPS],
     *[(None, nm + ".case", 360, _shifted(fn, OPS_CASE_DY)) for cp, nm, fn in _OPS],
     (0x002A, "asterisk", 300, lambda p: _asterisk(p, 150, 486, 92)),
     (0x0023, "numbersign", 420, lambda p: (_rect(p, 128, 120, 172, 540), _rect(p, 258, 120, 302, 540), _rect(p, 58, 238, 372, 286), _rect(p, 58, 372, 372, 420))),
@@ -659,8 +676,8 @@ PUNCT = [
     (0x0024, "dollar", 340, _yscaled(_dollar, DIGIT_H / 600.0)),   # $ spans the figure height
     (0x00A9, "copyright", 440, _copyright),
     (0x2030, "permille", 640, _yscaled(lambda p: (_ring(p, 104, 500, 58, 31), _ring(p, 300, 120, 58, 31), _ring(p, 480, 120, 58, 31), ribbon_prof(p, [('M', (74, 18)), ('L', (420, 600))], 34, 34)), FIG_K)),
-    (0x2032, "prime", 160, _yscaled(lambda p: ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), 0.9)),   # ′ ″ top near the figure top
-    (0x2033, "doubleprime", 270, _yscaled(lambda p: (ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), ribbon_prof(p, [('M', (176, 640)), ('L', (222, 456))], 44, 20)), 0.9)),
+    (0x2032, "prime", 160, _yscaled(lambda p: ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), FIG_K)),   # ′ ″ top at the figure top
+    (0x2033, "doubleprime", 270, _yscaled(lambda p: (ribbon_prof(p, [('M', (66, 640)), ('L', (112, 456))], 44, 20), ribbon_prof(p, [('M', (176, 640)), ('L', (222, 456))], 44, 20)), FIG_K)),
     # ---- v0.9.35: coverage gaps (audit #27) ----
     (0x0060, "grave", 190, lambda p: _grave(p, 95, 612, 1.3)),                                                         # ` ASCII grave (the pen grave of ѐ, larger, at apostrophe height)
     (0x2022, "bullet", 250, lambda p: _oval(p, 125, 150, 56, 60)),                                                     # • at mid x-height
@@ -674,8 +691,8 @@ PUNCT = [
     (0x00B6, "paragraph", 360, _pilcrow),
 ]
 for cp, name, width, fn in PUNCT:   # unify symbol/punct colour to the Cyrillic (two weight tiers)
-    _WT = SYM_HEAVY_WT if (cp in SYM_HEAVY or name.endswith(".case")) else SYM_MILD_WT
-    cs, xmin = _make(fn, width); glyph_order.append(name); charstrings[name] = cs; metrics[name] = (width, xmin)
+    _WT = SYM_HEAVY_WT if (cp in SYM_HEAVY or name.endswith(".case") or name.endswith(".fig")) else SYM_MILD_WT
+    cs, xmin = _make(fn, width, PUNCT_XOFF.get(name, 0)); glyph_order.append(name); charstrings[name] = cs; metrics[name] = (width, xmin)
     if cp is not None: cmap[cp] = name
 _WT = 1.0
 cmap[0x2010] = cmap[0x2011] = "hyphen"; cmap[0x2015] = "emdash"   # ‐ ‑ ― : same marks (U+00AD soft hyphen deliberately NOT mapped — FontBakery flags it)
@@ -970,13 +987,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.936", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.937", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.936",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.936", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.937",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.937", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -998,7 +1015,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.936    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.937    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the
@@ -1038,7 +1055,7 @@ for fl in ("woff2", "woff"):
 # ---- specimen with baseline guide lines ----
 from PIL import ImageFont
 face = ImageFont.truetype(otf, 100); dig = ImageFont.truetype(otf, 120); small = ImageFont.truetype(otf, 70)
-img = Image.new("RGB", (2460, 4200), "white"); dr = ImageDraw.Draw(img); y = 20   # cropped to actual content height before save
+img = Image.new("RGB", (2460, 4600), "white"); dr = ImageDraw.Draw(img); y = 20   # cropped to actual content height before save
 def line(txt, font, fill):
     global y
     asc, desc = font.getmetrics()
@@ -1091,5 +1108,7 @@ line("«Охрид» · 3/4 · 50% · 20° … и така", small, (20, 20, 90)
 for L in ["Скопје 2025 — Македонија", "Охрид, Битола, Прилеп!", "100 денари; (бр. 7)", "вода, леб и убавина?"]:
     line(L, small, (20, 20, 90))
 line("Latin: Makedonija, Ohrid — Amici (abvgd...)", small, (90, 20, 20))
+for L in ["rock'n'roll", "Let's use commin', 'cause I'mma go to Leno's"]:   # apostrophe contexts (calt)
+    line(L, small, (90, 20, 20))
 img = img.crop((0, 0, 2460, min(img.height, int(y) + 20)))   # trim trailing whitespace to the real content height
 img.save(os.path.join(OUTDIR, "specimen.png")); print(f"saved specimen.png ({img.height}px)")

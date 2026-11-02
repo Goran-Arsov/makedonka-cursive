@@ -30,8 +30,10 @@ ROWS = [  # (css class, text)
     ("mid", "Tom &amp; Jerry · “quote” ‘q’ ‚x‘ ‹y› · ¡Hola! · a@b.mk · €50 $5 · ½ ¼ ¾ · m² H₂O · ™ ® § ¶ © ‰"),
     ("mid", "0 1 2 3 4 5 6 7 8 9 · 1999 2006 60 99 · 2025-11-02 · воз-воз · a-b · А–Б · x—y · 20° 50% · [1] {2} (3)"),
     ("mid", "1 + 2 = 3 · 8 ÷ 2 × 4 · № 7 · x &lt; y &gt; z · a ± b · #*_|~\\^ · `x` •"),
+    ("mid", "rock'n'roll · Let's use commin', 'cause I'mma go to Leno's"),
     ("big b", "Битола, Прилеп — Задебелено · Bold Makedonija"),
     ("mid b", "ОХРИД СКОПЈЕ · ѕвезда sos šef hbl · “Quote” 2025-11-02 ½ € &amp;"),
+    ("mid b", "rock'n'roll · Let's use commin', 'cause I'mma go to Leno's"),
 ]
 FEATS = [  # (feature css, label, text)
     ("'frac' 1", "frac", "1/2 · 3/4 · 7/8 · 22/7 · 10/11/2025"),
@@ -39,8 +41,8 @@ FEATS = [  # (feature css, label, text)
     ("'subs' 1", "subs", "H2O, CO2"),
     ("'zero' 1", "zero", "0, 100, 2030"),
     ("'tnum' 1", "tnum", "0123456789 (tabular)"),
-    ("'case' 1", "case", "a-b x–y p—q 2025 + 3 (raised dashes/operators, cap-height figures)"),
-    ("'calt' 0", "calt off", "2025-11-02 А–Б МАКЕДОНИЈА 2025 (low dashes, ascender-height figures without calt)"),
+    ("'calt' 1", "calt", "a-b · 1-2 · A-B · 2025-11-02 · upper + lowercase · 1 + 2 · A + B · Скопје 2025 · МАКЕДОНИЈА 2025 · it's I'd rock'n'roll (automatic)"),
+    ("'case' 1", "case", "A-B X–Y P—Q 2025 + 3 МАКЕДОНИЈА (all-caps setting: raised dashes/operators, cap-height figures)"),
 ]
 rows = "\n".join(f'<div class="mk {c}">{t}</div>' for c, t in ROWS)
 feats = "\n".join(f'<div class="mk mid" style="font-feature-settings:{f}"><span class="lab">{l}</span>{t}</div>' for f, l, t in FEATS)

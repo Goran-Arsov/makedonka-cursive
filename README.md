@@ -7,7 +7,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.36** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.37** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 **Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
 (tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½),
 **South-Slavic Latin diacritics** (`š č ž ć đ` / `Š Č Ž Ć Đ`), and **math + symbols**
@@ -76,7 +76,7 @@ h1.strong { font-weight: 700; }
 ```css
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.36/MakedonkaCursive-Regular.woff2") format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.37/MakedonkaCursive-Regular.woff2") format("woff2");
   font-weight: 400; font-display: swap;
 }
 ```
@@ -87,14 +87,16 @@ h1.strong { font-weight: 700; }
 - **Weights:** Regular + Bold (a faux-bold derived from the Regular by a **contrast-preserving** dilation —
   it weights the stems while keeping the hairlines, overbars and connectors delicate).
 - **Digits:** 0–9, designed to match (calligraphic pen numerals; not in the source chart). They are
-  **hybrid figures** — ascender height, so they sit with lowercase text ("31 letters") — and switch
-  automatically to **cap-height lining figures** inside all-caps runs (`МАКЕДОНИЈА 2025`, `OHRID 1999`);
-  the `case` feature forces the cap-height set.
+  **hybrid figures** — about 1.7× the x-height, clearly below the ascenders, so they sit with lowercase text
+  ("31 letters") — and switch automatically to **cap-height lining figures** inside all-caps runs
+  (`МАКЕДОНИЈА 2025`, `OHRID 1999`); the `case` feature forces the cap-height set.
 - **Punctuation:** space `. , : ; ! ? ¡ ¿ - – — ( ) ' " „ " ‚ ‘ ’ « » ‹ › / … · • ° % `` ` `` — calligraphic
   pen marks, including the Macedonian `„ "` and `« »` quotes (designed to match; not in the source chart).
   A no-break space (U+00A0) is mapped too. Dashes and the math operators sit at a lowercase height between
   lowercase words (`воз-воз`, `upper + lowercase`) and rise automatically next to a figure or a capital
-  (`2025-11-02`, `А–Б`, `1 + 2`); the `case` feature raises them all.
+  (`2025-11-02`, `А–Б`, `1 + 2`); the `case` feature raises them all. The apostrophe sits at the ascender line
+  after a capital or a tall letter (`I'd`, `capital's`) and drops closer to the word after a short letter (`it's`,
+  `Let's`, `commin'`, `'cause`, `rock'n'roll`).
 - **Latin:** full A–Z / a–z, a calmer companion to the ornate Macedonian hand — one
   consistent, moderately upright slant across all letters, figures and punctuation, in a
   **restrained** pen style. Every Latin glyph is either drawn or a re-angled copy of a

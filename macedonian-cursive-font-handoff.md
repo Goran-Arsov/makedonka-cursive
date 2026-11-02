@@ -454,6 +454,88 @@ vectorizing the Wikimedia chart (see *Source material* below).
   Verified by HarfBuzz: "МАКЕДОНИЈА 2025" / "2025 ДЕНАРИ" / "1999 OHRID" → `.case`, "Скопје 2025" → default,
   "A 1/2" with `frac` → numr/fraction/dnom, "A 0" with `zero` → `zero.slash.case`; renders at 140px in both
   weights; overlap scan 0 pairs; FontBakery 0 FAIL. 270→281 glyphs; woff2 Regular 86 KB, Bold 119 KB.
+- **(v0.9.37) figures lower, three-height operators/dashes, apostrophes repositioned — built 2026-11-02, NOT yet
+  committed/shipped** (owner's LibreOffice screenshot of v0.9.36: "31" still as tall as b/d/l; "I'd", "it's",
+  "element's" apostrophes high, faint, crowding the letter). **Figures:** `DIGIT_H` 570→**450** (1.7× the 264u
+  x-height, 81% of the ascender); the 660u `.case` set is unchanged, so all-caps runs are unaffected. Everything
+  keyed to `DIGIT_H` followed: `° % ‰ $ ′ ″` (primes now `_yscaled(…, FIG_K)`), the fraction bar, and in
+  `features.py` the sups/numr raises are now proportional (`0.45·fh` / `0.44·fh`, fh = default figure height from
+  `base_paths["zero"]`) with `SC` 0.60→**0.68** so the small figures stay legible (~306u). **Operators/dashes — three
+  heights:** the 8 operators and 3 dashes now exist as default (lowercase: ops centre 165, dashes 150), **`.fig`**
+  (centre = hybrid figure middle: `OPS_FIG_DY = DIGIT_H/2 − 300`, `DASH_FIG_DY = DIGIT_H/2 − 150` → 225) and
+  **`.case`** (ops centre `DIGIT_CASE_H/2` = 330, dashes `DASH_CASE_DY = +150` → 300); `_DASHES` is a base list like
+  `_OPS`, both spliced three times into `PUNCT` via `_shifted`. `features.py`: `@dashf`, `lookup DASH_FIG`; `calt`
+  precedence for a dash/operator: (1) after a cap-height figure → `.case` (the figures AFTER the dash are not
+  substituted yet when the dash is processed, so this keeps "МАКЕДОНИЈА 2025-11-02" cap-height throughout,
+  together with the FIG_CASE propagation across a `.case` dash, `[@figsc @dashc] @figs'`); (2) a hybrid (or
+  tabular) figure on either side, space allowed → `.fig` — a mixed pair takes the LOWER neighbour's height
+  ("A + 1" → `.fig`); (3) capitals / cap-height figures on either side → `.case` ("A + B"); otherwise the
+  lowercase default ("a + b"); `case` forces `.case`.
+  **Apostrophes/quotes:** the 9-form marks moved down 60u (`_pencomma(…, 602, QS)` → y ≈ 435–640, head at the
+  ascender line; they topped out at 700, above the caps), the 6-form marks to cy 478 (same top); `_pencomma` got
+  a `tail` width (12, was 6 — the tail vanished at text size); advances 160 single / 270 double with the ink
+  shifted +15u right (`PUNCT_XOFF` → `_make(fn, width, xoff)`), i.e. more air on the LEFT; and the
+  ascender→quote floor-kern lefts now include every capital of both scripts (band 400–700) — "I'd", "O'Neil",
+  "D'Angelo" get clearance from the cap's top-right swash. Measured "it's": 57u between the t and the mark.
+  Pairs Reg 3283 / Bold 3221; 281→292 glyphs; overlap scan 0 pairs; FontBakery 0 FAIL (OTF WARN only UPM).
+  Version strings 0.937, demo/CSS `?v=48`, README jsDelivr tag `@v0.9.37` (no release yet).
+  **Second pass (owner's specimen screenshots, same day):** (a) the specimen's `case` row showed the forced
+  all-caps forms on "a-b x–y p—q" and a "calt off" row showed low dashes in "2025-11-02" — both misleading demos,
+  replaced by a `calt` row (automatic contexts) and a `case` row in capitals. But because Word does not apply
+  `calt` by default, the DEFAULT dash/operator height is now a compromise **centre 185** (hyphen y 157–212,
+  `OPS_LC_DY=-115`) — ~70% of the x-height between lowercase, only 40u below the hybrid-figure middle (225) when
+  no `calt` is applied; `.fig` 225 and `.case` 300 unchanged. (b) **Fraction bar** (`features.py`): a 40u-thick
+  polygon that read as a bold slash → a thin tapered pen diagonal (half-width 11 at the top → 5 at the bottom,
+  y −40..fh+12); ½ ¼ ¾ follow. (c) **Dots**: period/ellipsis/periodcentered `_oval` 35×41 → **50×56** and the
+  colon/semicolon dots 33×38 → 46×52 (heavy tier ×0.55 → ~55×62u; they were ~40u specks); the colon/semicolon
+  UPPER dot moved from y 300 (above the x-height!) to **215** (top ≈ 244), with the slant pre-shift recomputed
+  (`−SLANT·165` / `·118`); periodcentered centre 132→140. (d) **Apostrophes**: `PUNCT_XOFF` 15→**35** (advances
+  180 single / 290 double) and a lowered form after x-height letters — `quoteright.lc` / `quotesingle.lc` =
+  `_shifted(…, QUO_LC_DY=-130)` (span ~305–510u), chosen by `calt` `sub @XH [quoteright quotesingle]' lookup
+  QUO_LC` where `@XH` = the Latin and Cyrillic lowercase without ascenders (+ t, ќ, ф); kerned in their own band
+  (`_QUO_LC_L × _QUO_LC`, y 280–540, gap 24, + reverse); the high quotes' band widened to 300–700. "it's" now
+  has 87u between the t and the mark; "I'd", "l's", "capital's" keep the high mark. 292→294 glyphs; overlap scan
+  0 pairs; FontBakery 0 FAIL.
+  **Third pass (same day) — context rules corrected.** (a) Apostrophes: "rock 'n' roll" mixed a high leading '
+  with a lowered trailing one, and "‘quote’" lowered the closing ’ below its ‘. Now `calt` lowers an apostrophe
+  after a short letter only when a LETTER follows (`@XH [quoteright quotesingle]' @LETTERS`, with
+  `@LETTERS = [@XH @LC_ASC @CAPS]`, `@LC_ASC` = b d f h k l đ б в ѓ), lowers a LEADING one before a short letter
+  (`space [quoteright quotesingle]' @XH` — 'n', 'tis), and lowers a straight closing ' after a short letter
+  (`@XH quotesingle' space`, so 'tis' pairs low/low); the typographic closing ’ after a word stays high to match
+  ‘. Known limit: a straight-quoted word ending in an ascender ('word') pairs low/high — use ‘ ’ for quotations.
+  (b) A single FOLLOWING capital no longer raises anything: "all 31 Macedonian letters" was getting cap-height
+  figures and "њива — Сѐ" a `.case` em dash. The "before a capital" rules for figures and dashes now require an
+  ALL-CAPS word (`… (space) @CAPS @CAPS`); the "after a capital / cap-height figure" rules are unchanged
+  ("A–B", "МАКЕДОНИЈА 2025", "ОХРИД – СКОПЈЕ" keep the `.case` forms, "2025 — Македонија" → `.fig`).
+  **Fourth pass (same day) — apostrophe idioms + fixed specimen phrases.** The owner's standing test phrases
+  **"rock'n'roll"** and **"Let's use commin', 'cause I'mma go to Leno's"** are now in EVERY specimen/demo
+  (`specimen.png` last two lines via `build_font.py`, `specimen.html` Regular + Bold rows and the `calt` row via
+  `specimen_html.py`, `demo.html` Regular + Bold rows; canvas of `specimen.png` 4200→4600 px tall before the
+  content crop). They exposed two gaps: "rock'n'roll" (no spaces) paired a high first ' (after k, an ascender)
+  with a low second one, and "commin'," stayed high (a comma, not a letter/space, follows). `features.py` now
+  also lowers: a straight `'` after a short letter unconditionally (`@XH quotesingle'`), a typographic `’`
+  after a short letter before a punctuation mark (`@XH [quoteright quotesingle]' @PUNCT`, `@PUNCT` = , . ; : !
+  ? … ) ] } - – — ” »), and the **'n' idiom** whatever precedes it (`[quoteright quotesingle]' @XH
+  [quoteright quotesingle]`). Unchanged: ’ before a space/at the end stays high ("boys’ room", "‘quote’"),
+  after a capital/ascender stays high ("I'mma", "I'd"). New limit: British-style "‘Hello’, she said" lowers
+  the closing ’ before the comma. HarfBuzz-verified in both weights, OTF and TTF (identical glyph ids); demo/CSS
+  `?v=49`.
+  **Fifth pass (same day) — the letter after an apostrophe tucks under it.** Owner's Bold screenshot: too much
+  space between ' and s ("Let's", "Leno's") and between ' and m ("I'mma"). Cause: every quote kern pass is a
+  push-apart floor in the quote band, and an x-height letter never reaches that band, so (mark, letter) got
+  no kern at all and the letter sat a full mark-advance away — and s/m/м begin with a long low entry stroke,
+  so their x-height ink is far right of the tail (measured along the 15° slant: n'r 249u, which read fine;
+  's 280; 'm 406). New `kern_util._tuck_pairs` (`_QUO_APOS` = ' ’ and their `.lc` forms × all lowercase):
+  negative-only; only for letters whose ink stays entirely BELOW the mark's lowest ink (otherwise a floor
+  pass owns the pair — t, i, ascenders, overbars); pulls the letter until its top-left ink (top `TUCK_BAND`
+  70u of the letter) is `TUCK_G` **215u** from the mark's tail tip measured along the slant, capped at
+  `TUCK_MAX` **110** (keeps the tucked letter ≥ ~60u right of the mark's origin, i.e. never past the mark's
+  own left air — an I's foot swash or a cursive exit before the mark stays clear). Results (Regular/Bold):
+  's −65/−97, 'm −110/−110, 'r −34/−66, 'a 0/−20, 'v 0/−16; nearest mark→letter ink after the tuck ≥ 145u in
+  both weights (no clearance floor needed). Verified by a 16 384-triple ink-overlap scan (every lowercase/cap
+  + ' or ’ + every lowercase, HarfBuzz-kerned): the only crossings are ј's left-sweeping descender under the
+  previous letter, and the no-mark control (the same pairs without the apostrophe) crosses MORE, so that is
+  the pre-existing flourish, not the tuck. 3394/3357 kern pairs; TTFs shape identically to the OTFs.
 - **(v0.9.18) authorship + specimen:** name-table now credits **Goran Arsov** as the font's author/designer
   (name IDs 8/9) and carries his copyright (name ID 0), while **keeping MacedonianBoy's attribution** for the
   original cursive letterforms in the copyright + licenseDescription (both build scripts: `AUTHOR` const →

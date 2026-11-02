@@ -571,8 +571,8 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
-- **(v0.9.39) absolute slants: Cyrillic 14°, Latin 10°, everything else 10° — built 2026-11-02, NOT yet
-  committed/shipped** (owner, same day, in three steps: first "20% less slant on every glyph", then the absolute
+- **(v0.9.39) absolute slants: Cyrillic 14°, Latin 10°, everything else 10° — shipped 2026-11-02 (commit
+  `ed54883`, release v0.9.39, amici `?v=31`)** (owner, same day, in three steps: first "20% less slant on every glyph", then the absolute
   targets "Cyrillic lowercase and caps 12° (both!), Latin lowercase and caps 10° (both), take special care of
   the small s, all remaining glyphs 10°", then "make Cyrillic lowercase and uppercase 14°"). Slant is a shear,
   and the font has two kinds of glyph:

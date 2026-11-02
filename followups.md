@@ -40,26 +40,17 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
   so the old private specimen page can be retired or replaced by it.
 
-## Current state (v0.9.39 BUILT in the tree, uncommitted; v0.9.38 is the last SHIPPED; updated 2026-11-02)
-- **v0.9.39 (built, not shipped):** **absolute slants — Cyrillic (lowercase + caps) 14°, Latin (both cases)
-  10°, figures/punctuation/operators 10°.** Drawn glyphs via `T_DEG` 15 → 10; traced Cyrillic via a per-case
-  shear `cyr_shear(cp)` = tan(`CYR_TARGET_DEG` 14) − tan(measured natural lean 30.5° lowercase / 29.5° caps,
-  projection-profile method); Latin de-skew copies and the Bold model follow; the Latin s gets an extra 0.3
-  de-skew (`LAT_NAT[ѕ]` 37.5) so its stemless spine reads level with its neighbours. Measured (Regular): 14.2° /
-  13.5° / 10.2° / 9.8° / 10.0°. Per-glyph targets on top (`CYR_SLANT_DEG`, `LAT_SLANT_DEG`): С 15.35°
-  (+10% tangent), Ѕ ѕ −8°, Latin S −8°, Latin s −3° (backslants). Kerning extended to keep the scans at zero (descender floor before j/ј, wider
-  Ф/Ѕ/Р flourish floor, d + V W U in the ascender floor); the apostrophe triple scan is now fully clean. Whole
-  suite rebuilt (font-internal **"0.939"**, demo/CSS `?v=51`, README jsDelivr tag `@v0.9.39`), verified
-  (FontBakery 0 FAIL; 0 overlapping pairs; 294 glyphs), **uncommitted** — ship steps 5–8 to do. The installed
-  OTFs in `~/.local/share/fonts/` and amici (`?v=30`) are still v0.9.38.
-- **Shipped + public.** `origin/main` is at **v0.9.38** (commit `54ba98f`: every raised quote/apostrophe 175u
-  lower — tail at the x-height, one height in every context, `.lc` machinery kept at offset 0; capitals get 80u
-  before an apostrophe; № ring 44u further from the N). GitHub releases v0.9.15–v0.9.38 are live (each with its
-  zip; v0.9.38's has 15 entries). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real
-  secrets across history). Font-internal version **"0.938"**, demo/CSS `?v=50`, README jsDelivr tag `@v0.9.38`;
-  both OTFs installed in `~/.local/share/fonts/`; amici at `?v=30` (commit `df9272f`, pushed). Verified before
-  shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0 overlapping pairs in all 9 scan sections of both
-  weights, triple apostrophe scan clean bar ј's pre-existing sweep, 294 glyphs.
+## Current state (v0.9.39 SHIPPED 2026-11-02)
+- **Shipped + public.** `origin/main` is at **v0.9.39** (commit `ed54883`: the slant redesign — traced Cyrillic
+  14° both cases via `cyr_shear` from the measured ~30° natural lean, Latin/figures/punctuation 10° via `T_DEG`,
+  per-glyph targets С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°, Latin s extra 0.3 de-skew; descender floor before
+  j/ј, wider Ф/Ѕ/Р flourish floor, d + V W U in the ascender floor). GitHub releases v0.9.15–v0.9.39 are live
+  (each with its zip; v0.9.39's has 15 entries). Repo is **PUBLIC** (published as-is, no history rewrite —
+  verified no real secrets across history). Font-internal version **"0.939"**, demo/CSS `?v=51`, README
+  jsDelivr tag `@v0.9.39`; both OTFs installed in `~/.local/share/fonts/`; amici at `?v=31` (commit `439045d`,
+  pushed). Verified before shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0 overlapping pairs in all 9
+  scan sections of both weights, the 16 384-triple apostrophe scan fully clean in both weights, 294 glyphs.
+  Measured slants (projection profile, Regular): Cyrillic 14.2° / 13.5°, Latin 10.2° / 9.8°, punctuation 10.0°.
 - **Standing specimen phrases** — **"rock'n'roll"** and **"Let's use commin', 'cause I'mma go to Leno's"** are
   in `specimen.png`, `specimen.html` and `demo.html`; keep them in every future specimen/demo (owner's rule).
 - **Coverage — 281 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
@@ -128,7 +119,7 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
-- **v0.9.39** — **(built 2026-11-02, unshipped)** absolute slants: traced Cyrillic 14° both cases (`cyr_shear`
+- **v0.9.39** — **(2026-11-02)** absolute slants: traced Cyrillic 14° both cases (`cyr_shear`
   from the measured 30.5°/29.5° natural lean), Latin and all drawn glyphs 10° (`T_DEG` 10), Latin s extra
   de-skew (`LAT_NAT[ѕ]` 37.5); per-glyph targets С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°; de-skew copies + Bold model
   follow; descender floor kern before j/ј, Ф/Ѕ/Р flourish floor widened (cap 240, + ѐ ѝ), d + V W U added to
@@ -270,7 +261,7 @@ Windows/.NET step, optional.)
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
-**2026-11-02, v0.9.39 (built):**
+**2026-11-02, v0.9.39 (shipped):**
 - ~~**"Decrease the slant of all glyphs by 20%"**, then **"Cyrillic lowercase + caps 12°, Latin both cases 10°
   (special care of the small s), all remaining glyphs 10°"**, then **"Cyrillic lowercase and uppercase 14°"**
   (owner)~~ — measured the natural lean properly (projection-profile method; the first centroid measure had

@@ -15,11 +15,16 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   (`python build/scripts/build_font.py build/paths.json /tmp/try`), then **verify before shipping**: render words
   to a PNG with PIL (`ImageFont.truetype(otf, size, layout_engine=ImageFont.Layout.RAQM)` applies GPOS kern and
   default GSUB; the basic layout engine applies neither), or shape with HarfBuzz (`uharfbuzz`). Compare old vs new.
-  **Slant/width is unreliable to measure on round/ornate glyphs** — judge those by eye at large size.
+  **Comparison sheets get 10% white margin on every edge, sized from the real ink** (owner's rule, 2026-11-02 —
+  a sheet once clipped the very underbar under discussion). **Slant:** the only trustworthy measure on cursive is
+  the projection-profile italic angle (un-shear until the column histogram is sharpest; calibrated on the drawn
+  figures, ±1° on stem-bearing groups) — row-centroid and stem-segment estimates under-read it badly; stemless
+  letters (s ѕ S С о) can't be measured at all, judge them by eye against guide lines (see Open #9).
 - **Ship a version** — once it looks right, rebuild the whole suite into the project dir:
   1. `build_font.py build/paths.json .`  → Regular `.otf`/`.woff2`/`.woff` + `specimen.png` (auto kern + GSUB).
      `specimen.png` shows **both** the Cyrillic AND the full **Latin** alphabet (caps + MAKEDONIJA + lowercase +
-     diacritics) — generated every build, so it stays in sync with each version (canvas 4200px tall).
+     diacritics + the standing phrases) — generated every build, so it stays in sync with each version (canvas
+     4600px tall, cropped to content).
   2. `make_bold.py MakedonkaCursive-Regular.otf . 16`  → Bold (true dilation D=16; auto kern + GSUB)
   3. `otf2ttf.py <in>.otf <out>.ttf` for each weight  → the two `.ttf` (guarded outline closing + speck-drop +
      coincident-point cleanup + ttfautohint; the overlapping-segments WARN is gone since v0.9.36)
@@ -50,18 +55,29 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   flourish floor, d + V W U in the ascender floor. GitHub releases v0.9.15–v0.9.41 are live (each with its zip;
   v0.9.41's has 15 entries). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets
   across history). Font-internal version **"0.941"**, demo/CSS `?v=53`, README jsDelivr tag `@v0.9.41`; both
-  OTFs installed in `~/.local/share/fonts/`; amici at `?v=33` (commit `8545fc8`, pushed). Verified before shipping: FontBakery 0 FAIL / 0 ERROR on all four
-  files, 0 overlapping pairs in all 9 scan sections of both weights, the 16 384-triple apostrophe scan fully
-  clean in both weights, 294 glyphs. Measured slants (projection profile, Regular, v0.9.39): Cyrillic 14.2° /
-  13.5°, Latin 10.2° / 9.8°, punctuation 10.0°.
+  OTFs installed in `~/.local/share/fonts/`; amici at `?v=33` (commit `8545fc8`, pushed). Verified before
+  shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0 overlapping pairs in all 9 scan sections of both
+  weights, the 16 384-triple apostrophe scan fully clean in both weights, 294 glyphs. Measured slants (projection
+  profile, Regular, v0.9.39): Cyrillic 14.2° / 13.5°, Latin 10.2° / 9.8°, punctuation 10.0°.
+- **Slant (since v0.9.39):** the traced Cyrillic is de-slanted from the chart's ~30° lean to **14°** (both cases)
+  by a per-case shear in `letter_path` (`CYR_TARGET_DEG`, `cyr_shear`); everything drawn (Latin, figures,
+  punctuation, operators) is sheared to **10°** (`T_DEG`); the Latin copies of Cyrillic sources de-skew relative
+  to the shear they already carry (`_dsk`) so they land on 10°. Per-glyph overrides: `CYR_SLANT_DEG` (С 15.35°,
+  Ѕ ѕ −8°) and `LAT_SLANT_DEG` (S −8°, s −3°, + `LAT_NAT[ѕ]` 37.5 extra on the s). The Bold's dilation model and
+  the apostrophe tuck follow (`make_bold.TAN` 14°, `TUCK_SLANT_DEG` 10). `post.italicAngle` stays 0 (upright-
+  classified, by design). Anything placed by fractions of a glyph's bounds breaks under a shear — the ш/Ш underbar
+  did (fixed v0.9.41, now anchored to the feet); nothing else is placed that way.
 - **Standing specimen phrases** — **"rock'n'roll"** and **"Let's use commin', 'cause I'mma go to Leno's"** are
   in `specimen.png`, `specimen.html` and `demo.html`; keep them in every future specimen/demo (owner's rule).
-- **Coverage — 281 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
-  uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn + de-skewed copies of Cyrillic sources) **plus
-  South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9; punctuation (incl. „ " « » “ ” ‘ ’ ‚ ‹ › / … · • ° %
-  ¡ ¿ and the ASCII `` ` ``); **math + symbols** `+ − = × ÷ < > ± & № @ $ € © ® ™ § ¶ ‰ ′ ″ # * _ | ~ \ ^ [ ] { }`;
-  precomposed `½ ¼ ¾`, superscript `¹ ² ³ ⁰–⁹`, subscript `₀–₉`; raised `.case` dashes; NBSP; U+2010/2011/2015
-  aliased to the dashes. **Not** covered: other-Cyrillic (Open #6), Latin-1 accented letters (scope), U+00AD
+- **Coverage — 294 glyphs:** all 31 Macedonian Cyrillic letters (upper+lower) + grave-accented **ѐ/ѝ** and the
+  uppercase case pair **Ѐ/Ѝ**; full **Latin** A–Z/a–z (drawn, or de-skewed copies of Cyrillic sources — since
+  v0.9.40 the m is drawn too, so the copies are a c e g j o s u x y + A B C E H J K M O P S X Y) **plus
+  South-Slavic diacritics** `š č ž ć đ` / `Š Č Ž Ć Đ`; digits 0–9 (hybrid 450u default + a cap-height `.case` set);
+  punctuation (incl. „ " « » “ ” ‘ ’ ‚ ‹ › / … · • ° % ¡ ¿ and the ASCII `` ` ``); **math + symbols**
+  `+ − = × ÷ < > ± & № @ $ € © ® ™ § ¶ ‰ ′ ″ # * _ | ~ \ ^ [ ] { }`; precomposed `½ ¼ ¾`, superscript
+  `¹ ² ³ ⁰–⁹`, subscript `₀–₉`; dashes and operators in three heights (`.fig`/`.case` alternates); `.lc`
+  apostrophe alternates (identical outlines since v0.9.38 — see Open #10); NBSP; U+2010/2011/2015 aliased to the
+  dashes. **Not** covered: other-Cyrillic (Open #6), Latin-1 accented letters (scope), U+00AD
   (deliberately — FontBakery flags it; browsers substitute the hyphen at a break).
 - **Weights:** Regular + Bold — the Bold is a **contrast-preserving faux-bold** (`make_bold.py`: un-slant, stretch
   y by D/DY, fill ∪ round `pathops` stroke of width 2·D, re-slant — a true D×DY-ellipse dilation; D=16, DY=7).
@@ -83,10 +99,18 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   positive-only **floor kerns** (`_floor_pairs`: push apart until a y-band's nearest ink approach ≥ gap): digit
   pairs (`DIG_*`), S/Š/F/T before ascender letters (`ASC_*`), ascenders before the raised quotes (`QUO_*`), Ф/Ѕ
   before ascender/overbar letters (`CFL_*`); the cap sets include Ѐ Ѝ / Š Č Ž Ć Đ and the Latin lowercase set
-  š ž č ć đ. Regular/Bold **2832 / 2763** pairs. Overlap scan (HarfBuzz-kerned ink masks): 0 pairs, every category.
+  š ž č ć đ. Later passes: the **negative-only tuck** (v0.9.37, `_tuck_pairs`: an x-height letter after an
+  apostrophe is pulled under it, 215u along the slant, cap 110), a bigger capital→apostrophe floor (v0.9.38,
+  `CAP_QUO_GAP` 80), and since the de-slant (v0.9.39) a descender-band floor before j/ј (`DESC_*`), the Ф/Ѕ/Р
+  flourish floor widened (cap 240, + ѐ ѝ) and d + V W U in the S/F/T ascender floor. One value per pair (floor
+  wins over tuck). Regular/Bold **3069 / 3170** pairs. Overlap scan (HarfBuzz-kerned ink masks): 0 pairs in every
+  category; the 16 384-triple letter+apostrophe+letter scan: 0 overlaps.
 - **OpenType features (GSUB):** `tnum` tabular figures · `zero` slashed zero · `sups`/`subs` · `numr`/`dnom` ·
-  `frac` fractions (denominators first, up to four figures) · `case` (raised dashes) · `calt` (a dash after a figure
-  or a capital takes the raised `.case` form). Built from the digit outlines by `features.py`; HarfBuzz-verified. Both
+  `frac` fractions (denominators first, up to four figures) · `case` (cap-height figures + raised dashes/operators)
+  · `calt`, on by default: cap-height figures inside all-caps runs; dashes/operators at the lowercase height
+  between words, `.fig` beside hybrid figures, `.case` beside capitals; and the apostrophe `.lc` rules (after a
+  short letter, leading before one, the 'n' idiom, before punctuation — all one height now). Built from the
+  digit outlines by `features.py`; HarfBuzz-verified in both weights after every build. Both
   weights also carry a **STAT** table (Weight axis) + a **`meta`** table (dlng/slng = Latn, Cyrl). GSUB + the kern
   GPOS are compiled in ONE `add_kern(otf, extra_fea)` call — `addOpenTypeFeaturesFromString` rebuilds BOTH tables
   from its FEA, so two separate calls wipe each other (keep them in one call).
@@ -104,8 +128,8 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
 amici is **not deployed anywhere** — it exists only locally and in its GitHub repo — so propagation is: copy the
 four web fonts into `public/fonts/`, bump `?v=` in `app/assets/tailwind/application.css`, `bin/rails
 tailwindcss:build` (the build output is gitignored), commit, `git push origin main` (its local `main` has no
-upstream set). amici's `?v=` counter is independent of this repo's (v0.9.23=`?v=15` … v0.9.36=`?v=28`). Current:
-`3b53d31`, v0.9.36.
+upstream set). amici's `?v=` counter is independent of this repo's (v0.9.23=`?v=15` … v0.9.36=`?v=28` …
+v0.9.41=`?v=33`). Current: `8545fc8`, v0.9.41, `?v=33`.
 
 **B. Render-test in real apps before a wide push.** Validated via FontBakery (0 FAIL), HarfBuzz and PIL, and on
 2026-11-02 in **LibreOffice 24.2** (headless HTML→PDF→PNG, installed OTFs) and **Chrome** (headless screenshots of
@@ -266,6 +290,20 @@ Windows/.NET step, optional.)
    reach; own VPS/blog download page. **Google Fonts is out** (requires OFL/Apache; this is CC BY-SA 3.0). Every
    posting needs a visible MacedonianBoy + CC BY-SA 3.0 credit. **`DISTRIBUTION.md` (2026-11-02)** holds the
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
+9. **QA / measurement helpers are session-scratch, not in the repo** (2026-11-02). The checks quoted above were
+   run from scripts in the Claude session scratchpad, which does not survive the session: `pairs.py` (HarfBuzz-
+   kerned pair ink-overlap scan, 9 categories, px² at 200px/em, threshold 48), `triples.py` (every
+   letter+apostrophe+letter triple, overlap first×third and mark×third, with a no-mark control), `slant3.py`
+   (projection-profile italic angle per glyph/group), `slant2.py`/`slant.py` (the rejected centroid/segment
+   measures), `obox.py` (x/y extent of a pair's crossing), `tuck.py` (slant-wise air under an apostrophe),
+   `show.py` (comparison sheets with 10% margins). Each is ~40–80 lines over fontTools + uharfbuzz + PIL + numpy
+   and is described in the handoff where its numbers are quoted. Worth committing under `build/scripts/qa/` so
+   the "0 overlapping pairs" claim stays reproducible — a scope decision; recreate from the handoff descriptions
+   otherwise.
+10. **`.lc` apostrophe machinery is now redundant** (since v0.9.38): `quotesingle.lc`/`quoteright.lc` have the
+   same outline as the base glyphs (`QUO_LC_DY` 0), yet the `calt` apostrophe rules, the `.lc` kern passes and
+   the tuck still run on them. Kept deliberately as the knob to re-split the heights; remove (2 glyphs, 5 rules,
+   2 kern passes, `@XH`/`_QUO_LC*` lists) if a single height is final. Harmless as is (FontBakery clean).
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
 **2026-11-02, v0.9.41 (shipped):**

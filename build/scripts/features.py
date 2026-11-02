@@ -123,7 +123,7 @@ lookup DASH_FIG  { sub @dash by @dashf; } DASH_FIG;
 # `.fig` next to hybrid (or tabular) figures, the lowercase default otherwise.
 lookup FIG_CASE { sub @figs by @figsc; } FIG_CASE;
 # apostrophes after an x-height letter take a lower form (v0.9.37): the raised one floated far above "it's"
-@XH = [a.lat c.lat e.lat g.lat i j.lat m.lat n o.lat p q r s.lat u.lat v w x.lat y.lat z scaron zcaron cacute t
+@XH = [a.lat c.lat e.lat g.lat i j.lat m n o.lat p q r s.lat u.lat v w x.lat y.lat z scaron zcaron cacute t
        """ + " ".join("uni%04X" % ord(c) for c in "агдежзѕијклљмнњопрстќуфхцчџшѐѝ") + """];
 @LC_ASC = [b d f h k l dcroat uni0431 uni0432 uni0453];
 @LETTERS = [@XH @LC_ASC @CAPS];

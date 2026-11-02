@@ -571,6 +571,28 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
+- **(v0.9.40) drawn Latin m — built 2026-11-02, NOT yet committed/shipped** (owner: "the Latin small m looks too
+  much like the Cyrillic one, which is not good for a serious font"). It WAS the Cyrillic м: `m.lat`, a
+  de-skewed copy of uni043C (536u wide, with м's long rising entry and soft double arch). Now a drawn letter in
+  the n/h/u family: **`_L_m(p) = _archright(p,42,108); _archright(p,108,174)`** — the n's stem + arch repeated
+  once at the same 66u pitch (the second call re-traces the middle stem and unions), `LAT_STRETCH["m"] = 1.72`
+  and `LAT_LIGHTEN["m"] = 0.86` = the n's, so the arches, stem pitch (113u final), weight and the small entry
+  hook are the n's exactly; no exit stroke, like the n. Advances: n 188, m 301 (old м copy 536). Wiring:
+  `("m",0x6D,_L_m)` in `LATIN_DRAWN`, the `m.lat` entry removed from `REUSE_DESKEW` (the only consumer — the
+  glyph count stays 294), `features.py` `@XH` now lists `m` instead of `m.lat` (the apostrophe rules keep
+  firing for "I'mma", verified). `LAT_NAT[м]` kept (harmless). The tuck/floor/letter kerns re-derived
+  automatically (3071/3170 pairs). Verified: pair scan 0 overlaps in all 9 sections of both weights, triple
+  apostrophe scan clean, FontBakery 0 FAIL / 0 ERROR, TTFs shape identically to the OTFs. Version strings
+  0.940, demo/CSS `?v=52`, README `@v0.9.40`. Before/after render: `scratchpad/latin_m.png`.
+  **Middle leg thinner (same day, owner: "a bit thinner, for an artistic touch").** `_L_m` is now three strokes
+  instead of two `_archright` calls: (1) `ribbon_dir` stem + first arch ending at the middle shoulder
+  (108, 0.6·LXH) — `_archright`'s first three segments, full pen; (2) the middle leg as a **`ribbon_prof`
+  pressure taper** from `w0 = 40·LW_DMAX/LW_P0` (== ribbon_dir's full Latin downstroke width, so the join at
+  the shoulder has no notch) to **`M_MID_LEG = 0.65`**·w0 at the foot (gamma 1.4 eases it: ~22% thinner at
+  mid-height, 35% at the foot); (3) `ribbon_dir` retrace up the leg (thin by direction) + second arch + right
+  stem — `_archright` minus its leading downstroke, which would otherwise redraw the leg at full weight. The
+  Bold's uniform dilation keeps the contrast, subtler. Re-verified: pair/triple scans clean, FontBakery 0 FAIL,
+  TTF == OTF; 3069/3170 kern pairs. Render: `scratchpad/m_leg.png`.
 - **(v0.9.39) absolute slants: Cyrillic 14°, Latin 10°, everything else 10° — shipped 2026-11-02 (commit
   `ed54883`, release v0.9.39, amici `?v=31`)** (owner, same day, in three steps: first "20% less slant on every glyph", then the absolute
   targets "Cyrillic lowercase and caps 12° (both!), Latin lowercase and caps 10° (both), take special care of

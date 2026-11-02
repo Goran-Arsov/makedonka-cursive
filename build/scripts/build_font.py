@@ -738,7 +738,7 @@ cmap[0x2010] = cmap[0x2011] = "hyphen"; cmap[0x2015] = "emdash"   # ‐ ‑ ― 
 # cap 653, descender ~-240 (measured from the built Cyrillic — stable with the trace).
 LXH, LASC, LCAP, LDESC = 247.0, 553.0, 653.0, -240.0
 # per-glyph horizontal stretch for drawn letters that read too condensed (widen only, weight unchanged):
-LAT_STRETCH = {"i":1.36,"t":1.25,"l":1.52,"k":1.63,"n":1.72,"h":1.73,"b":1.68,"d":1.65,"r":1.73,
+LAT_STRETCH = {"i":1.36,"t":1.25,"l":1.52,"k":1.63,"n":1.72,"m":1.72,"h":1.73,"b":1.68,"d":1.65,"r":1.73,
                "q":1.67,"p":1.67,"f":1.06,"v":1.80,"w":1.52,"z":1.22,
                "D":1.55,"F":1.48,"G":1.50,"I":1.35,"L":1.75,"N":1.62,"Q":1.65,"R":1.72,"U":1.78,"V":1.78,"W":1.75,"Z":1.52}
 # extra side-spacing (units each side) for drawn letters that read too tight — adds whitespace, not glyph width:
@@ -763,7 +763,7 @@ def _dsk(scp): return math.tan(math.radians(LAT_NAT[scp])) + cyr_shear(scp) - SL
 LAT_LIGHTEN = {"h":0.84, "w":0.82, "b":0.90,            # per-glyph weight scale for the dense ones
                # drawn letters still heavier than the Cyrillic body after LAT_WT — thin to match:
                "I":0.62, "N":0.56, "L":0.70, "R":0.72, "F":0.74, "D":0.82, "Z":0.80, "U":0.84, "V":0.90,
-               "i":0.82, "t":0.84, "n":0.86}   # (p: none — it is q's mirror and q is not lightened; the old "p":0.80 was dead while p was a р copy)
+               "i":0.82, "t":0.84, "n":0.86, "m":0.86}   # (p: none — it is q's mirror and q is not lightened; the old "p":0.80 was dead while p was a р copy)
 def _loopasc(pen, x, top, mx=46, mn=9):
     ribbon_dir(pen, [('M',(x+4,16)),('C',(x-8,top*0.5),(x-26,top*0.88),(x+22,top)),('C',(x+56,top*1.08),(x+58,top*0.8),(x+32,top*0.70)),('C',(x+12,top*0.6),(x+18,top*0.42),(x+16,16))], mx, mn)
 def _lbowl(pen, cx, cy, rx, ry):
@@ -774,6 +774,17 @@ def _L_i(p): ribbon_dir(p,[('M',(60,LXH-6)),('C',(55,LXH*0.55),(50,20),(52,14))]
 def _L_t(p): ribbon_dir(p,[('M',(66,LASC*0.78)),('C',(56,LXH*0.55),(52,LXH*0.22),(56,18)),('C',(62,6),(84,10),(100,30))],44,12); ribbon_prof(p,[('M',(24,LXH+10)),('L',(100,LXH+2))],18,18)
 def _L_l(p): _loopasc(p,62,LASC); ribbon_dir(p,[('M',(74,17)),('C',(84,0),(112,8),(140,40))],36,12)
 def _L_n(p): _archright(p,42,108)
+M_MID_LEG = 0.65   # v0.9.40: the m's middle leg tapers to this fraction of the full stem width at its foot ("a bit thinner, for an artistic touch" — owner)
+def _L_m(p):   # v0.9.40: a drawn Latin m = the n's stem + arch, repeated once at the same 66u pitch — it was a de-skewed copy of the Cyrillic м and read as one ("too much like the Cyrillic one", owner)
+    lx, mx, rx = 42, 108, 174
+    # stem + first arch, ending at the middle shoulder (full pen, exactly _archright's first three segments)
+    ribbon_dir(p,[('M',(lx+2,LXH-2)),('C',(lx,LXH*0.5),(lx,18),(lx,14)),('C',(lx+1,LXH*0.5),(lx+2,LXH*0.86),(lx+6,LXH*0.99)),('C',(lx+22,LXH*1.07),(mx-10,LXH*1.02),(mx,LXH*0.6))],40,8)
+    # middle leg: a pressure taper from the full downstroke width at the shoulder (so no notch where it meets the
+    # arch) easing to M_MID_LEG of it at the foot — the one place the m departs from the n's pen
+    w0 = 40 * LW_DMAX / LW_P0            # == ribbon_dir's full Latin downstroke width, in ribbon_prof's units
+    ribbon_prof(p,[('M',(mx,LXH*0.6)),('C',(mx+1,LXH*0.33),(mx,18),(mx,14))], w0, w0 * M_MID_LEG)
+    # retrace up the middle leg (thin, by direction) + second arch + right stem (full pen) — _archright minus its leading downstroke
+    ribbon_dir(p,[('M',(mx,14)),('C',(mx+1,LXH*0.5),(mx+2,LXH*0.86),(mx+6,LXH*0.99)),('C',(mx+22,LXH*1.07),(rx-10,LXH*1.02),(rx,LXH*0.6)),('C',(rx+1,LXH*0.33),(rx,18),(rx,14))],40,8)
 def _L_h(p): _loopasc(p,48,LASC); ribbon_dir(p,[('M',(64,14)),('C',(63,LXH*0.5),(64,LXH*0.86),(68,LXH*0.99)),('C',(84,LXH*1.07),(118,LXH*1.02),(126,LXH*0.6)),('C',(127,LXH*0.33),(126,18),(126,14))],40,8)
 def _L_b(p): _loopasc(p,54,LASC); _lbowl(p,98,LXH*0.5,38,LXH*0.5)
 def _L_d(p): _lbowl(p,55,LXH*0.5,50,LXH*0.5); ribbon_dir(p,[('M',(108,LASC)),('C',(104,LXH*0.6),(103,20),(104,14))],44,12)
@@ -833,7 +844,7 @@ def _U_Q(p): ribbon_prof(p,[('M',(112,LCAP)),('C',(42,LCAP*0.98),(42,LCAP*0.02),
 # top CAP + central stem (left curl and outer pipes removed) — see the "Latin T" block after REUSE_DESKEW.
 LATIN_HOMO = {}   # none: every Latin letter is now drawn or a de-skewed copy (built below),
 # so the Macedonian Cyrillic glyphs are never reused directly and keep their steeper slant.
-LATIN_DRAWN = [("i",0x69,_L_i),("t",0x74,_L_t),("l",0x6C,_L_l),("k",0x6B,_L_k),("n",0x6E,_L_n),("h",0x68,_L_h),("b",0x62,_L_b),
+LATIN_DRAWN = [("i",0x69,_L_i),("t",0x74,_L_t),("l",0x6C,_L_l),("k",0x6B,_L_k),("n",0x6E,_L_n),("m",0x6D,_L_m),("h",0x68,_L_h),("b",0x62,_L_b),
     ("d",0x64,_L_d),("r",0x72,_L_r),("q",0x71,_L_q),("p",0x70,_L_p),("f",0x66,_L_f),("v",0x76,_L_v),("w",0x77,_L_w),("z",0x7A,_L_z),
     ("D",0x44,_U_D),("F",0x46,_U_F),("G",0x47,_U_G),("I",0x49,_U_I),("L",0x4C,_U_L),("N",0x4E,_U_N),
     ("Q",0x51,_U_Q),("R",0x52,_U_R),("U",0x55,_U_U),("V",0x56,_U_V),("W",0x57,_U_W),("Z",0x5A,_U_Z)]   # T built separately (clip of Cyrillic Т)
@@ -865,7 +876,7 @@ REUSE_DESKEW = [  # (newname, latin_cp, src_glyph, src_cp, is_cap) — de-skew =
     ("j.lat",0x6A,"uni0458",0x0458,False),   # (p is a drawn letter since v0.9.35 — see _L_p)
     ("a.lat",0x61,"uni0430",0x0430,False), ("u.lat",0x75,"uni0438",0x0438,False),
     ("c.lat",0x63,"uni0441",0x0441,False), ("e.lat",0x65,"uni0435",0x0435,False),
-    ("g.lat",0x67,"uni0434",0x0434,False), ("m.lat",0x6D,"uni043C",0x043C,False),
+    ("g.lat",0x67,"uni0434",0x0434,False),   # (m is a drawn letter since v0.9.40 — see _L_m; it was a copy of м)
     ("o.lat",0x6F,"uni043E",0x043E,False), ("s.lat",0x73,"uni0455",0x0455,False),
     ("x.lat",0x78,"uni0445",0x0445,False), ("y.lat",0x79,"uni0443",0x0443,False),
     ("A.lat",0x41,"uni0410",0x0410,True), ("B.lat",0x42,"uni0412",0x0412,True),
@@ -1020,13 +1031,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.939", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.940", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.939",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.939", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.940",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.940", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -1048,7 +1059,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.939    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.940    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

@@ -40,7 +40,13 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
   so the old private specimen page can be retired or replaced by it.
 
-## Current state (v0.9.39 SHIPPED 2026-11-02)
+## Current state (v0.9.40 BUILT in the tree, uncommitted; v0.9.39 is the last SHIPPED; updated 2026-11-02)
+- **v0.9.40 (built, not shipped):** **drawn Latin m** (`_L_m` = the n's stem + arch twice, same stretch/weight
+  as the n, with the middle leg tapering to `M_MID_LEG` 0.65 of the stem width at its foot) replacing the
+  de-skewed copy of the Cyrillic м; `m.lat` gone, `@XH` updated. Whole suite rebuilt
+  (font-internal **"0.940"**, demo/CSS `?v=52`, README jsDelivr tag `@v0.9.40`), verified (FontBakery 0 FAIL;
+  0 overlapping pairs; triple scan clean; 294 glyphs), **uncommitted** — ship steps 5–8 to do. The installed
+  OTFs in `~/.local/share/fonts/` and amici (`?v=31`) are still v0.9.39.
 - **Shipped + public.** `origin/main` is at **v0.9.39** (commit `ed54883`: the slant redesign — traced Cyrillic
   14° both cases via `cyr_shear` from the measured ~30° natural lean, Latin/figures/punctuation 10° via `T_DEG`,
   per-glyph targets С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°, Latin s extra 0.3 de-skew; descender floor before
@@ -119,6 +125,8 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.40** — **(built 2026-11-02, unshipped)** drawn Latin m (n's stem + two arches, `_L_m`, middle leg
+  tapered to 65% at the foot) replaces the de-skewed copy of the Cyrillic м; `m.lat` removed, `@XH` updated.
 - **v0.9.39** — **(2026-11-02)** absolute slants: traced Cyrillic 14° both cases (`cyr_shear`
   from the measured 30.5°/29.5° natural lean), Latin and all drawn glyphs 10° (`T_DEG` 10), Latin s extra
   de-skew (`LAT_NAT[ѕ]` 37.5); per-glyph targets С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°; de-skew copies + Bold model
@@ -261,6 +269,11 @@ Windows/.NET step, optional.)
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
+**2026-11-02, v0.9.40 (built):**
+- ~~**"The Latin small m looks too much like the Cyrillic one — design a Latin m"**, then **"make the middle leg a
+  bit thinner (artistic touch)"** (owner)~~ — drawn `_L_m` on the n's arch pattern (one stem, two arches, same
+  pen/pitch/weight as n, h, u), middle leg a pressure taper to 65% at the foot (`M_MID_LEG`); the м copy removed.
+
 **2026-11-02, v0.9.39 (shipped):**
 - ~~**"Decrease the slant of all glyphs by 20%"**, then **"Cyrillic lowercase + caps 12°, Latin both cases 10°
   (special care of the small s), all remaining glyphs 10°"**, then **"Cyrillic lowercase and uppercase 14°"**

@@ -571,6 +571,18 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
+- **(v0.9.41) ш/Ш underbar back under the stems — built 2026-11-02, NOT yet committed/shipped** (owner: "the
+  bottom bar on Ш and ш has been displaced … move them back"). A knock-on of the v0.9.39 de-slant that the scans
+  could not see: the bar's ends were placed as FRACTIONS of the glyph's whole ink width (`_fL/_fR` 0.00/0.60 for
+  ш, 0.205/0.659 for Ш), tuned on the 30° trace; the shear moved the top flourishes and the stems' feet by
+  different amounts, so the same fractions slid the bar ~45u (ш) / ~130u (Ш) LEFT, under the entry flourish.
+  Now the bar is anchored to the **stems' feet** — the ink in the baseline band (basey−4..basey+30, via
+  `FlattenPen`), with per-glyph offsets `_oL/_oR` ш (−16, −116), Ш (−53, −132) measured off the v0.9.38 glyphs
+  so the bar lands exactly where it was relative to the feet (verified: identical offsets before/after). The
+  band moves by at most 10u under any future shear, so the rule is slant-proof. Version strings 0.941, demo/CSS
+  `?v=53`, README `@v0.9.41`. Scans, FontBakery and the TTF check: all clean; 3069/3170 kern pairs. Render:
+  `scratchpad/sha_bar.png`. **Lesson:** fraction-of-bounds placements break under a global shear — the ш/Ш bar
+  was the only one (grep `_fL`); the ѐ/ѝ graves use the sheared bounds' centre and are fine.
 - **(v0.9.40) drawn Latin m — shipped 2026-11-02 (commit `df9eac3`, release v0.9.40, amici `?v=32`)** (owner: "the Latin small m looks too
   much like the Cyrillic one, which is not good for a serious font"). It WAS the Cyrillic м: `m.lat`, a
   de-skewed copy of uni043C (536u wide, with м's long rising entry and soft double arch). Now a drawn letter in

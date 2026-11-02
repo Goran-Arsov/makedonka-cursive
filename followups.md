@@ -40,7 +40,13 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
   so the old private specimen page can be retired or replaced by it.
 
-## Current state (v0.9.40 SHIPPED 2026-11-02)
+## Current state (v0.9.41 BUILT in the tree, uncommitted; v0.9.40 is the last SHIPPED; updated 2026-11-02)
+- **v0.9.41 (built, not shipped):** the **ш/Ш underbar** back under the stems — it had slid left with the
+  v0.9.39 de-slant (its ends were fractions of the whole ink width); now anchored to the stems' feet with offsets
+  measured off v0.9.38, so it sits exactly where it did. Whole suite rebuilt (font-internal **"0.941"**,
+  demo/CSS `?v=53`, README jsDelivr tag `@v0.9.41`), verified (FontBakery 0 FAIL; 0 overlapping pairs; triple
+  scan clean; 294 glyphs), **uncommitted** — ship steps 5–8 to do. The installed OTFs in
+  `~/.local/share/fonts/` and amici (`?v=32`) are still v0.9.40.
 - **Shipped + public.** `origin/main` is at **v0.9.40** (commit `df9eac3`: the drawn Latin m — `_L_m`, the n's
   stem + two arches at the n's stretch/weight, middle leg tapered to `M_MID_LEG` 0.65 at the foot; the
   de-skewed м copy `m.lat` removed, `@XH` updated). Before that, v0.9.39 (commit `ed54883`) was the slant
@@ -122,6 +128,8 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.41** — **(built 2026-11-02, unshipped)** ш/Ш underbar anchored to the stems' feet (it had slid left with
+  the de-slant; back to its v0.9.38 position).
 - **v0.9.40** — **(2026-11-02)** drawn Latin m (n's stem + two arches, `_L_m`, middle leg
   tapered to 65% at the foot) replaces the de-skewed copy of the Cyrillic м; `m.lat` removed, `@XH` updated.
 - **v0.9.39** — **(2026-11-02)** absolute slants: traced Cyrillic 14° both cases (`cyr_shear`
@@ -266,6 +274,11 @@ Windows/.NET step, optional.)
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
+**2026-11-02, v0.9.41 (built):**
+- ~~**"The bottom bar on Ш and ш has been displaced — move them back"** (owner)~~ — unintended knock-on of the
+  v0.9.39 de-slant (bar ends were fractions of the whole ink width); re-anchored to the stems' feet, matching
+  v0.9.38 exactly.
+
 **2026-11-02, v0.9.40 (shipped):**
 - ~~**"The Latin small m looks too much like the Cyrillic one — design a Latin m"**, then **"make the middle leg a
   bit thinner (artistic touch)"** (owner)~~ — drawn `_L_m` on the n's arch pattern (one stem, two arches, same

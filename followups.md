@@ -43,11 +43,15 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
     `--accept-visibility-change-consequences` flag yet).
 - **Private preview pages (owner-only, not in this repo):** a non-technical install/use guide exists as a private
   shareable page; the owner holds the link. The browser specimen is now generated in-repo (`specimen.html`, step 3b),
-  so the old private specimen page can be retired or replaced by it.
+  so the old private specimen page can be retired or replaced by it. A **live specimen artifact** (both v0.9.41 woff2
+  embedded; Cyrillic + Latin, both weights, standing phrases, light/dark toggle) was published 2026-11-06:
+  `https://claude.ai/artifact/NxYyZydEyDXcnaUYgMMw5P` — private to the owner's claude.ai account.
 
-## Current state (v0.9.41 SHIPPED 2026-11-02)
-- **Shipped + public.** `origin/main` is at **v0.9.41** (commit `ccdd5ef`: the ш/Ш underbar re-anchored to the
-  stems' feet — it had slid left with the v0.9.39 de-slant). Before that: v0.9.40 (`df9eac3`) the drawn Latin m
+## Current state (v0.9.41 SHIPPED 2026-11-02; QA suite added 2026-11-06)
+- **Shipped + public.** The font is at **v0.9.41** (commit `ccdd5ef`: the ш/Ш underbar re-anchored to the
+  stems' feet — it had slid left with the v0.9.39 de-slant). `origin/main` HEAD is now **`c25a8db`** — the two
+  2026-11-06 commits add `build/scripts/qa/` (the reproducible scan suite, Open #9) and record it; **no font
+  change**, so all four binaries, releases, amici and the installed OTFs stay at v0.9.41. Before that: v0.9.40 (`df9eac3`) the drawn Latin m
   (`_L_m`, the n's stem + two arches at the n's stretch/weight, middle leg tapered to `M_MID_LEG` 0.65; the м copy
   `m.lat` removed, `@XH` updated); v0.9.39 (`ed54883`) the slant redesign: traced Cyrillic 14° both cases via
   `cyr_shear` from the measured ~30° natural lean, Latin/figures/punctuation 10° via `T_DEG`, per-glyph targets
@@ -59,6 +63,13 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0 overlapping pairs in all 9 scan sections of both
   weights, the 16 384-triple apostrophe scan fully clean in both weights, 294 glyphs. Measured slants (projection
   profile, Regular, v0.9.39): Cyrillic 14.2° / 13.5°, Latin 10.2° / 9.8°, punctuation 10.0°.
+  These checks are now **reproducible in-repo** (`build/scripts/qa/` — `pairs.py`, `triples.py`, `slant3.py`,
+  `show.py`; commit `c25a8db`). Re-run after any glyph/kern change: `pairs.py` and `triples.py` exit non-zero on a
+  real-text collision; `slant3.py`'s `| [ ] #` anchor must read 10.0° and cyr-lower 14.2°. The pair scan's
+  non-zero cases are **intended** cap entry-swash flourish interlock on non-text adjacencies (reported
+  separately), not collisions — don't "fix" them. Reconstructions, not the lost originals: slant on
+  round/flourished groups reads +2–3° soft (judge by the stem-bearing anchor). Deps: `build/scripts/qa/requirements.txt`
+  (`uharfbuzz`, `freetype-py` — were missing from the main `requirements.txt`).
 - **Slant (since v0.9.39):** the traced Cyrillic is de-slanted from the chart's ~30° lean to **14°** (both cases)
   by a per-case shear in `letter_path` (`CYR_TARGET_DEG`, `cyr_shear`); everything drawn (Latin, figures,
   punctuation, operators) is sheared to **10°** (`T_DEG`); the Latin copies of Cyrillic sources de-skew relative

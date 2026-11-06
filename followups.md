@@ -47,19 +47,24 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   embedded; Cyrillic + Latin, both weights, standing phrases, light/dark toggle) was published 2026-11-06:
   `https://claude.ai/artifact/NxYyZydEyDXcnaUYgMMw5P` — private to the owner's claude.ai account.
 
-## Current state (v0.9.41 SHIPPED 2026-11-02; QA suite added 2026-11-06)
-- **Shipped + public.** The font is at **v0.9.41** (commit `ccdd5ef`: the ш/Ш underbar re-anchored to the
-  stems' feet — it had slid left with the v0.9.39 de-slant). `origin/main` HEAD is now **`c25a8db`** — the two
-  2026-11-06 commits add `build/scripts/qa/` (the reproducible scan suite, Open #9) and record it; **no font
-  change**, so all four binaries, releases, amici and the installed OTFs stay at v0.9.41. Before that: v0.9.40 (`df9eac3`) the drawn Latin m
+## Current state (v0.9.42 SHIPPED 2026-11-06)
+- **Shipped + public.** The font is at **v0.9.42** (commit `3c5146f`, `origin/main` HEAD): Cyrillic Е 14°→17°
+  and Latin E 10°→22° (per-glyph `CYR_SLANT_DEG`/`LAT_SLANT_DEG`); Cyrillic **Н** got a detached ~1278u² stray
+  speck dropped from its counter (Н-scoped `PURGE_AREA` 2000u²), its **two legs connected by a crossbar**, and the
+  **half-circle cut-off at the right-leg foot filled** — the geometry added in the NEUT glyph-assembly loop in
+  q-space (OTF coords mapped via `bl`/`basey`), and inherited by the Latin H copy. Earlier 2026-11-06: v0.9.41
+  (`ccdd5ef`) ш/Ш underbar re-anchored to the stems' feet; the QA scan suite `build/scripts/qa/` landed at
+  `c25a8db` (Open #9). Before that: v0.9.40 (`df9eac3`) the drawn Latin m
   (`_L_m`, the n's stem + two arches at the n's stretch/weight, middle leg tapered to `M_MID_LEG` 0.65; the м copy
   `m.lat` removed, `@XH` updated); v0.9.39 (`ed54883`) the slant redesign: traced Cyrillic 14° both cases via
   `cyr_shear` from the measured ~30° natural lean, Latin/figures/punctuation 10° via `T_DEG`, per-glyph targets
   С 15.35°, Ѕ ѕ −8°, Latin S −8°, s −3°, Latin s extra 0.3 de-skew; descender floor before j/ј, wider Ф/Ѕ/Р
-  flourish floor, d + V W U in the ascender floor. GitHub releases v0.9.15–v0.9.41 are live (each with its zip;
-  v0.9.41's has 15 entries). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets
-  across history). Font-internal version **"0.941"**, demo/CSS `?v=53`, README jsDelivr tag `@v0.9.41`; both
-  OTFs installed in `~/.local/share/fonts/`; amici at `?v=33` (commit `8545fc8`, pushed). Verified before
+  flourish floor, d + V W U in the ascender floor. GitHub releases v0.9.15–v0.9.42 are live (each with its zip;
+  v0.9.42's has 15 entries). Repo is **PUBLIC** (published as-is, no history rewrite — verified no real secrets
+  across history). Font-internal version **"0.942"**, demo/CSS `?v=54`, README jsDelivr tag `@v0.9.42`; both
+  OTFs installed in `~/.local/share/fonts/`; amici at `?v=34` (commit `b569a37` on origin/main — amici was checked
+  out on the owner's `public-announcements` feature branch, so the font commit sits on both `main` and that branch,
+  and the branch's uncommitted announcements WIP was left untouched). Verified before
   shipping: FontBakery 0 FAIL / 0 ERROR on all four files, 0 overlapping pairs in all 9 scan sections of both
   weights, the 16 384-triple apostrophe scan fully clean in both weights, 294 glyphs. Measured slants (projection
   profile, Regular, v0.9.39): Cyrillic 14.2° / 13.5°, Latin 10.2° / 9.8°, punctuation 10.0°.
@@ -157,6 +162,10 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.42** — **(2026-11-06)** Cyrillic Е 14°→17°, Latin E 10°→22° (`CYR_SLANT_DEG`/`LAT_SLANT_DEG`); Cyrillic
+  Н — detached ~1278u² stray speck removed (`PURGE_AREA` 2000u², Н-scoped), the two legs connected by a crossbar,
+  and the half-circle cut-off at the right-leg foot filled with a disk (both added in the NEUT loop in q-space;
+  Latin H inherits). FontBakery 0 FAIL, pair/triple scans clean, 294 glyphs. amici `?v=34`.
 - **v0.9.41** — **(2026-11-02)** ш/Ш underbar anchored to the stems' feet (it had slid left with
   the de-slant; back to its v0.9.38 position).
 - **v0.9.40** — **(2026-11-02)** drawn Latin m (n's stem + two arches, `_L_m`, middle leg

@@ -571,6 +571,30 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
+- **(v0.9.42) Cyrillic Е & Latin E slant; Cyrillic Н legs connected + notch filled + speck removed — shipped
+  2026-11-06 (commit `3c5146f`, release v0.9.42, amici `?v=34`)**
+  **E slant (owner, in steps 13° → 17° → 20° → 22° for Latin; Cyrillic Е tilted +3° to 17°):**
+  `CYR_SLANT_DEG[0x0415] = 17.0`, `LAT_SLANT_DEG["E.lat"] = 22.0` — absolute targets. The two are independent: the
+  `_dsk` de-skew for the Latin copy of Е cancels the Cyrillic target algebraically (tan(target) drops out), so
+  changing Cyrillic Е does NOT drag Latin E. Ѐ (composed from Е's bounds) follows Cyrillic Е. Measured (projection
+  profile): Cyrillic Е 19°, Latin E ~17.8° — the ornate E's flourishes make the projection under-read the knob by
+  ~2–3° (judge by the knob, not the measure; same caveat as `slant3.py`'s round/flourished groups).
+  **Н speck (owner: "broken leg" — a detached ~1278u² sliver floating in the counter):** `PURGE_AREA = {0x041D:
+  2000.0}`, applied in `letter_path` as `purge_slivers(p, max_area=PURGE_AREA.get(cp, 120.0))`. The speck sat above
+  the default 120u²/4u sliver floor; a corpus sweep of every traced Cyrillic letter put the smallest REAL contour
+  at ј's dot 2858u², so a 2000u² floor for Н drops only the speck (Н body 112675u², top-loop counter 9134u² are
+  far above). Scoped to Н — a global bump would disturb the embolden-crack purge tuned at 120u².
+  **Н legs + notch (owner: "connect the two legs", "fill the half-circle cut-off near the bottom of the right
+  leg"):** added in the **NEUT glyph-assembly loop** (`if cp == 0x041D:`, after the `bl`/`LEFT_CAP` adjustment,
+  before `hshift`) — the same place the ш/Ш underline is drawn. `_Q(ox, oy) = (ox + bl - M_BODY, oy + basey)` maps
+  FINAL (OTF) coords to this glyph's q-space (pure translation; the trace coords sit ~11000–12000). After the
+  speck fix the body is two contours (left leg x[8,871], right leg x[853,1079]), closest at (789,220)↔(890,211),
+  a 102u gap. A crossbar quad `[(745,208),(892,200),(892,232),(745,240)]` bridges it (merges the two into one
+  contour); a disk (centre (904,96), r25) fills the half-circle bite in the right-leg stem's bottom-left
+  (x≈880–918, y≈75–108). Unioned via `pathops.op(path, _add, PathOp.UNION)`. Latin H (`H.lat`, a `_neut` copy of
+  Н) inherits all three fixes for free. **Lesson:** hand-drawn geometry on a traced glyph goes in the NEUT loop in
+  q-space; measure coords off the OTF, convert with `+ bl − M_BODY` (x) and `+ basey` (y). FontBakery 0 FAIL / 0
+  ERROR on all four; pair + 16 384-triple scans clean both weights; 294 glyphs.
 - **(v0.9.41) ш/Ш underbar back under the stems — shipped 2026-11-02 (commit `ccdd5ef`, release v0.9.41, amici `?v=33`)** (owner: "the
   bottom bar on Ш and ш has been displaced … move them back"). A knock-on of the v0.9.39 de-slant that the scans
   could not see: the bar's ends were placed as FRACTIONS of the glyph's whole ink width (`_fL/_fR` 0.00/0.60 for

@@ -290,20 +290,25 @@ Windows/.NET step, optional.)
    reach; own VPS/blog download page. **Google Fonts is out** (requires OFL/Apache; this is CC BY-SA 3.0). Every
    posting needs a visible MacedonianBoy + CC BY-SA 3.0 credit. **`DISTRIBUTION.md` (2026-11-02)** holds the
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
-9. **QA / measurement helpers are session-scratch, not in the repo** (2026-11-02). The checks quoted above were
-   run from scripts in the Claude session scratchpad, which does not survive the session: `pairs.py` (HarfBuzz-
-   kerned pair ink-overlap scan, 9 categories, px² at 200px/em, threshold 48), `triples.py` (every
-   letter+apostrophe+letter triple, overlap first×third and mark×third, with a no-mark control), `slant3.py`
-   (projection-profile italic angle per glyph/group), `slant2.py`/`slant.py` (the rejected centroid/segment
-   measures), `obox.py` (x/y extent of a pair's crossing), `tuck.py` (slant-wise air under an apostrophe),
-   `show.py` (comparison sheets with 10% margins). Each is ~40–80 lines over fontTools + uharfbuzz + PIL + numpy
-   and is described in the handoff where its numbers are quoted. Worth committing under `build/scripts/qa/` so
-   the "0 overlapping pairs" claim stays reproducible — a scope decision; recreate from the handoff descriptions
-   otherwise.
+9. ~~**QA / measurement helpers are session-scratch, not in the repo**~~ **Resolved 2026-11-06 (commit
+   `7418882`):** reconstructed from the handoff and committed under `build/scripts/qa/` — `qa_common.py` (shared
+   HarfBuzz-shape + FreeType per-glyph raster, glyph-cached so a full scan runs <1s), `slant3.py`, `pairs.py`,
+   `triples.py`, `show.py`, `README.md`, and `requirements.txt` (the QA-only deps `uharfbuzz` + `freetype-py`,
+   which were **missing from `build/requirements.txt`** — `fontbakery` too). Each is **validated to reproduce the
+   handoff's published numbers** with a built-in positive control / calibration anchor: slant anchor `| [ ] #` =
+   **10.0°** and cyr-lower = **14.2°** exact; the pair scan is **0 px² in all 9 real-text categories, both
+   weights** (the cap entry-swash flourish interlock — the МАКЕДОНИЈА look — is thin flourish crossings on
+   non-text adjacencies, confirmed by rendering, and reported **separately** as intended, not a collision); the
+   16 384-triple apostrophe scan is clean in both weights. **Caveat:** these are faithful *reconstructions*, not
+   the lost originals — `slant3` on round/flourished groups (ornate caps, round digits) reads +2–3° soft, so judge
+   slant from the stem-bearing groups + the `| [ ] #` anchor, as the handoff does. **Not recreated:** the rejected
+   `slant`/`slant2` measures, `obox` (subsumed by `pairs`), `tuck` (the tuck fires only in the letter-`'`-letter
+   context that `triples` already proves collision-free) — all documented in `build/scripts/qa/README.md`.
 10. **`.lc` apostrophe machinery is now redundant** (since v0.9.38): `quotesingle.lc`/`quoteright.lc` have the
    same outline as the base glyphs (`QUO_LC_DY` 0), yet the `calt` apostrophe rules, the `.lc` kern passes and
    the tuck still run on them. Kept deliberately as the knob to re-split the heights; remove (2 glyphs, 5 rules,
    2 kern passes, `@XH`/`_QUO_LC*` lists) if a single height is final. Harmless as is (FontBakery clean).
+   **2026-11-06: owner chose to KEEP the knob** (single apostrophe height not declared final) — leave it in place.
 
 ## Resolved (kept for the record; knob-level detail is in the handoff's dated entries)
 **2026-11-02, v0.9.41 (shipped):**

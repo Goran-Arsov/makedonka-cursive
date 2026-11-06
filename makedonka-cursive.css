@@ -6,16 +6,16 @@
  */
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("MakedonkaCursive-Regular.woff2?v=53") format("woff2"),
-       url("MakedonkaCursive-Regular.woff?v=53") format("woff");
+  src: url("MakedonkaCursive-Regular.woff2?v=54") format("woff2"),
+       url("MakedonkaCursive-Regular.woff?v=54") format("woff");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("MakedonkaCursive-Bold.woff2?v=53") format("woff2"),
-       url("MakedonkaCursive-Bold.woff?v=53") format("woff");
+  src: url("MakedonkaCursive-Bold.woff2?v=54") format("woff2"),
+       url("MakedonkaCursive-Bold.woff?v=54") format("woff");
   font-weight: 700;
   font-style: normal;
   font-display: swap;

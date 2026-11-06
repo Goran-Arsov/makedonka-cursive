@@ -101,6 +101,11 @@ def _n_body_shift(x, y):
         s = 1.0 - (1.0 - N_TRIM_L) * wL; x = _BL[0] + s * (x - _BL[0]); y = _BL[1] + s * (y - _BL[1])
     return (x, y)
 POINT_SHIFT = {0x041D: _n_body_shift}            # cp -> raw-space point transform
+# Per-glyph sliver-purge area floor. Н carries a detached ~1278u² speck floating in its counter (a trace
+# artifact above the default 120u² floor — the "broken leg" the owner reported 2026-11-06). The smallest
+# REAL traced contour is ~2858u² (ј's dot), so a 2000u² floor for Н drops only the speck; Н's body
+# (112675u²) and top-loop counter (9134u²) are far above it.
+PURGE_AREA = {0x041D: 2000.0}
 
 class ShiftPen:
     """Pen that remaps each point through fn (raw paths.json space) before forwarding."""
@@ -267,8 +272,8 @@ CYR_NAT_LOWER_DEG, CYR_NAT_CAPS_DEG = 30.5, 29.5       # measured natural lean o
 # the 14° tangent → 15.35°; the dze Ѕ ѕ first −20% (11.2°), then "a target of 6° for all" together with the
 # Latin S s. The Latin copies of these sources are unaffected by the Cyrillic entries (their de-skew backs the
 # whole source shear out again — see _dsk) and take their own targets from LAT_SLANT_DEG.
-CYR_SLANT_DEG = {0x0421: 15.35, 0x0405: -8.0, 0x0455: -8.0}   # Ѕ ѕ: 11.2 → 6 → 2 → −2 → −8 (owner, same day; negative = backslant)
-LAT_SLANT_DEG = {"S.lat": -8.0, "s.lat": -3.0}        # S: 8 → 6 → 2 → −2 → −8; s the same then back to −3; Š š follow; s keeps its extra LAT_NAT de-skew too
+CYR_SLANT_DEG = {0x0421: 15.35, 0x0405: -8.0, 0x0455: -8.0, 0x0415: 17.0}   # Ѕ ѕ: 11.2 → 6 → 2 → −2 → −8 (owner, same day; negative = backslant); Е 14→17 (owner 2026-11-06: tilt +3°)
+LAT_SLANT_DEG = {"S.lat": -8.0, "s.lat": -3.0, "E.lat": 22.0}        # S: 8 → 6 → 2 → −2 → −8; s the same then back to −3; Š š follow; s keeps its extra LAT_NAT de-skew too; E → 22° absolute (owner 2026-11-06: 13 → 17 → 20 → 22)
 def cyr_shear(cp):   # the de-slant shear applied to a traced glyph of code point cp (caps < U+0430)
     nat = CYR_NAT_CAPS_DEG if cp < 0x0430 else CYR_NAT_LOWER_DEG
     return math.tan(math.radians(CYR_SLANT_DEG.get(cp, CYR_TARGET_DEG))) - math.tan(math.radians(nat))   # −0.317 caps / −0.340 lowercase at the group target
@@ -341,9 +346,10 @@ def letter_path(idxs, cp):
         # size — v0.9.35 audit #13); they are all wound opposite to the body, so purge them (adds ink only)
         p = embolden(p, EMBOLDEN[cp])
     # every traced letter: drop sliver contours (the POINT_SHIFT'ed Н carried three <70u² hairline slivers
-    # at its crossbar junction — audit #16); the smallest real contour in the trace is ~3300u², so nothing
-    # intentional is near the 120u²/4u thresholds
-    p = purge_slivers(p)
+    # at its crossbar junction — audit #16); the smallest real contour in the trace is ~2858u² (ј), so nothing
+    # intentional is near the 120u²/4u thresholds. Н also carried a larger detached speck (~1278u²) floating
+    # in its counter that slipped the default floor — PURGE_AREA lifts the floor to 2000u² for Н only (2026-11-06).
+    p = purge_slivers(p, max_area=PURGE_AREA.get(cp, 120.0))
     # v0.9.39: de-slant to CYR_TARGET_DEG (cyr_shear, about the chart's y=0 — the horizontal offset that leaves
     # per glyph is absorbed by the sidebearing normalisation downstream, and y is untouched so baselines/heights hold)
     q = pathops.Path(); p.draw(TransformPen(q.getPen(), (1, 0, cyr_shear(cp), 1, 0, 0))); q.simplify()
@@ -490,6 +496,21 @@ for g, cp, path in NEUT:
         if _bx: bl = min(_bx)
     else:
         bl = min(bl, minx + LEFT_CAP)        # cap leftward overhang (fixes offset-bottom caps like Ч)
+    if cp == 0x041D:                         # Н: (1) connect the two legs, (2) fill the right-leg notch (owner 2026-11-06)
+        # Coords below are the FINAL (OTF) frame; _Q maps them to this glyph's q-space (pure translation).
+        def _Q(ox, oy): return (ox + bl - M_BODY, oy + basey)
+        _add = pathops.Path(); _ap = _add.getPen()
+        def _fill(pts):                      # draw a CCW (ink-positive) polygon in OTF coords
+            a = sum(pts[i][0]*pts[(i+1) % len(pts)][1] - pts[(i+1) % len(pts)][0]*pts[i][1] for i in range(len(pts)))
+            if a < 0: pts = pts[::-1]
+            _ap.moveTo(_Q(*pts[0]))
+            for _p in pts[1:]: _ap.lineTo(_Q(*_p))
+            _ap.closePath()
+        _fill([(745, 208), (892, 200), (892, 232), (745, 240)])          # crossbar: bridge the ~80u gap between legs
+        import math as _m                                                 # fill the half-circle bite in the stem's bottom-left with a disk
+        _cx, _cy, _r = 904, 96, 25
+        _fill([(_cx + _r*_m.cos(2*_m.pi*_k/28), _cy + _r*_m.sin(2*_m.pi*_k/28)) for _k in range(28)])
+        path = pathops.op(path, _add, pathops.PathOp.UNION); path.simplify()
     hshift = M_BODY - bl
     vshift = -basey
     adv = int(round((br - bl) + 2 * M_BODY))
@@ -1037,13 +1058,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.941", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.942", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.941",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.941", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.942",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.942", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -1065,7 +1086,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.941    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.942    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

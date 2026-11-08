@@ -11,3 +11,7 @@ MakedonkaCursive-v*.zip
 .DS_Store
 *.swp
 tmp/
+
+# Owner's local-only working docs — kept on disk, not published (root-anchored)
+/CLAUDE.md
+/followups.md

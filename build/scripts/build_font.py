@@ -107,6 +107,24 @@ POINT_SHIFT = {0x041D: _n_body_shift}            # cp -> raw-space point transfo
 # (112675u²) and top-loop counter (9134u²) are far above it.
 PURGE_AREA = {0x041D: 2000.0}
 
+# --- hand-edited glyph overrides (owner) --------------------------------------
+# These glyphs are replaced WHOLESALE by an outline the owner hand-drew in CorelDRAW and handed back,
+# normalized to FONT UNITS, y-up (baseline y=0, cap top ~685), slant already baked in (it was edited FROM the
+# exported final outline). letter_path() returns it verbatim: no cyr_shear, no POINT_SHIFT, no sliver purge,
+# no per-glyph leg/notch fix (the hand-edit supersedes all of those). Downstream sidebearing + advance
+# normalisation and the Latin de-skew copy (REUSE_DESKEW builds H.lat off uni041D) still apply, so Latin H
+# keeps following the 10° Latin slant off this same shape. File: build/source/overrides/<glyphname>.svg.
+_OVR_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "source", "overrides")
+def _load_override_d(fname):
+    fp = os.path.join(_OVR_DIR, fname + ".svg")
+    if not os.path.exists(fp):
+        return None
+    import re as _re
+    m = _re.search(r'<path id="glyph"[^>]*\bd="([^"]*)"', open(fp).read(), _re.S)
+    return m.group(1) if m else None
+OVERRIDE_D = {0x041D: _load_override_d("uni041D")}            # cp -> path 'd' (font units, y-up)
+OVERRIDE_D = {cp: dd for cp, dd in OVERRIDE_D.items() if dd}  # keep only the ones whose file is present
+
 class ShiftPen:
     """Pen that remaps each point through fn (raw paths.json space) before forwarding."""
     def __init__(self, target, fn): self.t, self.fn = target, fn
@@ -333,6 +351,8 @@ def embolden(path, d):
     return out
 
 def letter_path(idxs, cp):
+    if cp in OVERRIDE_D:                              # owner's hand-edited outline: final units + slant, return as-is
+        p = pathops.Path(); parse_path(OVERRIDE_D[cp], p.getPen()); p.simplify(); return p
     k = SCALE_OVERRIDE.get(cp, 1.0)
     shift = POINT_SHIFT.get(cp)
     p = pathops.Path(); pen = p.getPen()
@@ -496,7 +516,7 @@ for g, cp, path in NEUT:
         if _bx: bl = min(_bx)
     else:
         bl = min(bl, minx + LEFT_CAP)        # cap leftward overhang (fixes offset-bottom caps like Ч)
-    if cp == 0x041D:                         # Н: (1) connect the two legs, (2) fill the right-leg notch (owner 2026-11-06)
+    if cp == 0x041D and cp not in OVERRIDE_D:  # Н: connect legs + fill notch (owner 2026-11-06) — SKIPPED when a hand-edit override supplies the whole glyph
         # Coords below are the FINAL (OTF) frame; _Q maps them to this glyph's q-space (pure translation).
         def _Q(ox, oy): return (ox + bl - M_BODY, oy + basey)
         _add = pathops.Path(); _ap = _add.getPen()
@@ -1058,13 +1078,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.942", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.943", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.942",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.942", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.943",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.943", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
@@ -1086,7 +1106,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.942    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.943    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

@@ -23,7 +23,7 @@ TAN = math.tan(math.radians(14))                         # the font's italic ang
 DY = max(4.0, round(D * 0.44))                           # vertical growth < horizontal, so weight lands on the thick
                                                          # near-vertical stems, not the thin horizontals (т/г/п overbars,
                                                          # ш underline, connectors) — this keeps the Regular's contrast
-VER = "0.942"
+VER = "0.943"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
@@ -105,7 +105,7 @@ _b.ulCodePageRange1 = 0x00000005; _b.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=8, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_b.panose, _k, _v)          # PANOSE: Latin hand-written / script, bold
-fb.font["head"].fontRevision = 0.942
+fb.font["head"].fontRevision = 0.943
 # STAT (Bold's position on the Weight axis) + meta (design/supported scripts), matching the
 # Regular. Placed BEFORE the Mac-name strip so buildStatTable's platform-1 names are removed too.
 from fontTools.otlLib.builder import buildStatTable

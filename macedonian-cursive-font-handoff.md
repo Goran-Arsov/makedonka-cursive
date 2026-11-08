@@ -331,7 +331,7 @@ vectorizing the Wikimedia chart (see *Source material* below).
 - **(v0.9.35) glyph-audit fixes — shipped 2026-11-02 (commit `34e3155`, GitHub release v0.9.35, installed locally,
   amici `?v=27` pushed as `5104a2b`).** A per-glyph audit (metrics + per-contour
   dump, 900px/em zooms with enclosed-hole counting, a HarfBuzz-kerned ink-overlap scan of ~6000 pairs) found the
-  defects tracked as followups Open #13–#27; all fixed in one build. **Outline mechanics:** (1) new
+  defects tracked internally as Open #13–#27; all fixed in one build. **Outline mechanics:** (1) new
   `build/scripts/outline_util.py::purge_slivers(path, max_width=4, max_area=120)` drops hairline sliver contours
   (either winding) — skia-pathops leaves them behind when unioning many near-coincident copies; used after the ѕ
   `embolden` (ѕ/s/š had 80 white cracks) and at the end of the Bold dilation. (2) `_disks(pen, items)` — every
@@ -596,7 +596,7 @@ vectorizing the Wikimedia chart (see *Source material* below).
   source-3.0) moved to a new **`NOTICE`** file, referenced from README and added to the release zip (15 files
   now). README gets a shields.io badge. Font name-table: `licenseDescription` + `licenseInfoURL` → 4.0, copyright/
   Notice "Distributed under CC BY-SA 4.0" (the "derived from … CC BY-SA 3.0" SOURCE strings stay). CSS/demo/
-  specimen footers, DISTRIBUTION.md, CLAUDE.md and amici's footer credit (en/mk locales + the license URL) all →
+  specimen footers, DISTRIBUTION.md, the project's local CLAUDE.md and amici's footer credit (en/mk locales + the license URL) all →
   4.0; every remaining "3.0" is a SOURCE reference. **No glyph/outline changes** — pair/triple scans identical to
   v0.9.43, FontBakery 0 FAIL/0 ERROR per-format. Gotcha: keep `LICENSE` as the pure canonical text or GitHub
   drops back to "Other".

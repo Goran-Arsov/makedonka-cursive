@@ -1,11 +1,11 @@
 # QA scans — Makedonka Cursive
 
-Reproducible checks behind the numbers quoted in `followups.md` and
+Reproducible checks behind the numbers quoted in
 `macedonian-cursive-font-handoff.md` ("0 overlapping pairs", the measured slants,
 the apostrophe tuck being collision-free).
 
 **Provenance.** The original QA scripts lived in a Claude session scratchpad and
-were not kept (followups Open #9). These are **faithful reconstructions**, written
+were not kept (an internal follow-up note). These are **faithful reconstructions**, written
 2026-11-06 from the method descriptions in the handoff, and each is **validated to
 reproduce the handoff's published numbers** via a built-in positive control or
 calibration anchor (detailed below). They are not byte-for-byte the originals.

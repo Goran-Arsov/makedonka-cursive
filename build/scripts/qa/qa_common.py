@@ -7,7 +7,7 @@ shape with uHarfBuzz (GPOS kern + default GSUB, exactly what a browser applies)
 and rasterise each glyph id with FreeType (correct non-zero winding, so the
 disk-brush glyphs' overlapping contours and real counters both come out right).
 
-Render resolution is 200 px/em: an "overlap of N px²" in the handoff / followups
+Render resolution is 200 px/em: an "overlap of N px²" in the handoff
 is N overlapping pixels at this size. INK_CUTOFF treats a pixel as ink at >= half
 coverage, so anti-aliased edges that merely touch don't register as a collision.
 

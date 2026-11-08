@@ -1,7 +1,7 @@
 # Distribution kit — Makedonka Cursive
 
 Ready-to-paste material for posting the font on free-font sites, a blog or a download page.
-Everything here follows from the licence: the font is a **CC BY-SA 3.0 derivative**, so every posting must
+Everything here follows from the licence: the font is **CC BY-SA 4.0** (a ShareAlike derivative of a CC BY-SA 3.0 chart), so every posting must
 show the attribution below and must not claim a different licence.
 
 ## Files to upload
@@ -26,12 +26,12 @@ all-caps). An ornate copperplate hand: use it large — headings, logos, titles,
 
 ## Attribution (must appear wherever the font is offered)
 Makedonka Cursive © Goran Arsov. A derivative of “Macedonian cursive script” by MacedonianBoy (Wikimedia
-Commons, https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), licensed under
+Commons, https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), which is licensed
 Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0). Changes were made. Distributed under
-CC BY-SA 3.0: https://creativecommons.org/licenses/by-sa/3.0/
+CC BY-SA 4.0: https://creativecommons.org/licenses/by-sa/4.0/
 
 ## Licence line for site forms
-Free for personal and commercial use under CC BY-SA 3.0 — attribution required, derivatives must carry the
+Free for personal and commercial use under CC BY-SA 4.0 — attribution required, derivatives must carry the
 same licence. Not OFL (so not eligible for Google Fonts).
 
 ## Tags

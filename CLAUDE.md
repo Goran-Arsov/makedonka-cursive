@@ -22,5 +22,6 @@ A Macedonian cursive display font, vectorized from a CC BY-SA 3.0 chart.
   rebuild the site's CSS.
 
 ## License
-CC BY-SA 3.0, derived from "Macedonian cursive script" by MacedonianBoy (Wikimedia Commons).
+The font is **CC BY-SA 4.0** — a ShareAlike adaptation of "Macedonian cursive script" by MacedonianBoy
+(Wikimedia Commons), whose chart is CC BY-SA 3.0 (the source stays 3.0; the adaptation uses the later 4.0).
 Keep the attribution when distributing; a site serving the font owes a **visible** credit.

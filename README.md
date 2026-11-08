@@ -1,5 +1,7 @@
 # Makedonka Cursive
 
+[![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC%20BY--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
+
 A Macedonian cursive **display** font — all 31 Macedonian letters (upper + lowercase),
 a full **Latin** alphabet, digits 0–9, and punctuation — in two weights, **Regular** and
 **Bold**. The Macedonian letters are
@@ -7,7 +9,7 @@ vectorized from the Wikimedia chart *"Macedonian cursive script"* and spaced to 
 the x-height**, so words read as a connected whole and lowercase tucks under a leading
 capital's flourish. (True contextual joining — a v2 — is future work.)
 
-**Version 0.9.43** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
+**Version 0.9.44** — a font by **Goran Arsov**, derived from MacedonianBoy's cursive chart (CC BY-SA 3.0).
 **Hinted** (PostScript + TrueType), with a contrast-preserving Bold, an **OpenType figures suite**
 (tabular figures, slashed zero, super/subscripts, automatic fractions — type `1/2` → ½),
 **South-Slavic Latin diacritics** (`š č ž ć đ` / `Š Č Ž Ć Đ`), and **math + symbols**
@@ -76,7 +78,7 @@ h1.strong { font-weight: 700; }
 ```css
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.43/MakedonkaCursive-Regular.woff2") format("woff2");
+  src: url("https://cdn.jsdelivr.net/gh/Goran-Arsov/makedonka-cursive@v0.9.44/MakedonkaCursive-Regular.woff2") format("woff2");
   font-weight: 400; font-display: swap;
 }
 ```
@@ -133,15 +135,18 @@ h1.strong { font-weight: 700; }
 and all spacing/kerning/engineering). It is a **derivative work** of
 [*"Macedonian cursive script"* by **MacedonianBoy**](https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg)
 (Wikimedia Commons), whose Macedonian cursive letterforms it traces, licensed **Creative Commons
-Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)**. Therefore:
+Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)**. Because CC BY-SA 3.0 lets an adaptation be
+released under a later version with the same terms, **this font is distributed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)** (the source chart stays CC BY-SA 3.0). Therefore:
 
-- You **must keep attribution** to MacedonianBoy and the CC BY-SA 3.0 license wherever you
-  distribute or ship the font (a credits/colophon page, a CSS comment, or an "about" note is
-  fine). The attribution is also embedded in the font's metadata.
-- You **must license the font (and modified versions) under CC BY-SA 3.0** — it cannot be
+- You **must keep attribution** to MacedonianBoy (and to Goran Arsov) and link the CC BY-SA 4.0
+  license wherever you distribute or ship the font (a credits/colophon page, a CSS comment, or an
+  "about" note is fine). The attribution is also embedded in the font's metadata.
+- You **must license the font (and modified versions) under CC BY-SA 4.0** — it cannot be
   made proprietary or sold under closed terms. Others may reuse and modify it under the same
   license (including commercially).
 
-See `LICENSE`. Full license text: https://creativecommons.org/licenses/by-sa/3.0/
+See `LICENSE` (the full CC BY-SA 4.0 legal text) and `NOTICE` (attribution + derivation details).
+Human-readable summary: https://creativecommons.org/licenses/by-sa/4.0/
 
 *(This is a practical summary of the license terms, not legal advice.)*

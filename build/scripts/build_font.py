@@ -1066,11 +1066,11 @@ _FIGURE_FEA = generate_figures(base_paths, charstrings, metrics, glyph_order, cm
 AUTHOR = "Goran Arsov"
 ATTRIB = (f'Makedonka Cursive. (c) 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
           '"Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), CC BY-SA 3.0; changes were made. '
-          'Distributed under CC BY-SA 3.0.')
+          'Distributed under CC BY-SA 4.0.')
 LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursive script" by MacedonianBoy '
            '(https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), CC BY-SA 3.0. The digits, '
            f'punctuation, Bold weight, Latin alphabet, spacing and kerning are by {AUTHOR}. Distributed under '
-           'CC BY-SA 3.0: keep attribution and license derivatives alike.')
+           'CC BY-SA 4.0: keep attribution and license derivatives alike.')
 PS = "MakedonkaCursive-Regular"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
@@ -1078,16 +1078,16 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.943", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.944", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.943",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.943", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.944",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.944", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
-    "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/4.0/",
 })
 # Vertical metrics harmonised: typo = hhea = win (ascent/-descent, lineGap 0) so every app computes the SAME
 # line height, and USE_TYPO_METRICS is set below. Kept at the glyph-bbox extent so the tall flourishes never clip.
@@ -1106,7 +1106,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.943    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.944    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

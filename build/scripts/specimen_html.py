@@ -66,7 +66,7 @@ footer {{ margin-top: 3rem; font: 12px system-ui, sans-serif; color: #888 }}
 {rows}
 <h2>OpenType features</h2>
 {feats}
-<footer>Makedonka Cursive by Goran Arsov — derived from “Macedonian cursive script” by MacedonianBoy (Wikimedia Commons), CC BY-SA 3.0.
+<footer>Makedonka Cursive by Goran Arsov, licensed CC BY-SA 4.0 — derived from “Macedonian cursive script” by MacedonianBoy (Wikimedia Commons, CC BY-SA 3.0).
 Both weights are embedded in this file, so kerning and features render natively in any browser.</footer>
 </body></html>
 """

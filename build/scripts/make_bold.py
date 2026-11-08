@@ -23,7 +23,7 @@ TAN = math.tan(math.radians(14))                         # the font's italic ang
 DY = max(4.0, round(D * 0.44))                           # vertical growth < horizontal, so weight lands on the thick
                                                          # near-vertical stems, not the thin horizontals (т/г/п overbars,
                                                          # ш underline, connectors) — this keeps the Regular's contrast
-VER = "0.943"
+VER = "0.944"
 f = TTFont(REG); gs = f.getGlyphSet(); order = f.getGlyphOrder()
 cmap = f.getBestCmap(); hmtx = f["hmtx"]; UPM = f["head"].unitsPerEm
 
@@ -68,11 +68,11 @@ for g in order:
 AUTHOR = "Goran Arsov"
 ATTRIB = (f'Makedonka Cursive. (c) 2026 {AUTHOR}. Macedonian cursive letterforms derived from '
           '"Macedonian cursive script" by MacedonianBoy (Wikimedia Commons), CC BY-SA 3.0; changes were made. '
-          'Distributed under CC BY-SA 3.0.')
+          'Distributed under CC BY-SA 4.0.')
 LICENSE = (f'Makedonka Cursive by {AUTHOR} is a derivative of "Macedonian cursive script" by MacedonianBoy '
            '(https://commons.wikimedia.org/wiki/File:Macedonian_cursive_script.svg), CC BY-SA 3.0. The digits, '
            f'punctuation, Bold weight, Latin alphabet, spacing and kerning are by {AUTHOR}. Distributed under '
-           'CC BY-SA 3.0: keep attribution and license derivatives alike.')
+           'CC BY-SA 4.0: keep attribution and license derivatives alike.')
 PS = "MakedonkaCursive-Bold"
 fb = FontBuilder(UPM, isTTF=False)
 fb.setupGlyphOrder(order); fb.setupCharacterMap(cmap)
@@ -89,7 +89,7 @@ fb.setupNameTable({
     "fullName": "Makedonka Cursive Bold", "psName": PS, "version": f"Version {VER}", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov, Bold weight (dilated from the Regular); letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
-    "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/4.0/",
 })
 o2 = f["OS/2"]
 fb.setupOS2(sTypoAscender=o2.sTypoAscender, sTypoDescender=o2.sTypoDescender, sTypoLineGap=o2.sTypoLineGap,
@@ -105,7 +105,7 @@ _b.ulCodePageRange1 = 0x00000005; _b.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=8, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_b.panose, _k, _v)          # PANOSE: Latin hand-written / script, bold
-fb.font["head"].fontRevision = 0.943
+fb.font["head"].fontRevision = 0.944
 # STAT (Bold's position on the Weight axis) + meta (design/supported scripts), matching the
 # Regular. Placed BEFORE the Mac-name strip so buildStatTable's platform-1 names are removed too.
 from fontTools.otlLib.builder import buildStatTable

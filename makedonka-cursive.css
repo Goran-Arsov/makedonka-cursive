@@ -1,21 +1,21 @@
 /*
  * Makedonka Cursive — Macedonian cursive display font.
  * Derived from "Macedonian cursive script" by MacedonianBoy (Wikimedia Commons),
- * CC BY-SA 3.0. This font is distributed under CC BY-SA 3.0 — keep attribution.
- * https://creativecommons.org/licenses/by-sa/3.0/
+ * CC BY-SA 3.0. This font is distributed under CC BY-SA 4.0 — keep attribution.
+ * https://creativecommons.org/licenses/by-sa/4.0/
  */
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("MakedonkaCursive-Regular.woff2?v=55") format("woff2"),
-       url("MakedonkaCursive-Regular.woff?v=55") format("woff");
+  src: url("MakedonkaCursive-Regular.woff2?v=56") format("woff2"),
+       url("MakedonkaCursive-Regular.woff?v=56") format("woff");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "Makedonka Cursive";
-  src: url("MakedonkaCursive-Bold.woff2?v=55") format("woff2"),
-       url("MakedonkaCursive-Bold.woff?v=55") format("woff");
+  src: url("MakedonkaCursive-Bold.woff2?v=56") format("woff2"),
+       url("MakedonkaCursive-Bold.woff?v=56") format("woff");
   font-weight: 700;
   font-style: normal;
   font-display: swap;

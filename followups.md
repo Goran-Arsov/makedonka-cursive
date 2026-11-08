@@ -189,6 +189,11 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.45** — **(2026-11-08)** Removed the ш/Ш **underbar** (owner request). The feet-anchored
+  rectangle in the NEUT loop (`build_font.py`, `if cp in (0x0448,0x0428)`) is deleted (a breadcrumb
+  comment keeps the old offsets); Bold inherits it (dilated from the Regular). Spacing unchanged
+  (ш 569 / Ш 933); the т/г/п overbar untouched. FontBakery 0 FAIL per-format; 294 glyphs.
+  amici `?v=37`, arsov.mk `?v=2`.
 - **v0.9.44** — **(2026-11-08)** Relicensed the font to **CC BY-SA 4.0** (ShareAlike adaptation of
   MacedonianBoy's CC BY-SA 3.0 chart; 3.0 §4(b) permits the later version). `LICENSE` → verbatim canonical 4.0
   legal text so GitHub detects/badges it (`cc-by-sa-4.0`); attribution/derivation moved to a new `NOTICE`;

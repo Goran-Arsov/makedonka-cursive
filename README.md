@@ -85,7 +85,8 @@ h1.strong { font-weight: 700; }
 
 ## Coverage
 - **Letters:** all 31 Macedonian letters, upper + lowercase (62 glyphs), with the correct
-  Macedonian/Serbian-style cursive forms (overbarred г/п/т, g-shaped д, dotted ј, …).
+  Macedonian/Serbian-style cursive forms (overbarred г/п/т, g-shaped д, dotted ј, …); plus the
+  grave-accented **ѐ ѝ** / **Ѐ Ѝ** (U+0450/045D/0400/040D), used to mark Macedonian stress.
 - **Weights:** Regular + Bold (a faux-bold derived from the Regular by a **contrast-preserving** dilation —
   it weights the stems while keeping the hairlines, overbars and connectors delicate).
 - **Digits:** 0–9, designed to match (calligraphic pen numerals; not in the source chart). They are
@@ -121,10 +122,7 @@ h1.strong { font-weight: 700; }
 - **Not included:** other-Cyrillic (Russian/Serbian-specific letters) and the Western-European accented
   Latin letters (À…ÿ) — the Latin set is for names and the South-Slavic languages.
 
-## Scope & roadmap
-- **A display face — use it large.** An ornate copperplate for headings, logos, titles and short text.
-  It ships **hinted** (PostScript + TrueType grid-fitting), but the hairlines are intentionally delicate,
-  so it isn't meant for long body copy at small sizes.
+## Roadmap
 - **Fully connected joining is on the roadmap (v2).** The letters are spaced and kerned to read as
   connected cursive; true entry/exit joining strokes (OpenType `calt` with connected letterforms) are
   future work — they need the forms drawn by hand, so they're not auto-generated.

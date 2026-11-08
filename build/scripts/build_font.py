@@ -496,20 +496,8 @@ for g, cp, path in NEUT:
     glyph_order.append(g)
     if g not in _NOMAP: cmap[cp] = g
     minx, maxx, bl, br, basey = measure(path, cp)
-    if cp in (0x0448, 0x0428):               # Macedonian cursive ш/Ш: underline beneath the letter — its ends
-        # v0.9.41: anchored to the STEMS' FEET (the ink in the baseline band), not to fractions of the whole ink
-        # width — the v0.9.39 de-slant moved the top flourishes and the feet by different amounts, so the old
-        # fractions (0.00/0.60, 0.205/0.659) slid the bar left under the entry flourish (owner: "displaced").
-        # The offsets reproduce the v0.9.38 bar exactly relative to the feet (measured: ш −16/−116, Ш −53/−132).
-        _fp = FlattenPen(); path.draw(_fp)
-        _feet = [x for c in _fp.contours for (x, y) in c if basey - 4 <= y <= basey + 30]
-        _oL, _oR = {0x0448: (-16, -116), 0x0428: (-53, -132)}[cp]
-        _xL = min(_feet) + _oL; _xR = max(_feet) + _oR
-        _dy = basey - 60; _th = 28
-        _dp = path.getPen()
-        _dp.moveTo((_xL, _dy - _th/2)); _dp.lineTo((_xR, _dy - _th/2))
-        _dp.lineTo((_xR, _dy + _th/2)); _dp.lineTo((_xL, _dy + _th/2)); _dp.closePath()
-        path.simplify()
+    # (ш/Ш underline bar removed by owner request, 2026-11-08 — was the v0.9.12–v0.9.41 feet-anchored
+    #  rectangle at _dy = basey - 60, th 28, offsets ш −16/−116 Ш −53/−132; see handoff history to restore.)
     if cp in BODY_LSB:                       # р ј: far-left descender — base the LEFT sidebearing on the x-height
         _fp = FlattenPen(); path.draw(_fp)   # body (above the baseline) so the body sits centred, descender trails left
         _bx = [x for c in _fp.contours for (x, y) in c if basey + 25 <= y <= basey + CONN_HI]
@@ -1078,13 +1066,13 @@ fb.setupGlyphOrder(glyph_order); fb.setupCharacterMap(cmap)
 # These let the rasteriser snap those lines to the pixel grid, and give psautohint the zones it needs to hint.
 PRIVATE = {"BlueValues": [-7, 0, 260, 270, 548, 560, 680, 694], "OtherBlues": [-248, -236],
            "StdHW": 20, "StdVW": 52, "BlueScale": 0.0396, "BlueShift": 7, "BlueFuzz": 1}
-fb.setupCFF(PS, {"version": "0.944", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
+fb.setupCFF(PS, {"version": "0.945", "FullName": "Makedonka Cursive", "FamilyName": "Makedonka Cursive",
                  "Weight": "Regular", "Notice": ATTRIB, "ItalicAngle": 0}, charstrings, PRIVATE)
 fb.setupHorizontalMetrics(metrics)
 fb.setupHorizontalHeader(ascent=ascent, descent=descent, lineGap=0)
 fb.setupNameTable({
-    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.944",
-    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.944", "copyright": ATTRIB,
+    "familyName": "Makedonka Cursive", "styleName": "Regular", "uniqueFontIdentifier": "MakedonkaCursive;0.945",
+    "fullName": "Makedonka Cursive", "psName": PS, "version": "Version 0.945", "copyright": ATTRIB,
     "description": "Macedonian cursive display font by Goran Arsov; letterforms derived from a CC BY-SA 3.0 chart by MacedonianBoy, digits/punctuation/Latin/Bold/kerning by Goran Arsov.",
     "designer": "Goran Arsov; original Macedonian cursive letterforms by MacedonianBoy", "manufacturer": "Goran Arsov",
     "licenseDescription": LICENSE, "licenseInfoURL": "https://creativecommons.org/licenses/by-sa/4.0/",
@@ -1106,7 +1094,7 @@ _os2.ulCodePageRange2 = 0x00000000
 for _k, _v in dict(bFamilyType=3, bSerifStyle=0, bWeight=6, bProportion=3, bContrast=6, bStrokeVariation=6,
                    bArmStyle=0, bLetterForm=9, bMidline=0, bXHeight=4).items():
     setattr(_os2.panose, _k, _v)        # PANOSE: Latin hand-written / script (was all-zeros "any")
-fb.font["head"].fontRevision = 0.944    # match the name-table version (was the default 1.0)
+fb.font["head"].fontRevision = 0.945    # match the name-table version (was the default 1.0)
 # STAT (this face's position on the Weight axis — the modern standard for a multi-style
 # family; Adobe/InDesign use it for family grouping) + meta (design/supported scripts).
 # Regular is the default, so its axis-value name is elidable (flag 0x2). Placed BEFORE the

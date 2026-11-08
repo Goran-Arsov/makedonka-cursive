@@ -571,6 +571,19 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
+- **(v0.9.45) Removed the ш/Ш underbar — shipped 2026-11-08 (commit `2ec49f1`, release v0.9.45,
+  amici `70ee9a4` `?v=37`, arsov.mk `4dc4bd0` `?v=2`)**
+  The Macedonian-cursive **underline bar beneath ш (U+0448) and Ш (U+0428) is removed** (owner request). The bar
+  was a feet-anchored filled rectangle drawn in the `for g, cp, path in NEUT:` glyph-assembly loop in `build_font.py`
+  (the `if cp in (0x0448, 0x0428):` block measured the stems' feet, offset ш −16/−116, Ш −53/−132, and stamped a
+  rectangle at `_dy = basey − 60`, thickness 28). That block is deleted, replaced by a one-line breadcrumb comment
+  recording those numbers so the v0.9.12–v0.9.41 feet-anchored bar can be reconstructed from this history if wanted.
+  **Bold needs no edit** — `make_bold.py` dilates the Regular OTF and draws no bar of its own, so removing it from the
+  Regular source removes it from both weights. **Spacing is neutral**: the sidebearings are measured on the glyph
+  *before* the bar was ever appended (`measure(path, cp)` precedes the block), so the advance widths are unchanged
+  (verified: ш 569 / Ш 933 in the Regular, identical to v0.9.44). The separate **т/г/п overbar is untouched** (it is
+  a different mechanism). FontBakery 0 FAIL/0 ERROR per-format; 294 glyphs. Version strings → 0.945 (build_font ×4,
+  make_bold ×2), README version + jsDelivr `@v0.9.45`, demo/CSS `?v=57`.
 - **(v0.9.44) Relicensed the font to CC BY-SA 4.0 — shipped 2026-11-08 (commit `b3f2ca4`, release v0.9.44,
   amici `6990241` `?v=36`)**
   The font (Goran's adaptation) now ships under **CC BY-SA 4.0**; MacedonianBoy's source chart stays CC BY-SA

@@ -47,8 +47,17 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   embedded; Cyrillic + Latin, both weights, standing phrases, light/dark toggle) was published 2026-11-06:
   `https://claude.ai/artifact/NxYyZydEyDXcnaUYgMMw5P` — private to the owner's claude.ai account.
 
-## Current state (v0.9.44 SHIPPED 2026-11-08)
-- **Shipped + public.** The font is at **v0.9.44** (commit `b3f2ca4`, `origin/main` HEAD): **relicensed to
+## Current state (v0.9.45 SHIPPED 2026-11-08)
+- **Shipped + public.** The font is at **v0.9.45** (commit `2ec49f1`, `origin/main` HEAD): the Macedonian-cursive
+  **underline bar beneath ш (U+0448) / Ш (U+0428) is removed** (owner request). It was a feet-anchored filled
+  rectangle in the NEUT glyph-assembly loop (`build_font.py`); that block is gone, replaced by a breadcrumb comment
+  recording the old geometry (ш −16/−116, Ш −53/−132, `_dy = basey-60`, th 28) so it stays restorable. Bold inherits
+  it automatically (dilated from the Regular — it draws no bar of its own). **Spacing unchanged** — advance widths
+  identical to v0.9.44 (ш 569, Ш 933 Regular); the separate т/г/п overbar is untouched. Version strings → 0.945
+  (build_font ×4, make_bold ×2), README version + jsDelivr `@v0.9.45`, demo/CSS `?v=57`; specimen.png + specimen.html
+  regenerated. FontBakery **0 FAIL/0 ERROR per-format** (OTF, TTF); 294 glyphs. Release `v0.9.45` carries the 15-file
+  zip. Installed in `~/.local/share/fonts/`; amici `70ee9a4` `?v=37`; **arsov.mk** `4dc4bd0` `?v=2`.
+- **Earlier — v0.9.44** (commit `b3f2ca4`): **relicensed to
   CC BY-SA 4.0**. The font (the adaptation) now ships under CC BY-SA 4.0 — permitted because 4.0 is a later
   version of the same ShareAlike license (3.0 §4(b) + CC's compatibility list), and it's the one GitHub's
   detector can badge (it has no 3.0 template). MacedonianBoy's **source chart stays CC BY-SA 3.0**; attribution
@@ -161,7 +170,9 @@ amici is **not deployed anywhere** — it exists only locally and in its GitHub 
 four web fonts into `public/fonts/`, bump `?v=` in `app/assets/tailwind/application.css`, `bin/rails
 tailwindcss:build` (the build output is gitignored), commit, `git push origin main` (its local `main` has no
 upstream set). amici's `?v=` counter is independent of this repo's (v0.9.23=`?v=15` … v0.9.36=`?v=28` …
-v0.9.41=`?v=33` … v0.9.43=`?v=35`, v0.9.44=`?v=36`). Current: `6990241`, v0.9.44, `?v=36`.
+v0.9.41=`?v=33` … v0.9.43=`?v=35`, v0.9.44=`?v=36`, v0.9.45=`?v=37`). Current: `70ee9a4`, v0.9.45, `?v=37`.
+(**arsov.mk** — `~/IT/Rails/MyApps/arsov_mk`, Makedonka is one optional entry in the section font-picker — is now a
+second propagation target: same steps, its own `?v=` counter; v0.9.44=`?v=1`, v0.9.45=`?v=2` at commit `4dc4bd0`.)
 
 **B. Render-test in real apps before a wide push.** Validated via FontBakery (0 FAIL), HarfBuzz and PIL, and on
 2026-11-02 in **LibreOffice 24.2** (headless HTML→PDF→PNG, installed OTFs) and **Chrome** (headless screenshots of

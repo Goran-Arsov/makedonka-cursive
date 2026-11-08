@@ -47,8 +47,15 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   embedded; Cyrillic + Latin, both weights, standing phrases, light/dark toggle) was published 2026-11-06:
   `https://claude.ai/artifact/NxYyZydEyDXcnaUYgMMw5P` — private to the owner's claude.ai account.
 
-## Current state (v0.9.42 SHIPPED 2026-11-06)
-- **Shipped + public.** The font is at **v0.9.42** (commit `3c5146f`, `origin/main` HEAD): Cyrillic Е 14°→17°
+## Current state (v0.9.43 SHIPPED 2026-11-08)
+- **Shipped + public.** The font is at **v0.9.43** (commit `691a170`, `origin/main` HEAD): the Cyrillic **Н**
+  is now the owner's **hand-edited glyph** (drawn in CorelDRAW 2021, handed back) — the **first per-glyph
+  override**: `build/source/overrides/uni041D.svg` (the outline normalized to font units, y-up, slant baked
+  in) + `uni041D.corel-source.svg` (the raw CorelDRAW file, provenance). `letter_path` returns it verbatim
+  for uni041D (no `cyr_shear`, no `POINT_SHIFT`, no sliver purge; the v0.9.42 leg/notch fix is **skipped**);
+  Latin **H** still de-skews from it via `REUSE_DESKEW`, so it follows the new shape at the 10° Latin slant.
+  FontBakery 0 FAIL/0 ERROR per-format, pair/triple scans clean, 294 glyphs. amici `be5f6be` `?v=35`.
+- **Earlier — v0.9.42** (commit `3c5146f`): Cyrillic Е 14°→17°
   and Latin E 10°→22° (per-glyph `CYR_SLANT_DEG`/`LAT_SLANT_DEG`); Cyrillic **Н** got a detached ~1278u² stray
   speck dropped from its counter (Н-scoped `PURGE_AREA` 2000u²), its **two legs connected by a crossbar**, and the
   **half-circle cut-off at the right-leg foot filled** — the geometry added in the NEUT glyph-assembly loop in
@@ -145,7 +152,7 @@ amici is **not deployed anywhere** — it exists only locally and in its GitHub 
 four web fonts into `public/fonts/`, bump `?v=` in `app/assets/tailwind/application.css`, `bin/rails
 tailwindcss:build` (the build output is gitignored), commit, `git push origin main` (its local `main` has no
 upstream set). amici's `?v=` counter is independent of this repo's (v0.9.23=`?v=15` … v0.9.36=`?v=28` …
-v0.9.41=`?v=33`). Current: `8545fc8`, v0.9.41, `?v=33`.
+v0.9.41=`?v=33`, v0.9.42=`?v=34`, v0.9.43=`?v=35`). Current: `be5f6be`, v0.9.43, `?v=35`.
 
 **B. Render-test in real apps before a wide push.** Validated via FontBakery (0 FAIL), HarfBuzz and PIL, and on
 2026-11-02 in **LibreOffice 24.2** (headless HTML→PDF→PNG, installed OTFs) and **Chrome** (headless screenshots of
@@ -162,6 +169,11 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.43** — **(2026-11-08)** Cyrillic Н replaced by the owner's **hand-edited glyph** (drawn in
+  CorelDRAW 2021, handed back). First per-glyph **OVERRIDE**: `build/source/overrides/uni041D.svg` (outline
+  normalized to font units, slant baked in) + `uni041D.corel-source.svg` (raw file). `letter_path` returns
+  it verbatim for uni041D (no cyr_shear/POINT_SHIFT/sliver-purge; the v0.9.42 leg/notch fix skipped); Latin
+  H de-skews from it via REUSE_DESKEW. FontBakery 0 FAIL, pair/triple scans clean, 294 glyphs. amici `?v=35`.
 - **v0.9.42** — **(2026-11-06)** Cyrillic Е 14°→17°, Latin E 10°→22° (`CYR_SLANT_DEG`/`LAT_SLANT_DEG`); Cyrillic
   Н — detached ~1278u² stray speck removed (`PURGE_AREA` 2000u², Н-scoped), the two legs connected by a crossbar,
   and the half-circle cut-off at the right-leg foot filled with a disk (both added in the NEUT loop in q-space;

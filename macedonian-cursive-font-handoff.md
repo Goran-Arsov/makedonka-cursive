@@ -571,6 +571,26 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
+- **(v0.9.43) Cyrillic Н replaced by the owner's hand-edited glyph — shipped 2026-11-08 (commit `691a170`,
+  release v0.9.43, amici `be5f6be` `?v=35`)**
+  The **first hand-edited (override) glyph** in the font. The owner opened the exported Cyrillic-N SVG in
+  **CorelDRAW 2021**, reshaped it, and handed back `Makedonka glyph H - Goran1.svg`. Corel had applied a pure
+  **uniform scale** (~4.82×) + translate and dropped the guide layer; recovered exactly by aligning the edited
+  path's bbox to the original export's (sx = sy = 0.207265, aspect match to 4 dp), then y-flipped to font units.
+  Stored as **`build/source/overrides/uni041D.svg`** (outline in FINAL font units, y-up, baseline y=0, slant
+  already baked in — it was edited FROM the final outline) and **`uni041D.corel-source.svg`** (the raw Corel
+  file, provenance). **Mechanism:** `OVERRIDE_D` (cp→path-`d`, loaded from `build/source/overrides/<name>.svg`);
+  `letter_path(cp)` returns the parsed override **before** `cyr_shear`/`POINT_SHIFT`/`purge_slivers`, so none of
+  the trace pipeline touches it; the `cp==0x041D` leg/notch fix in the NEUT loop is guarded `and cp not in
+  OVERRIDE_D`, so the v0.9.42 crossbar+disk are NOT re-added (the hand-edit already has clean legs). **Latin H**
+  is untouched in code: `REUSE_DESKEW` reads `_neut["uni041D"]` (now the override) and de-skews by `_dsk(0x041D)`,
+  which is calibrated to a source carrying `tan(LAT_NAT[Н]) + cyr_shear(Н)` — exactly the slant the exported Н
+  had — so H lands on the 10° Latin slant off the new shape automatically. Caveat: this holds only because the
+  edit kept the glyph's overall ~14° lean; a reshaped slant would propagate proportionally into H. To add more
+  hand-edits later: drop `<glyphname>.svg` (final font units, y-up) into `build/source/overrides/` and add the
+  cp to `OVERRIDE_D`. QA: FontBakery 0 FAIL/0 ERROR per-format (OTF, TTF — run the two formats SEPARATELY; mixing
+  all four files trips `bold_italic_unique_for_nameid1` as a harness artifact), pair + 16384-triple scans clean,
+  294 glyphs.
 - **(v0.9.42) Cyrillic Е & Latin E slant; Cyrillic Н legs connected + notch filled + speck removed — shipped
   2026-11-06 (commit `3c5146f`, release v0.9.42, amici `?v=34`)**
   **E slant (owner, in steps 13° → 17° → 20° → 22° for Latin; Cyrillic Е tilted +3° to 17°):**

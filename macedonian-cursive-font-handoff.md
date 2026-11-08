@@ -571,6 +571,22 @@ vectorizing the Wikimedia chart (see *Source material* below).
   the ring sat 10u off the N's right stem), advance 470 → **514** so the right bearing is unchanged. Verified:
   3206/3239 kern pairs; TTFs shape identically to the OTFs; pair scan 0 overlaps in all 9 sections of both
   weights; triple scan unchanged in kind (ј sweep; Ѕ'f 79/32 px²); FontBakery 0 FAIL / 0 ERROR.
+- **(v0.9.44) Relicensed the font to CC BY-SA 4.0 — shipped 2026-11-08 (commit `b3f2ca4`, release v0.9.44,
+  amici `6990241` `?v=36`)**
+  The font (Goran's adaptation) now ships under **CC BY-SA 4.0**; MacedonianBoy's source chart stays CC BY-SA
+  3.0. Permitted by CC BY-SA 3.0 §4(b)(ii) ("a later version of this License with the same License Elements")
+  and CC's compatibility list. Motivation: GitHub's detector (licensee) has **no CC BY-SA 3.0 template**
+  (verified: `gh api /licenses/cc-by-sa-3.0` → 404, `/cc-by-sa-4.0` → full), so the repo read "Other/NOASSERTION"
+  under 3.0 and reads **`cc-by-sa-4.0`** after this change (confirmed via `gh api …/license`). **How:** `LICENSE`
+  is replaced with the verbatim canonical CC BY-SA 4.0 legal code (from SPDX) — licensee matches on TEXT, so any
+  custom preamble breaks detection; the derivation/attribution prose (the old LICENSE, updated to font-4.0/
+  source-3.0) moved to a new **`NOTICE`** file, referenced from README and added to the release zip (15 files
+  now). README gets a shields.io badge. Font name-table: `licenseDescription` + `licenseInfoURL` → 4.0, copyright/
+  Notice "Distributed under CC BY-SA 4.0" (the "derived from … CC BY-SA 3.0" SOURCE strings stay). CSS/demo/
+  specimen footers, DISTRIBUTION.md, CLAUDE.md and amici's footer credit (en/mk locales + the license URL) all →
+  4.0; every remaining "3.0" is a SOURCE reference. **No glyph/outline changes** — pair/triple scans identical to
+  v0.9.43, FontBakery 0 FAIL/0 ERROR per-format. Gotcha: keep `LICENSE` as the pure canonical text or GitHub
+  drops back to "Other".
 - **(v0.9.43) Cyrillic Н replaced by the owner's hand-edited glyph — shipped 2026-11-08 (commit `691a170`,
   release v0.9.43, amici `be5f6be` `?v=35`)**
   The **first hand-edited (override) glyph** in the font. The owner opened the exported Cyrillic-N SVG in
@@ -933,8 +949,9 @@ diacritics). A local copy lives at `build/source/Macedonian_cursive_script.svg`.
 
    **Implication:** a font traced/imported from this SVG is a **derivative work**
    and inherits two obligations: (a) **attribute** MacedonianBoy + link the
-   license; (b) **ShareAlike** — release the font under CC BY-SA 3.0 (or
-   compatible). It could **not** be proprietary or sold under closed terms.
+   license; (b) **ShareAlike** — release the font under CC BY-SA 3.0 or a later/
+   compatible version (**this font uses CC BY-SA 4.0** since v0.9.44, per 3.0 §4(b)).
+   It could **not** be proprietary or sold under closed terms.
    - If CC BY-SA is acceptable → usable as a trace/import source.
    - If full ownership/control is wanted → **do not trace the file**; use it only
      as a *visual reference* while redrawing the letters from scratch (which is

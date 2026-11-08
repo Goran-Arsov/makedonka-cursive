@@ -47,8 +47,17 @@ automatically at the end of each build; `outline_util.py` holds the shared slive
   embedded; Cyrillic + Latin, both weights, standing phrases, light/dark toggle) was published 2026-11-06:
   `https://claude.ai/artifact/NxYyZydEyDXcnaUYgMMw5P` — private to the owner's claude.ai account.
 
-## Current state (v0.9.43 SHIPPED 2026-11-08)
-- **Shipped + public.** The font is at **v0.9.43** (commit `691a170`, `origin/main` HEAD): the Cyrillic **Н**
+## Current state (v0.9.44 SHIPPED 2026-11-08)
+- **Shipped + public.** The font is at **v0.9.44** (commit `b3f2ca4`, `origin/main` HEAD): **relicensed to
+  CC BY-SA 4.0**. The font (the adaptation) now ships under CC BY-SA 4.0 — permitted because 4.0 is a later
+  version of the same ShareAlike license (3.0 §4(b) + CC's compatibility list), and it's the one GitHub's
+  detector can badge (it has no 3.0 template). MacedonianBoy's **source chart stays CC BY-SA 3.0**; attribution
+  to it is unchanged. `LICENSE` is now the verbatim canonical CC BY-SA 4.0 legal text (so GitHub detects it and
+  shows the badge — confirmed `cc-by-sa-4.0`); the derivation/attribution explanation moved to a new **`NOTICE`**
+  file (added to the release zip, 15 files now). README carries a shields.io badge. Font name-table license
+  metadata (nameID 13/14) + every web/doc credit updated 3.0→4.0; all remaining "3.0" refs are the SOURCE chart.
+  **No glyph changes** from v0.9.43. amici `6990241` `?v=36`.
+- **Earlier — v0.9.43** (commit `691a170`): the Cyrillic **Н**
   is now the owner's **hand-edited glyph** (drawn in CorelDRAW 2021, handed back) — the **first per-glyph
   override**: `build/source/overrides/uni041D.svg` (the outline normalized to font units, y-up, slant baked
   in) + `uni041D.corel-source.svg` (the raw CorelDRAW file, provenance). `letter_path` returns it verbatim
@@ -152,7 +161,7 @@ amici is **not deployed anywhere** — it exists only locally and in its GitHub 
 four web fonts into `public/fonts/`, bump `?v=` in `app/assets/tailwind/application.css`, `bin/rails
 tailwindcss:build` (the build output is gitignored), commit, `git push origin main` (its local `main` has no
 upstream set). amici's `?v=` counter is independent of this repo's (v0.9.23=`?v=15` … v0.9.36=`?v=28` …
-v0.9.41=`?v=33`, v0.9.42=`?v=34`, v0.9.43=`?v=35`). Current: `be5f6be`, v0.9.43, `?v=35`.
+v0.9.41=`?v=33` … v0.9.43=`?v=35`, v0.9.44=`?v=36`). Current: `6990241`, v0.9.44, `?v=36`.
 
 **B. Render-test in real apps before a wide push.** Validated via FontBakery (0 FAIL), HarfBuzz and PIL, and on
 2026-11-02 in **LibreOffice 24.2** (headless HTML→PDF→PNG, installed OTFs) and **Chrome** (headless screenshots of
@@ -169,6 +178,11 @@ cu2qu `MAX_ERR`, re-`simplify()`) had made it the same or worse. (FontValidator 
 Windows/.NET step, optional.)
 
 ## Changelog (one line each; details + knobs are in the handoff)
+- **v0.9.44** — **(2026-11-08)** Relicensed the font to **CC BY-SA 4.0** (ShareAlike adaptation of
+  MacedonianBoy's CC BY-SA 3.0 chart; 3.0 §4(b) permits the later version). `LICENSE` → verbatim canonical 4.0
+  legal text so GitHub detects/badges it (`cc-by-sa-4.0`); attribution/derivation moved to a new `NOTICE`;
+  README shields badge; font metadata + every credit (CSS/demo/specimen/DISTRIBUTION/CLAUDE/amici) → 4.0, source
+  refs stay 3.0. No glyph changes; FontBakery 0 FAIL. amici `?v=36`.
 - **v0.9.43** — **(2026-11-08)** Cyrillic Н replaced by the owner's **hand-edited glyph** (drawn in
   CorelDRAW 2021, handed back). First per-glyph **OVERRIDE**: `build/source/overrides/uni041D.svg` (outline
   normalized to font units, slant baked in) + `uni041D.corel-source.svg` (raw file). `letter_path` returns
@@ -319,8 +333,8 @@ Windows/.NET step, optional.)
    Prototype in session scratch, not committed.
 8. **Public distribution** — jsDelivr already serves the public repo/releases (documented in README). Remaining
    channels (manual/owner): free-font aggregators (DaFont / FontSpace / 1001 Free Fonts / Font Squirrel) for
-   reach; own VPS/blog download page. **Google Fonts is out** (requires OFL/Apache; this is CC BY-SA 3.0). Every
-   posting needs a visible MacedonianBoy + CC BY-SA 3.0 credit. **`DISTRIBUTION.md` (2026-11-02)** holds the
+   reach; own VPS/blog download page. **Google Fonts is out** (requires OFL/Apache; this is CC BY-SA 4.0). Every
+   posting needs a visible MacedonianBoy + CC BY-SA 4.0 credit. **`DISTRIBUTION.md`** holds the
    ready-to-paste blurbs (EN/MK), attribution text, licence line and tags — only the postings themselves remain.
 9. ~~**QA / measurement helpers are session-scratch, not in the repo**~~ **Resolved 2026-11-06 (commit
    `7418882`):** reconstructed from the handoff and committed under `build/scripts/qa/` — `qa_common.py` (shared
